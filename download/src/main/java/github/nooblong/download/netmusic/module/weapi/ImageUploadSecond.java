@@ -38,7 +38,7 @@ public class ImageUploadSecond extends SimpleWeApiModule {
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         JsonNode imgResponse = OkUtil.getJsonResponse(OkUtil.get(
                 "https://music.163.com/upload/img/op?id=" + docId
-                        + "&op=" + imgX + "y" + imgY + "y" + 300 + "y" + 300), client);
+                        + "&op=" + imgX + "y" + imgY + "y" + size + "y" + size), client);
         assert imgResponse != null;
         if (!(imgResponse.get("code").asInt() == 200)) {
             throw new RuntimeException("裁剪错误");
