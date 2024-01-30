@@ -1,0 +1,35 @@
+workingDir: /root/workingDir
+queueTail: prd
+initialDelay: 1
+server:
+  port: 25565
+  tomcat:
+    max-http-form-post-size: 50MB
+spring:
+  session:
+    timeout: 10
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/netmusic?serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: 用户名
+    password: 密码
+    hikari:
+      validation-timeout: 300000
+  servlet:
+    multipart:
+      max-file-size: 100000000
+      max-request-size: 100000000
+  rabbitmq:
+    host: 127.0.0.1
+    username: 用户名
+    password: 密码
+    publisher-confirm-type: correlated
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    call-setters-on-nulls: true

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="github.nooblong.download.mapper.UploadDetailMapper">
+
+    <select id="getUploadDetailByStatus" resultType="github.nooblong.download.entity.UploadDetail">
+        select *
+        from music.upload_detail
+        where get_display_status_times <![CDATA[<]]> 5
+          and (display_status != 'ONLINE'
+            and display_status != 'ONLY_SELF_SEE'
+            and display_status != 'FAILED'
+            and display_status != 'TRANSCODE_FAILED')
+          and voice_id > 0
+    </select>
+
+</mapper>
