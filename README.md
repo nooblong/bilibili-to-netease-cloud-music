@@ -10,6 +10,4 @@ http://106.75.218.120/#/recentsList
 
 半成品，可能会有各种问题
 
-做完开源
-
 test edit from mirror private repositories
