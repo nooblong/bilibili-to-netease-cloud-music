@@ -8,8 +8,6 @@ public interface FfmpegService {
 
     Path encodeMp3(Path sourceUrl, double beginSec, double endSec, double voiceOffset);
 
-    Path encodeMp3Cracked(Path sourceUrl, double beginSec, double endSec, double voiceOffset);
-
     FFmpegProbeResult probeInfo(Path sourceUrl);
 
 }

@@ -44,6 +44,10 @@ public class MessageReceiver {
     @RabbitListener(queues = "#{uploadQueue.name}", containerFactory = "jsonContainerFactory")
     public void receiveMessage(Message message, Long id, Channel channel) throws IOException {
         UploadDetail byId = Db.getById(id, UploadDetail.class);
+        if (byId == null) {
+            log.warn("没有detail id: {}", id);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        }
         log.info("队列处理: {}, {}, {}", byId.getTitle(), byId.getBvid(), byId.getCid());
         boolean login = netMusicClient.checkLogin(byId.getUserId());
         if (!login) {

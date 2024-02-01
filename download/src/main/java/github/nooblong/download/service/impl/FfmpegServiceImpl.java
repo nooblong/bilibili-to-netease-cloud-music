@@ -34,11 +34,6 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     FFprobe fFprobe;
 
     @Override
-    public Path encodeMp3Cracked(Path sourceUrl, double beginSec, double endSec, double voiceOffset) {
-        return encodeMp3(sourceUrl, beginSec, endSec, voiceOffset);
-    }
-
-    @Override
     public Path encodeMp3(Path sourceUrl, double beginSec, double endSec, double voiceOffset) {
         Assert.isTrue(Files.exists(sourceUrl), "转码失败，" + sourceUrl + "不是文件");
         boolean cutLength = beginSec != 0 && endSec != 0;
