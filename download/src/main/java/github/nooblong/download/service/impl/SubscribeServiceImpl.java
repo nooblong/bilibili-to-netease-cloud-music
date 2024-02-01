@@ -102,9 +102,10 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 UploadDetail uploadDetail = new UploadDetail();
                 uploadDetail.setBvid(next.getBvid())
                         .setCid(next.getCid())
+                        .setSubscribeId(subscribe.getId())
                         .setTitle(next.getTitle())
-                        .setCrack(subscribe.getPassCheck().longValue())
-                        .setUseVideoCover(subscribe.getUseDefaultCover() == 0 ? 1L : 0L)
+                        .setCrack(subscribe.getCrack().longValue())
+                        .setUseVideoCover(subscribe.getUseVideoCover() == 0 ? 1L : 0L)
                         .setVoiceListId(subscribe.getVoiceListId())
                         .setUserId(subscribe.getUserId());
                 // 根据subscribe设置uploadName

@@ -51,7 +51,7 @@ public class SubscribeController {
             return Result.fail("请先上传一遍单个的证明可以上传");
         }
         Subscribe byId = Db.getById(id, Subscribe.class);
-        if (subscribe.getPassCheck() > 0) {
+        if (subscribe.getCrack() > 0) {
             Long userId = JwtUtil.verifierFromContext().getId();
             if (!userId.equals(Constant.adminUserId)) {
                 return Result.fail("暂不开放绕过订阅");
@@ -86,7 +86,7 @@ public class SubscribeController {
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
         subscribe.setUserId(user.getId());
-        if (subscribe.getPassCheck() > 0) {
+        if (subscribe.getCrack() > 0) {
             Long id = JwtUtil.verifierFromContext().getId();
             if (!id.equals(Constant.adminUserId)) {
                 return Result.fail("暂不开放绕过订阅");
