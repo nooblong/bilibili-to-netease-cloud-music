@@ -1,7 +1,3 @@
-/*
- Navicat Premium Data Transfer
- Date: 30/01/2024 16:36:47
-*/
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
@@ -157,8 +153,8 @@ CREATE TABLE `subscribe` (
   `remark` varchar(256) NOT NULL DEFAULT '',
   `net_cover` varchar(256) NOT NULL DEFAULT '',
   `enable` tinyint NOT NULL DEFAULT '1',
-  `pass_check` tinyint NOT NULL DEFAULT '0',
-  `use_default_cover` tinyint NOT NULL DEFAULT '0',
+  `crack` tinyint NOT NULL DEFAULT '0',
+  `use_video_cover` tinyint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `subscribe_pk` (`user_id`,`target_id`,`key_word`)
 ) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

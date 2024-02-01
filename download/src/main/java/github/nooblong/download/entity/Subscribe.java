@@ -40,8 +40,8 @@ public class Subscribe implements Serializable {
     private String remark;
     private String netCover;
     private Integer enable;
-    private Integer passCheck;
-    private Integer useDefaultCover;
+    private Integer crack;
+    private Integer useVideoCover;
 
     @TableField(exist = false)
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();
