@@ -9,6 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"github.nooblong.*"})
+//@MapperScan(basePackages = {"github.nooblong.*.mapper"})
 @Slf4j
 public class SystemStart {
     public static void main(String[] args) {

@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"github.nooblong.*"})
+@MapperScan(basePackages = {"github.nooblong.*.mapper"})
 @EnableScheduling
 @Slf4j
 public class Download {
