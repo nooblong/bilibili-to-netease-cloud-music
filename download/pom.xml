@@ -30,11 +30,6 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>github.nooblong</groupId>
-            <artifactId>oss</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
         </dependency>
