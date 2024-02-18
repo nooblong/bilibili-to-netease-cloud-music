@@ -42,6 +42,7 @@ public class Subscribe implements Serializable {
     private Integer enable;
     private Integer crack;
     private Integer useVideoCover;
+    private Integer priority;
 
     @TableField(exist = false)
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();

@@ -101,7 +101,7 @@ public class UploadDetailController {
 
         Db.save(uploadDetail);
         
-        messageSender.sendUploadDetailId(uploadDetail.getId());
+        messageSender.sendUploadDetailId(uploadDetail.getId(), 10);
         return Result.ok("添加队列成功");
     }
 

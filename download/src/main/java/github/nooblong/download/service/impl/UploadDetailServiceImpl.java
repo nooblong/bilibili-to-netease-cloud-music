@@ -106,7 +106,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         }
         updateBatchById(onlySelfSee, 100);
         for (Long uploadDetailId : toProcessList) {
-            messageSender.sendUploadDetailId(uploadDetailId);
+            messageSender.sendUploadDetailId(uploadDetailId, 1);
         }
     }
 

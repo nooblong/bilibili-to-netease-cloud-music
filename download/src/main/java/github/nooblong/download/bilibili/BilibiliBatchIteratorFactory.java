@@ -72,7 +72,9 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
                     .setDuration(jsonNode.get("duration").asInt())
                     .setBvid(bvid)
                     .setCid(jsonNode.get("cid").asText())
-                    .setPartName(jsonNode.get("part").asText());
+                    .setPartName(jsonNode.get("part").asText())
+                    .setTitle(jsonNode.get("part").asText())
+                    ;
             data.add(bilibiliVideo);
         });
         IteratorCollectionTotalList<BilibiliVideo> result = new IteratorCollectionTotalList<>();

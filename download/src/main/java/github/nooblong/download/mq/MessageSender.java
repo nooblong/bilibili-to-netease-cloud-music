@@ -1,6 +1,7 @@
 package github.nooblong.download.mq;
 
 import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,9 +19,13 @@ public class MessageSender {
         this.directExchange = directExchange;
     }
 
-    public void sendUploadDetailId(Long id) {
+    public void sendUploadDetailId(Long id, int priority) {
         Assert.notNull(id, "发送消息为空id");
-        rabbitTemplate.convertAndSend(directExchange.getName(), "uploadRouting", id);
+        MessagePostProcessor messagePostProcessor = message -> {
+            message.getMessageProperties().setPriority(priority);
+            return message;
+        };
+        rabbitTemplate.convertAndSend(directExchange.getName(), "uploadRouting", id, messagePostProcessor);
     }
 
     public void sendMessageCustom(Object o, String exchange, String routingKey) {

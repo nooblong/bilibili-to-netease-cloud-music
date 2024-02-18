@@ -150,7 +150,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 Assert.notNull(uploadDetail.getId(), "上传->保存数据库失败");
 
                 log.info("上传" + next.getTitle());
-                messageSender.sendUploadDetailId(uploadDetail.getId());
+                messageSender.sendUploadDetailId(uploadDetail.getId(), subscribe.getPriority());
                 isProcess = true;
             }
             if (isProcess) {

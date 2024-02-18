@@ -1,5 +1,6 @@
 package github.nooblong.download.batch;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import github.nooblong.download.entity.UploadDetail;
@@ -38,7 +39,9 @@ public class UploadSingleAudioSaveStep {
                     byId.setBvid(bilibiliVideoContext.getBvid());
                     byId.setCid(bilibiliVideoContext.getCid());
                     byId.setLocalName(path.getFileName().toString());
-                    byId.setUploadName(bilibiliVideoContext.getUploadName());
+                    if (StrUtil.isBlank(byId.getUploadName())) {
+                        byId.setUploadName(bilibiliVideoContext.getUploadName());
+                    }
                     byId.setVoiceId(Long.valueOf(bilibiliVideoContext.getVoiceId()));
                     byId.setStatus("FINISHED");
 

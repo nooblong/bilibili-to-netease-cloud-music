@@ -43,6 +43,16 @@ public class MessageReceiver {
 
     @RabbitListener(queues = "#{uploadQueue.name}", containerFactory = "jsonContainerFactory")
     public void receiveMessage(Message message, Long id, Channel channel) throws IOException {
+//        try {
+//            log.info("消费: {}, 优先级: {}", id, message.getMessageProperties().getPriority());
+//            Thread.sleep(1000);
+//            if (1 + 1 == 2) {
+//                channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+//                return;
+//            }
+//        } catch (InterruptedException e) {
+//            return;
+//        }
         UploadDetail byId = Db.getById(id, UploadDetail.class);
         if (byId == null) {
             log.warn("没有detail id: {}", id);

@@ -41,6 +41,7 @@ public class RabbitConfig {
     Queue uploadQueue() {
         return QueueBuilder.durable("uploadQueue" + queueTail)
                 .withArgument("x-dead-letter-exchange", "deadUploadFanout" + queueTail)
+                .withArgument("x-max-priority", 20)
                 .build();
     }
 
@@ -73,6 +74,7 @@ public class RabbitConfig {
         factory.setMessageConverter(jsonMessageConverter);
         factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         factory.setDefaultRequeueRejected(false);
+        factory.setPrefetchCount(1);
         return factory;
     }
 
@@ -83,6 +85,7 @@ public class RabbitConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         factory.setDefaultRequeueRejected(false);
+        factory.setPrefetchCount(1);
         return factory;
     }
 
