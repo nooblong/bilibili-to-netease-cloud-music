@@ -30,10 +30,8 @@ public class BilibiliController {
     }
 
     @GetMapping("/bilibili/checkLogin")
-    public Result<Boolean> getLoginStatus() {
-        JsonNode likes = bilibiliUtil.getLikes();
-        Assert.isTrue(likes.get("code").asInt() == 0, "未登录");
-        return Result.ok("已登录", bilibiliUtil.needRefreshCookie());
+    public Result<Boolean> checkLogin() {
+        return Result.ok("执行成功", bilibiliUtil.getLoginRole3());
     }
 
     @GetMapping("/download/getVideoInfo")

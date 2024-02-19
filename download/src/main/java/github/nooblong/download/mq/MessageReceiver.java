@@ -68,8 +68,7 @@ public class MessageReceiver {
             return;
         }
         try {
-            JsonNode likes = bilibiliUtil.getLikes();
-            Assert.isTrue(likes.get("code").asInt() == 0, "未登录");
+            Assert.isTrue(bilibiliUtil.getLoginRole3(), "未登录");
         } catch (Exception e) {
             SysUser sysUser = Db.getById(1, SysUser.class);
             bilibiliUtil.setCredMap(sysUser);

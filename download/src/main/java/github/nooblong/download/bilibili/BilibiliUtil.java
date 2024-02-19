@@ -392,4 +392,16 @@ public class BilibiliUtil implements InitializingBean {
         return OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
                 + "/session/get_likes", credMap), okHttpClient);
     }
+
+    public boolean getLoginRole3() {
+        try {
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
+                    + "/user/get_self_info", credMap), okHttpClient);
+            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
+            return true;
+        } catch (Exception e) {
+            log.error("b站大会员未登录");
+            return false;
+        }
+    }
 }
