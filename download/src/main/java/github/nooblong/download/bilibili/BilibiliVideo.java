@@ -151,6 +151,9 @@ public class BilibiliVideo implements Serializable {
     @JsonIgnore
     private static String assembleLocalName(String partName, String videoName, String bvid, String cid) {
         // [partName(null)]-[videoName]-[bvid]-[cid(null)]
+        if (videoName.length() > 30) {
+            videoName = videoName.substring(0, 30);
+        }
         String sb = "[" + partName + "]" + "-" +
                 "[" + videoName + "]" + "-" +
                 "[" + bvid + "]" + "-" +
