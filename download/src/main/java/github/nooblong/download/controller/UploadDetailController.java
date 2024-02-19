@@ -1,6 +1,7 @@
 package github.nooblong.download.controller;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -188,7 +189,13 @@ public class UploadDetailController {
             recentResponse.setId(String.valueOf(record.getId()));
             recentResponse.setDisplayStatus(record.getDisplayStatus());
             recentResponse.setCreateTime(DateUtil.formatDateTime(record.getCreateTime()));
-            recentResponse.setName(record.getTitle());
+            if (StrUtil.isNotBlank(record.getUploadName())) {
+                recentResponse.setName(record.getUploadName());
+            } else {
+                recentResponse.setName(record.getTitle());
+            }
+            recentResponse.setRetryTimes(record.getRetryTimes().intValue());
+            recentResponse.setUploadStatus(record.getStatus());
             recentResponse.setVoiceId(record.getVoiceId().toString());
             recentResponse.setVoiceListId(record.getVoiceListId().toString());
             recentResponses.add(recentResponse);
