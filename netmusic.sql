@@ -138,6 +138,7 @@ CREATE TABLE `BATCH_STEP_EXECUTION_SEQ` (
 DROP TABLE IF EXISTS `subscribe`;
 CREATE TABLE `subscribe` (
   `id` bigint NOT NULL AUTO_INCREMENT,
+  `remark` varchar(256) NOT NULL DEFAULT '',
   `reg_name` varchar(256) NOT NULL DEFAULT '',
   `user_id` bigint NOT NULL DEFAULT '0',
   `voice_list_id` bigint NOT NULL,
@@ -150,14 +151,14 @@ CREATE TABLE `subscribe` (
   `key_word` varchar(256) NOT NULL DEFAULT '',
   `limit_sec` int NOT NULL DEFAULT '0',
   `video_order` varchar(128) DEFAULT 'PUB_NEW_FIRST_THEN_OLD',
-  `remark` varchar(256) NOT NULL DEFAULT '',
   `net_cover` varchar(256) NOT NULL DEFAULT '',
   `enable` tinyint NOT NULL DEFAULT '1',
   `crack` tinyint NOT NULL DEFAULT '0',
   `use_video_cover` tinyint NOT NULL DEFAULT '0',
+  `priority` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `subscribe_pk` (`user_id`,`target_id`,`key_word`)
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for subscribe_reg
@@ -185,13 +186,44 @@ CREATE TABLE `sys_user` (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `sys_user_pk` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for upload_detail
 -- ----------------------------
 DROP TABLE IF EXISTS `upload_detail`;
 CREATE TABLE `upload_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `subscribe_id` bigint NOT NULL DEFAULT '0',
+  `local_name` varchar(512) NOT NULL DEFAULT '',
+  `upload_name` varchar(512) NOT NULL DEFAULT '',
+  `user_id` bigint NOT NULL DEFAULT '0',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `voice_offset` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `video_begin_sec` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `video_end_sec` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `voice_id` bigint NOT NULL DEFAULT '0',
+  `voice_list_id` bigint NOT NULL DEFAULT '0',
+  `privacy` tinyint NOT NULL DEFAULT '0',
+  `display_status` varchar(256) NOT NULL DEFAULT 'AUDITING',
+  `get_display_status_times` int NOT NULL DEFAULT '0',
+  `bvid` varchar(256) NOT NULL DEFAULT '',
+  `cid` varchar(256) NOT NULL DEFAULT '',
+  `title` varchar(256) NOT NULL DEFAULT '',
+  `video_info` json DEFAULT NULL,
+  `retry_times` int NOT NULL DEFAULT '0',
+  `status` varchar(64) NOT NULL DEFAULT 'NOT_UPLOAD',
+  `use_video_cover` tinyint NOT NULL DEFAULT '0',
+  `crack` tinyint NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11939 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ----------------------------
+-- Table structure for upload_detail_copy1
+-- ----------------------------
+DROP TABLE IF EXISTS `upload_detail_copy1`;
+CREATE TABLE `upload_detail_copy1` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `subscribe_id` bigint NOT NULL DEFAULT '0',
   `local_name` varchar(512) NOT NULL DEFAULT '',
