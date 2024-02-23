@@ -198,6 +198,7 @@ public class UploadDetailController {
             recentResponse.setUploadStatus(record.getStatus());
             recentResponse.setVoiceId(record.getVoiceId().toString());
             recentResponse.setVoiceListId(record.getVoiceListId().toString());
+            recentResponse.setSubscribeId(record.getSubscribeId());
             recentResponses.add(recentResponse);
         }
         Page<RecentResponse> result = new Page<RecentResponse>(page.getCurrent(), page.getSize(),
