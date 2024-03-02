@@ -2,6 +2,11 @@
 b站视频一键转网易云播客
 
 体验地址
+
+http://nooblong.tech/#/recentsList
+
+或者
+
 http://106.75.218.120/#/recentsList
 
 需要右上角退出再登录
@@ -10,4 +15,3 @@ http://106.75.218.120/#/recentsList
 
 半成品，可能会有各种问题
 
-test edit from mirror private repositories
