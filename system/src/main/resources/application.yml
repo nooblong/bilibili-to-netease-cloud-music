@@ -14,7 +14,7 @@ spring:
     username: 用户名
     password: 密码
     hikari:
-      validation-timeout: 300000
+      validation-timeout: 1200000
   servlet:
     multipart:
       max-file-size: 100000000
