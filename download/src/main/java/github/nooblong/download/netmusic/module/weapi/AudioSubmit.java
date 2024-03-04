@@ -34,7 +34,7 @@ public class AudioSubmit extends SimpleWeApiModule {
         objectNode.put("autoPublish", false);
         objectNode.put("autoPublishText", "");
         objectNode.put("description", queryMap.get("description") != null ? (String) queryMap.get("description") :
-                "upload by nooblong/bilibili-to-netease-cloud-music");
+                "upload by github.com/nooblong/bilibili-to-netease-cloud-music");
         objectNode.put("voiceListId", (String) queryMap.get("voiceListId"));
         objectNode.put("coverImgId", (String) queryMap.get("coverImgId"));
         objectNode.put("dfsId", (String) queryMap.get("docId"));

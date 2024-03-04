@@ -51,7 +51,8 @@ public class UploadSingleAudioUploadMusicStep {
                     StringBuilder desc = new StringBuilder();
                     descList.add("视频bvid: " + bilibiliVideoContext.getBvid());
                     descList.add("b站作者: " + bilibiliVideoContext.getAuthor());
-                    descList.add("upload by nooblong/bilibili-to-netease-cloud-music");
+                    descList.add("一键上传工具: www.nooblong.tech");
+                    descList.add("github: nooblong/bilibili-to-netease-cloud-music");
                     descList.forEach(s -> desc.append(s).append("\n"));
 
                     String uploadName = bilibiliVideoContext.getUploadName();
