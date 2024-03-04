@@ -13,4 +13,5 @@ public class RecentResponse {
     private Integer retryTimes;
     private String voiceId;
     private String voiceListId;
+    private Long subscribeId;
 }
