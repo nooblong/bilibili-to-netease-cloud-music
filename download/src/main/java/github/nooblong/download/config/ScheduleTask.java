@@ -24,17 +24,14 @@ import java.util.concurrent.TimeUnit;
 public class ScheduleTask {
 
     final NetMusicClient netMusicClient;
-    final OkHttpClient okHttpClient;
     final UploadDetailService uploadDetailService;
     final SubscribeService subscribeService;
     final BilibiliUtil bilibiliUtil;
 
     public ScheduleTask(NetMusicClient netMusicClient,
-                        OkHttpClient okHttpClient,
                         UploadDetailService uploadDetailService,
                         SubscribeService service, BilibiliUtil bilibiliUtil) {
         this.netMusicClient = netMusicClient;
-        this.okHttpClient = okHttpClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
         this.bilibiliUtil = bilibiliUtil;

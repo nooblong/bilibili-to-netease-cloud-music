@@ -15,35 +15,36 @@ import github.nooblong.download.netmusic.module.weapi.LoginCellphone;
 import github.nooblong.download.netmusic.module.weapi.LoginQrCheck;
 import github.nooblong.download.netmusic.module.weapi.LoginRefresh;
 import github.nooblong.download.utils.CookieUtil;
+import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
 public class NetMusicClient {
 
-    private final OkHttpClient noCookieClient;
     private final OkHttpClient templateClient;
     private final ModuleFactory moduleFactory;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public NetMusicClient(OkHttpClient client,
-                          ModuleFactory moduleFactory,
+    public NetMusicClient(ModuleFactory moduleFactory,
                           LoginQrCheck loginQrCheck,
                           LoginRefresh loginRefresh,
                           Login login,
                           LoginCellphone loginCellphone) {
-        this.templateClient = client;
-        this.moduleFactory = moduleFactory;
-        this.noCookieClient = client.newBuilder()
-                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+        this.templateClient = new OkHttpClient.Builder()
+                .readTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(5, TimeUnit.MINUTES)
                 .build();
+        this.moduleFactory = moduleFactory;
         this.loginQrCheck = loginQrCheck;
         this.loginRefresh = loginRefresh;
         this.login = login;
@@ -52,19 +53,14 @@ public class NetMusicClient {
 
     public JsonNode getMusicDataByContext(Map<String, Object> params, String key) {
         SysUser user = JwtUtil.verifierFromContext();
-        List<Cookie> cookiesByUser = CookieUtil.getCookiesByUser(user);
-        OkHttpClient client = generateClient(user, cookiesByUser);
-        return getMusicData(params, key, client, getCsrfToken(cookiesByUser), cookiesByUser);
+        return getMusicData(params, key, user.getId());
     }
 
     public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
-        SysUser user = Db.getById(userId, SysUser.class);
-        List<Cookie> cookiesByUser = CookieUtil.getCookiesByUser(user);
-        OkHttpClient client = generateClient(user, cookiesByUser);
-        return getMusicData(queryMap, key, client, getCsrfToken(cookiesByUser), cookiesByUser);
+        return getMusicData(queryMap, key, userId);
     }
 
-    OkHttpClient generateClient(SysUser user, List<Cookie> cookiesByUser) {
+    public OkHttpClient generateClient(SysUser user, List<Cookie> cookiesByUser) {
         return templateClient.newBuilder()
                 .cookieJar(new CookieJar() {
                     @Override
@@ -93,12 +89,20 @@ public class NetMusicClient {
                                 log.error("刷新token出错: {}", e.getMessage());
                             }
                         }
+                        if (url != null && url.toString().contains("/register/anonimous")) {
+                            ObjectNode anonymousCookie = CookieUtil.parseCookiesIn(cookies);
+                            if (anonymousCookie.has("MUSIC_A")) {
+                                log.info("设置游客token成功!");
+                                OkUtil.anonymousToken = anonymousCookie.get("MUSIC_A").asText();
+                            }
+                        }
                     }
 
                     @Override
                     @Nonnull
                     public List<Cookie> loadForRequest(@Nullable HttpUrl url) {
                         log.info("对: {} 使用用户cookie: {}", url, user.getUsername());
+                        log.info("cookie: {}", cookiesByUser);
                         return cookiesByUser;
                     }
                 })
@@ -106,22 +110,21 @@ public class NetMusicClient {
                 .build();
     }
 
-    public JsonNode getMusicDataWithNoCookie(Map<String, Object> queryMap, String key) {
-        return getMusicData(queryMap, key, this.noCookieClient, null, new ArrayList<>());
-    }
-
-    public JsonNode getMusicData(Map<String, Object> queryMap, String key, OkHttpClient client,
-                                 String csrfToken, List<Cookie> cookieList) {
+    public JsonNode getMusicData(Map<String, Object> queryMap, String key, Long userId) {
+        SysUser user = Db.getById(userId, SysUser.class);
+        List<Cookie> cookiesByUser = CookieUtil.getCookiesByUser(user);
         BaseModule baseModule = moduleFactory.getService(key);
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode paramNode = objectMapper.createObjectNode();
         baseModule.genParams(paramNode, queryMap);
         Map<String, String> headerMap = new HashMap<>();
         baseModule.genHeader(headerMap);
-        baseModule.genCookie(cookieList);
+        baseModule.genCookie(cookiesByUser);
+        String csrfToken = getCsrfToken(cookiesByUser);
         if (csrfToken != null) {
             queryMap.put("csrfToken", csrfToken);
         }
+        OkHttpClient client = generateClient(user, cookiesByUser);
         JsonNode result = baseModule.execute(paramNode, headerMap, client);
         baseModule.postProcess(result);
         return result;

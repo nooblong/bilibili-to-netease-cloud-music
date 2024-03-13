@@ -48,7 +48,7 @@ public class ImageUploadFirst extends SimpleWeApiModule {
         headerMap.put("x-nos-token", token);
         headerMap.put("Host", "ymusic.nos-hz.163yun.com");
         headerMap.put("Content-Type", "image/jpeg");
-        headerMap.put("User-Agent", OkUtil.getFixedUserAgent(0));
+        headerMap.put("User-Agent", OkUtil.WEAPI_AGENT);
         headerMap.put("Connection", "close");
         headerMap.put("X-Nos-Meta-Content-Type", "image/jpeg");
     }

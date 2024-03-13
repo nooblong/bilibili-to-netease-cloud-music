@@ -23,11 +23,9 @@ import java.util.HashMap;
 public class NetMusicController {
 
     final NetMusicClient netMusicClient;
-    final OkHttpClient okHttpClient;
 
-    public NetMusicController(NetMusicClient netMusicClient, OkHttpClient okHttpClient) {
+    public NetMusicController(NetMusicClient netMusicClient) {
         this.netMusicClient = netMusicClient;
-        this.okHttpClient = okHttpClient;
     }
 
     @GetMapping("/netmusic/loginStatus")

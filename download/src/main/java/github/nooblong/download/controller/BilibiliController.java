@@ -22,11 +22,9 @@ import java.util.UUID;
 public class BilibiliController {
 
     final BilibiliUtil bilibiliUtil;
-    final OkHttpClient okHttpClient;
 
-    public BilibiliController(BilibiliUtil bilibiliUtil, OkHttpClient okHttpClient) {
+    public BilibiliController(BilibiliUtil bilibiliUtil) {
         this.bilibiliUtil = bilibiliUtil;
-        this.okHttpClient = okHttpClient;
     }
 
     @GetMapping("/bilibili/checkLogin")
@@ -69,7 +67,7 @@ public class BilibiliController {
                 uuid.toString().substring(20));
         JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.
                 get("http://" + Constant.FULL_BILI_API + "/user/User/get_user_info?uid=" + uid
-                        + "&buvid3=" + formattedUUID), okHttpClient);
+                        + "&buvid3=" + formattedUUID), new OkHttpClient());
         return Result.ok("查询成功", jsonResponse);
     }
 

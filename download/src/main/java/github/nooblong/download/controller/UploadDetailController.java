@@ -46,18 +46,15 @@ import java.util.stream.Collectors;
 @RestController
 public class UploadDetailController {
     private final UploadDetailService uploadDetailService;
-    final OkHttpClient okHttpClient;
     final NetMusicClient netMusicClient;
     final BilibiliUtil bilibiliUtil;
     final MessageSender messageSender;
 
     public UploadDetailController(UploadDetailService uploadDetailService,
-                                  OkHttpClient okHttpClient,
                                   NetMusicClient netMusicClient,
                                   BilibiliUtil bilibiliUtil,
                                   MessageSender messageSender) {
         this.uploadDetailService = uploadDetailService;
-        this.okHttpClient = okHttpClient;
         this.messageSender = messageSender;
         this.netMusicClient = netMusicClient;
         this.bilibiliUtil = bilibiliUtil;

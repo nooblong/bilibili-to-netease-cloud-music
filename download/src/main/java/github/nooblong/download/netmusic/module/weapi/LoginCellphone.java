@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 ;
 
@@ -18,12 +19,6 @@ import java.util.Map;
  */
 @Service
 public class LoginCellphone extends SimpleWeApiModule {
-
-    @Override
-    public void genCookie(List<Cookie> cookieList) {
-        cookieList.add(OkUtil.netCookieBuilder().name("os").value("ios").build());
-        cookieList.add(OkUtil.netCookieBuilder().name("appver").value("8.20.21").build());
-    }
 
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {

@@ -21,64 +21,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Slf4j
-@Component
 public class OkUtil {
-    @Bean
-    public OkHttpClient okHttpClient() {
-        return new OkHttpClient.Builder()
-                .readTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(5, TimeUnit.MINUTES)
-                .build();
-    }
 
-
-    public static String[] userAgentList = new String[]
-            {
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69",
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:80.0) Gecko/20100101 Firefox/80.0",
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1",
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1",
-                    "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Mobile Safari/537.36",
-                    "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Mobile Safari/537.36",
-                    "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Mobile Safari/537.36",
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_2 like Mac OS X) AppleWebKit/603.2.4 (KHTML, like Gecko) Mobile/14F89;GameHelper",
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_5) AppleWebKit/603.2.4 (KHTML, like Gecko) Version/10.1.1 Safari/603.2.4",
-                    "Mozilla/5.0 (iPhone; CPU iPhone OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A300 Safari/602.1",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:46.0) Gecko/20100101 Firefox/46.0",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:46.0) Gecko/20100101 Firefox/46.0",
-                    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
-                    "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)",
-                    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)",
-                    "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Win64; x64; Trident/6.0)",
-                    "Mozilla/5.0 (Windows NT 6.3; Win64, x64; Trident/7.0; rv:11.0) like Gecko",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/13.10586",
-                    "Mozilla/5.0 (iPad; CPU OS 10_0 like Mac OS X) AppleWebKit/602.1.38 (KHTML, like Gecko) Version/10.0 Mobile/14A300 Safari/602.1"
-            };
-
-    public static String getRandomUserAgent() {
-        double index = Math.floor(Math.random() * userAgentList.length);
-        return userAgentList[(int) index];
-    }
-
-    public static String getFixedUserAgent(int i) {
-        return userAgentList[i];
-    }
+    public static String anonymousToken = "1f5fa7b6a6a9f81a11886e5186fde7fb74afecc68539838b34fd4c1fc57b40cc4b7f5273fc3921d1f66807bb86d2c6cb1366ed0860abc362e189299846f5e4182c0190c476579d923324751bcc9aaf44c3061cd18d77b7a0";
+    public static final String MOBILE_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1";
+    public static final String PC_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0";
+    public static final String WEAPI_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69";
+    public static final String LINUX_API_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36";
 
     public static Cookie.Builder netCookieBuilder() {
         return new Cookie.Builder().domain("music.163.com");
-    }
-
-    public static Headers getNetHeaders(Map<String, String> header) {
-        Headers.Builder builder = new Headers.Builder();
-        builder.set(HttpHeaders.ACCEPT, "*/*");
-        builder.set(HttpHeaders.CONNECTION, "keep-alive");
-        builder.set(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded");
-        builder.set(HttpHeaders.REFERER, "https://music.163.com");
-        builder.set(HttpHeaders.USER_AGENT, getFixedUserAgent(0));
-        header.forEach(builder::set);
-        return builder.build();
     }
 
     public static Headers justAddHeaders(Map<String, String> header) {
@@ -94,28 +46,42 @@ public class OkUtil {
                 .add("params", weapiEncrypt[0])
                 .add("encSecKey", weapiEncrypt[1])
                 .build();
-        Headers netHeaders = getNetHeaders(header);
-        log.info("请求网易WeApi Header: {}", netHeaders.toMultimap());
-        Request.Builder builder = new Request.Builder().url(url).headers(netHeaders);
+        Headers.Builder headerBuilder = new Headers.Builder();
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
+        header.forEach(headerBuilder::set);
+        Headers headers = headerBuilder.build();
+        log.info("请求网易WeApi Header: {}", headers.toMultimap());
+        Request.Builder builder = new Request.Builder().url(url).headers(headers);
         Request request = builder.method(method.toUpperCase(), formBody).build();
         log.info("请求网易WeApi: {} body: {}", url, jsonNode);
         return request;
     }
 
     public static Request postApi(JsonNode jsonNode, String url, Map<String, String> header, String method) {
+        Headers.Builder headerBuilder = new Headers.Builder();
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
+        header.forEach(headerBuilder::set);
+        Headers headers = headerBuilder.build();
         FormBody.Builder formBuilder = new FormBody.Builder();
         jsonNode.fieldNames().forEachRemaining(s -> formBuilder.add(s, jsonNode.get(s).asText()));
-        Request request = new Request.Builder().url(url).headers(getNetHeaders(header))
+        Request request = new Request.Builder().url(url).headers(headers)
                 .method(method.toUpperCase(), formBuilder.build()).build();
         log.info("请求网易Api: {} body: {}", request, jsonNode);
         return request;
     }
 
     public static Request postEApi(JsonNode jsonNode, String url, String optionsUrl, Map<String, String> header, String method) {
+        Headers.Builder headerBuilder = new Headers.Builder();
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
+        header.forEach(headerBuilder::set);
+        Headers headers = headerBuilder.build();
         String eapiEncrypt = CryptoUtil.eapiEncrypt(url, jsonNode.toString());
         url = url.replaceAll("api", optionsUrl);
         RequestBody formBody = new FormBody.Builder().add("params", eapiEncrypt).build();
-        Request request = new Request.Builder().url(url).headers(getNetHeaders(header))
+        Request request = new Request.Builder().url(url).headers(headers)
                 .method(method.toUpperCase(), formBody).build();
         log.info("请求网易EApi: {} body: {}", request, jsonNode);
         return request;

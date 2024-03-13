@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -49,10 +50,10 @@ public class BilibiliUtil implements InitializingBean {
     private final Map<String, String> credMap = new HashMap<>();
     private static final ThreadLocal<SysUser> threadLocalAdminUser = new ThreadLocal<>();
     final OkHttpClient okHttpClient;
-    private IUserService userService;
+    private final IUserService userService;
 
-    public BilibiliUtil(OkHttpClient okHttpClient, IUserService userService) {
-        this.okHttpClient = okHttpClient;
+    public BilibiliUtil(IUserService userService) {
+        this.okHttpClient = new OkHttpClient.Builder().build();
         this.userService = userService;
         SysUser user = threadLocalAdminUser.get();
         if (user == null) {
@@ -241,7 +242,7 @@ public class BilibiliUtil implements InitializingBean {
         assert topPrivateDomain != null;
         if (topPrivateDomain.equals("b23.tv")) {
             Request request = new Request.Builder().url(url)
-                    .header(HttpHeaders.USER_AGENT, OkUtil.getFixedUserAgent(0)).get().build();
+                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
             try (Response response = okHttpClient.newCall(request).execute()) {
                 HttpUrl httpUrl = response.request().url();
                 String topPrivateDomain1 = httpUrl.topPrivateDomain();
