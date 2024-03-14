@@ -1,11 +1,10 @@
 .idea
 **/target
 **/*.iml
-**/*-local.ymlß
+**/*-local.yml
 *.DS_Store
 **/ffmpeg
 **/ffmpeg.exe
 **/ffprobe
 **/ffprobe.exe
 **/result.mp3
-workingDir/oss/bilibili/*
