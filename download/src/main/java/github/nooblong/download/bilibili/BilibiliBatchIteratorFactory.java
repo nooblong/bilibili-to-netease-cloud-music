@@ -1,6 +1,5 @@
 package github.nooblong.download.bilibili;
 
-import github.nooblong.download.BatchVideoIteratorFactory;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.bilibili.enums.VideoOrder;

@@ -1,6 +1,8 @@
 package github.nooblong.download.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import github.nooblong.download.StatusTypeEnum;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -20,25 +22,20 @@ public class UploadDetail implements Serializable {
     /**
      * 保存在本地的名称, partName-title-aid-cid.ext
      */
+    @TableField(exist = false)
     private String localName;
     private String uploadName;
     private Long userId;
     private Date createTime;
     private Date updateTime;
-    private Double voiceOffset;
-    private Double videoBeginSec;
-    private Double videoEndSec;
+    private Double offset;
+    private Double beginSec;
+    private Double endSec;
     private Long voiceId;
     private Long voiceListId;
     private Long privacy;
-    /**
-     * AUDITING, ONLY_SELF_SEE, ONLINE, FAILED
-     */
-    private String displayStatus;
-    private Long getDisplayStatusTimes;
-    private String videoInfo;
     private Long retryTimes;
-    private String status;
+    private StatusTypeEnum status;
     private String bvid;
     private String cid;
     /**
@@ -47,6 +44,4 @@ public class UploadDetail implements Serializable {
     private String title;
     private Long useVideoCover;
     private Long crack;
-    @Serial
-    private static final long serialVersionUID = 1L;
 }

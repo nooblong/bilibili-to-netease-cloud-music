@@ -1,4 +1,4 @@
-package github.nooblong.download;
+package github.nooblong.download.bilibili;
 
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;

@@ -1,4 +1,4 @@
-package github.nooblong.download;
+package github.nooblong.download.bilibili.enums;
 
 public enum SubscribeTypeEnum {
     UP,

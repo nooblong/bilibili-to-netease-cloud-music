@@ -47,8 +47,4 @@ public class Subscribe implements Serializable {
     @TableField(exist = false)
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();
 
-    @Serial
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
 }

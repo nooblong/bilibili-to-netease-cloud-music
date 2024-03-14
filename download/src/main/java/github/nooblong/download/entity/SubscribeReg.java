@@ -37,7 +37,4 @@ public class SubscribeReg implements Serializable {
      */
     private Integer pos;
 
-    @Serial
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }

@@ -1,7 +1,6 @@
 package github.nooblong.download.mq;
 
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.rabbitmq.client.Channel;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.download.bilibili.BilibiliUtil;
@@ -118,9 +117,9 @@ public class MessageReceiver {
                 .addLong("voiceListId", uploadDetail.getVoiceListId())
                 .addLong("crack", uploadDetail.getCrack())
                 .addLong("useVideoCover", uploadDetail.getUseVideoCover())
-                .addDouble("beginSec", uploadDetail.getVideoBeginSec())
-                .addDouble("endSec", uploadDetail.getVideoEndSec())
-                .addDouble("voiceOffset", uploadDetail.getVoiceOffset())
+                .addDouble("beginSec", uploadDetail.getBeginSec())
+                .addDouble("endSec", uploadDetail.getEndSec())
+                .addDouble("voiceOffset", uploadDetail.getOffset())
                 .addString("customUploadName", uploadDetail.getUploadName())
                 .addDate("date", new Date())
                 .toJobParameters();

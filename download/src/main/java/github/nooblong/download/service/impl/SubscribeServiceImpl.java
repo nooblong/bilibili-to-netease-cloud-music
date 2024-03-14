@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import github.nooblong.download.SubscribeTypeEnum;
+import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;

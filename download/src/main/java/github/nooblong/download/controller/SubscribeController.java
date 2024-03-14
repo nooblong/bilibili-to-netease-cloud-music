@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
-import github.nooblong.download.SubscribeTypeEnum;
+import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliUtil;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.entity.Subscribe;

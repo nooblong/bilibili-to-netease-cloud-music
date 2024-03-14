@@ -28,7 +28,6 @@ import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
 import jakarta.servlet.http.HttpServletRequest;
-import okhttp3.OkHttpClient;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -83,9 +82,9 @@ public class UploadDetailController {
         uploadDetail.setCid(req.getCid());
         uploadDetail.setVoiceListId(req.getVoiceListId());
         uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);
-        uploadDetail.setVideoBeginSec(req.getVoiceBeginSec());
-        uploadDetail.setVideoEndSec(req.getVoiceEndSec());
-        uploadDetail.setVoiceOffset(req.getVoiceOffset());
+        uploadDetail.setBeginSec(req.getVoiceBeginSec());
+        uploadDetail.setEndSec(req.getVoiceEndSec());
+        uploadDetail.setOffset(req.getVoiceOffset());
         uploadDetail.setUploadName(req.getCustomUploadName());
         uploadDetail.setUserId(userId);
 
