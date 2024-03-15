@@ -3,6 +3,7 @@ package github.nooblong.download.batch;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.entity.UploadDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -43,11 +44,8 @@ public class UploadSingleAudioSaveStep {
                         byId.setUploadName(bilibiliVideoContext.getUploadName());
                     }
                     byId.setVoiceId(Long.valueOf(bilibiliVideoContext.getVoiceId()));
-                    byId.setStatus("FINISHED");
+                    byId.setStatus(StatusTypeEnum.AUDITING);
 
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    String json = objectMapper.writeValueAsString(bilibiliVideoContext);
-                    byId.setVideoInfo(json);
                     Db.updateById(byId);
 
                     jobContext.put("voiceId", bilibiliVideoContext.getVoiceId());

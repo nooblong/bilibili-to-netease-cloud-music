@@ -39,10 +39,10 @@ public class UploadSingleAudioGetDataStep {
                     if (StrUtil.isNotEmpty(cid)) {
                         bilibiliVideo.setCid(cid);
                     }
-                    bilibiliUtil.init(bilibiliVideo);
+                    bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
 
                     log.info("getUploadData: {}", bilibiliVideo.getTitle());
-                    Path path = bilibiliUtil.downloadFile(bilibiliVideo);
+                    Path path = bilibiliUtil.downloadFile(bilibiliVideo, bilibiliUtil.getCurrentCred());
                     Path imagePath = bilibiliUtil.downloadCover(bilibiliVideo);
 
                     BilibiliVideoContext bilibiliVideoContext = new BilibiliVideoContext();

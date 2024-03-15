@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.enums.AudioQuality;
@@ -16,6 +15,7 @@ import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
+import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
@@ -24,7 +24,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -44,56 +43,34 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Component
-public class BilibiliUtil implements InitializingBean {
+public class BilibiliUtil {
     @Value("${workingDir:#{null}}")
     private String workingDir;
     private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
 
     @Getter
-    private Map<String, String> credMap = new HashMap<>();
+    private Map<String, String> currentCred = new HashMap<>();
     final OkHttpClient okHttpClient;
-    private final IUserService userService;
+    final IUserService userService;
 
     public BilibiliUtil(IUserService userService) {
-        this.okHttpClient = new OkHttpClient.Builder().build();
         this.userService = userService;
+        this.okHttpClient = new OkHttpClient.Builder().build();
         // 选出当前cred
-        SysUser sysUser = availableBilibiliCookieUser();
+        SysUser sysUser = getAvailableBilibiliCookieUser();
         if (sysUser == null) {
             log.error("初始化BilibiliUtil失败，没有可用cookie");
         }
     }
 
-    private Map<String, String> getCredMapByUser(SysUser user) {
-        try {
-            Map<String, String> result = new HashMap<>();
-            Map<String, String> map = new ObjectMapper().readValue(user.getBiliCookies(), new TypeReference<>() {
-            });
-            result.put("sessdata", map.get("sessdata"));
-            result.put("bili_jct", map.get("bili_jct"));
-            if (map.get("buvid3") != null && !map.get("buvid3").isEmpty()) {
-                result.put("buvid3", map.get("buvid3"));
-            }
-            if (map.get("buvid4") != null && !map.get("buvid4").isEmpty()) {
-                result.put("buvid4", map.get("buvid4"));
-            }
-            if (map.get("ac_time_value") != null && !map.get("ac_time_value").isEmpty()) {
-                result.put("ac_time_value", map.get("ac_time_value"));
-            }
-            return result;
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void checkCredMap() {
-        boolean loginRole3 = getLoginRole3();
-        if (!loginRole3) {
-            this.credMap = new HashMap<>();
+    public void checkCurrentCredMap() {
+        boolean login3 = isLogin3(currentCred);
+        if (!login3) {
+            this.currentCred = new HashMap<>();
             log.info("b站cookie失效，清除，选出新cookie");
-            SysUser sysUser = availableBilibiliCookieUser();
+            SysUser sysUser = getAvailableBilibiliCookieUser();
             if (sysUser != null) {
-                this.credMap = getCredMapByUser(sysUser);
+                this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
                 log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
             } else {
                 log.info("无可用cookie");
@@ -101,16 +78,16 @@ public class BilibiliUtil implements InitializingBean {
         }
     }
 
-    private SysUser availableBilibiliCookieUser() {
+    private SysUser getAvailableBilibiliCookieUser() {
         List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
             log.error("没有可用b站cookie");
             return null;
         }
         for (SysUser sysUser : list) {
-            Map<String, String> userCredMap = getCredMapByUser(sysUser);
-            boolean loginRole3 = getLoginRole3(userCredMap);
-            if (loginRole3) {
+            Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
+            boolean login3 = isLogin3(userCredMap);
+            if (login3) {
                 return sysUser;
             }
         }
@@ -118,52 +95,46 @@ public class BilibiliUtil implements InitializingBean {
         return null;
     }
 
-    public Boolean needRefreshCookie() {
-        JsonNode need = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                + "/Credential/check_refresh", credMap), okHttpClient);
+    public boolean needRefreshCookie(Map<String, String> cred) {
+        JsonNode need = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+                + "/Credential/check_refresh", cred), okHttpClient);
         if (need.get("code").asInt() != 0) {
             throw new RuntimeException("b站账号未登录");
         }
         return need.get("data").asBoolean();
     }
 
-    public JsonNode refresh() {
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                + "/Credential/refresh", credMap), okHttpClient);
+    public Map<String, String> refresh(Map<String, String> cred) {
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+                + "/Credential/refresh", cred), okHttpClient);
         if (response.get("code").asInt() != 0) {
             throw new RuntimeException("刷新cookie出错");
         }
-        return response.get("data");
+        JsonNode data = response.get("data");
+        return new ObjectMapper().convertValue(data, new TypeReference<>() {
+        });
     }
 
-    public void validate(JsonNode cookie) throws JsonProcessingException {
+    public void validate(@Nonnull Map<String, String> cred, Long userId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> map = objectMapper.convertValue(cookie, new TypeReference<>() {
-        });
-        JsonNode node = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                + "/Credential/check_valid", map), okHttpClient);
+        JsonNode node = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+                + "/Credential/check_valid", cred), okHttpClient);
         Assert.isTrue(node.get("code").asInt() == 0 && node.get("data").asBoolean(), "验证cookie出错");
         Assert.isTrue(node.get("data").asBoolean(), "cookie刷新后无法使用");
         // save
-        SysUser byId = userService.getById(Constant.adminUserId);
-        ObjectNode oldCookie = ((ObjectNode) objectMapper.readTree(byId.getBiliCookies()));
-        if (cookie == null) {
-            log.error("validate出错");
-            return;
-        }
-        for (String key : map.keySet()) {
-            String value = map.get(key);
+        Map<String, String> oldCookie = userService.getBilibiliCookieMap(userId);
+        for (String key : cred.keySet()) {
+            String value = cred.get(key);
             if (StrUtil.isNotEmpty(value)) {
                 oldCookie.put(key, value);
             }
         }
-        byId.setBiliCookies(oldCookie.toString());
-        Db.updateById(byId);
+        userService.updateBilibiliCookieByCookieMap(userId, oldCookie);
     }
 
-    public JsonNode getBestStreamUrl(BilibiliVideo bilibiliVideo) {
+    public JsonNode getBestStreamUrl(BilibiliVideo bilibiliVideo, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
         builder.addQueryParameter("bvid", bilibiliVideo.getBvid());
         builder.addQueryParameter("cid", bilibiliVideo.getCidOrDefault());
@@ -173,9 +144,9 @@ public class BilibiliUtil implements InitializingBean {
         return response;
     }
 
-    public JsonNode getUserFavoriteList(String uid) {
+    public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list");
         builder.addQueryParameter("uid", uid);
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
@@ -183,9 +154,9 @@ public class BilibiliUtil implements InitializingBean {
         return response;
     }
 
-    public Path downloadFile(BilibiliVideo video) {
+    public Path downloadFile(BilibiliVideo video, Map<String, String> cred) {
         // 文件名: partName-title-aid-cid.ext
-        JsonNode bestStreamUrl = getBestStreamUrl(video);
+        JsonNode bestStreamUrl = getBestStreamUrl(video, cred);
         ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
         String ext = this.expectQuality.getExt();
         for (int i = 0; i < arrayNode.size(); i++) {
@@ -196,7 +167,7 @@ public class BilibiliUtil implements InitializingBean {
             }
         }
         String fileName = video.getLocalName();
-        Path path = Paths.get(workingDir, Constant.OSS_BASE_FOLDER, Constant.BILI_DOWNLOAD_FOLDER);
+        Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
         AtomicBoolean isDownloaded = new AtomicBoolean(false);
         try (Stream<Path> filesWalk = Files.walk(path, 1)) {
             String finalExt = ext;
@@ -256,7 +227,7 @@ public class BilibiliUtil implements InitializingBean {
             Assert.notNull(response.body(), "下载封面失败");
             log.info("文件大小: {}K", response.body().contentLength() / 1024);
             String fileName = assembleFileExt(video.getLocalCoverName(), "jpg");
-            Path path = Paths.get(workingDir, Constant.OSS_BASE_FOLDER, Constant.BILI_DOWNLOAD_FOLDER);
+            Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
             File downloadedFile = new File(path.toFile(), fileName);
             BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
             sink.writeAll(response.body().source());
@@ -267,7 +238,18 @@ public class BilibiliUtil implements InitializingBean {
         }
     }
 
-    public String getUrlBvid(String url) {
+    public boolean isLogin3(Map<String, String> credMap) {
+        try {
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+                    + "/user/get_self_info", credMap), okHttpClient);
+            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private String getUrlBvid(String url) {
         if (!url.startsWith("http")) {
             url = "https://" + url;
         }
@@ -298,9 +280,9 @@ public class BilibiliUtil implements InitializingBean {
         }
     }
 
-    public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder) {
+    public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
         builder.addQueryParameter("pn", String.valueOf(pn));
@@ -312,9 +294,9 @@ public class BilibiliUtil implements InitializingBean {
                 .setTotalNum(response.get("data").get("page").get("total").asInt());
     }
 
-    public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page) {
+    public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list_content");
         builder.addQueryParameter("page", String.valueOf(page));
         builder.addQueryParameter("media_id", String.valueOf(mediaId));
@@ -324,39 +306,20 @@ public class BilibiliUtil implements InitializingBean {
                 .setTotalNum(response.get("data").get("has_more").asBoolean() ? 1 : 0);
     }
 
-    public static int parseStrTime(String strTime) {
-        // 00:23  01:26
-        // 拆分时分秒
-        String[] timeParts = strTime.split(":");
-        int hours = 0;
-        int minutes = 0;
-        int seconds = 0;
 
-        if (timeParts.length == 2) {
-            minutes = Integer.parseInt(timeParts[0]);
-            seconds = Integer.parseInt(timeParts[1]);
-        } else if (timeParts.length == 3) {
-            hours = Integer.parseInt(timeParts[0]);
-            minutes = Integer.parseInt(timeParts[1]);
-            seconds = Integer.parseInt(timeParts[2]);
-        }
 
-        // 计算总秒数
-        return (hours * 60 * 60) + (minutes * 60) + seconds;
-    }
-
-    public JsonNode getSeriesMeta(String seriesId) {
+    public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
         builder.addQueryParameter("type_", "CommentResourceType(1):parse");
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 
-    public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord) {
+    public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
         builder.addQueryParameter("pn", String.valueOf(pn));
@@ -380,15 +343,17 @@ public class BilibiliUtil implements InitializingBean {
                 url.startsWith("bilibili")) {
             String bvid = getUrlBvid(url);
             return new BilibiliVideo().setBvid(bvid);
-        } else {
+        } else if (url.toLowerCase().startsWith("bv")){
             return new BilibiliVideo().setBvid(url);
+        } else {
+            throw new RuntimeException("未知的输入");
         }
     }
 
-    public void init(BilibiliVideo video) {
+    public void init(BilibiliVideo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
-        credMap.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
         builder.addQueryParameter("bvid", video.getBvid());
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
@@ -396,7 +361,7 @@ public class BilibiliUtil implements InitializingBean {
         Assert.isTrue(response.get("code").asInt() != -1, "请求视频信息错误");
         video.setVideoInfo(response);
         if (video.getHasMultiPart() && video.getCid() == null) {
-            log.warn("这是一个多p视频，且没有设置cid，默认使用p1");
+            log.info("这是一个多p视频，且没有设置cid，默认使用p1");
             video.setCid(video.getDefaultCid());
         }
     }
@@ -414,40 +379,24 @@ public class BilibiliUtil implements InitializingBean {
         return fileExtension;
     }
 
-    public void afterPropertiesSet() {
-        Assert.notNull(workingDir, "工作目录未提供");
-    }
+    public static int parseStrTime(String strTime) {
+        // 00:23  01:26
+        // 拆分时分秒
+        String[] timeParts = strTime.split(":");
+        int hours = 0;
+        int minutes = 0;
+        int seconds = 0;
 
-    public int getPartNumbers(String bvid) {
-        BilibiliVideo video = createByUrl(bvid);
-        init(video);
-        return video.getPartNumbers();
-    }
-
-    public JsonNode getLikes() {
-        return OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                + "/session/get_likes", credMap), okHttpClient);
-    }
-
-    private boolean getLoginRole3() {
-        try {
-            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                    + "/user/get_self_info", credMap), okHttpClient);
-            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
-            return true;
-        } catch (Exception e) {
-            return false;
+        if (timeParts.length == 2) {
+            minutes = Integer.parseInt(timeParts[0]);
+            seconds = Integer.parseInt(timeParts[1]);
+        } else if (timeParts.length == 3) {
+            hours = Integer.parseInt(timeParts[0]);
+            minutes = Integer.parseInt(timeParts[1]);
+            seconds = Integer.parseInt(timeParts[2]);
         }
-    }
 
-    private boolean getLoginRole3(Map<String, String> credMap) {
-        try {
-            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
-                    + "/user/get_self_info", credMap), okHttpClient);
-            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        // 计算总秒数
+        return (hours * 60 * 60) + (minutes * 60) + seconds;
     }
 }

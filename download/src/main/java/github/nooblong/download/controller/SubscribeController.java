@@ -53,7 +53,7 @@ public class SubscribeController {
         Subscribe byId = Db.getById(id, Subscribe.class);
         if (subscribe.getCrack() > 0) {
             Long userId = JwtUtil.verifierFromContext().getId();
-            if (!userId.equals(Constant.adminUserId)) {
+            if (!userId.equals(1L)) {
                 return Result.fail("暂不开放绕过订阅");
             }
         }
@@ -62,7 +62,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliUtil.init(bilibiliVideo);
+            bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
             JsonNode info = bilibiliVideo.getVideoInfo();
             subscribe.setTargetId(info.get("data").get("bvid").asText());
         }
@@ -88,7 +88,7 @@ public class SubscribeController {
         subscribe.setUserId(user.getId());
         if (subscribe.getCrack() > 0) {
             Long id = JwtUtil.verifierFromContext().getId();
-            if (!id.equals(Constant.adminUserId)) {
+            if (!id.equals(1L)) {
                 return Result.fail("暂不开放绕过订阅");
             }
         }
@@ -96,7 +96,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliUtil.init(bilibiliVideo);
+            bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
             JsonNode info = bilibiliVideo.getVideoInfo();
             subscribe.setTargetId(info.get("bvid").asText());
         }

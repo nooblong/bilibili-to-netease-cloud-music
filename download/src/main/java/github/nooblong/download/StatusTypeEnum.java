@@ -10,5 +10,7 @@ public enum StatusTypeEnum {
     FAILED,
     OVER_MAX_RETRY,
     INTERNAL_ERROR,
-    SKIP
+    SKIP,
+    TRANSCODE_FAILED,
+    UNKNOWN
 }

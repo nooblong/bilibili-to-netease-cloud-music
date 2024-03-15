@@ -47,7 +47,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<BilibiliVideo> getUpVideoListFromBilibili(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord) {
-        IteratorCollectionTotal collectionTotal = bilibiliUtil.getUpVideos(upId, ps, pn, userVideoOrder, keyWord);
+        IteratorCollectionTotal collectionTotal = bilibiliUtil.getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliUtil.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         collectionTotal.getData().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()
@@ -64,7 +64,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
 
     public IteratorCollectionTotalList<BilibiliVideo> getPartVideosFromBilibili(String bvid) {
         BilibiliVideo video = bilibiliUtil.createByUrl(bvid);
-        bilibiliUtil.init(video);
+        bilibiliUtil.init(video, bilibiliUtil.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         video.getPartVideos().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()
@@ -92,7 +92,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
         IteratorCollectionTotal collectionVideos = null;
         try {
             collectionVideos = template.execute((RetryCallback<IteratorCollectionTotal, Throwable>)
-                    context -> bilibiliUtil.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder));
+                    context -> bilibiliUtil.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliUtil.getCurrentCred()));
         } catch (Throwable e) {
             log.error("获取合集失败: {}", e.getMessage());
             throw new RuntimeException(e);
@@ -112,7 +112,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<BilibiliVideo> getFavoriteVideoListFromBilibili(String favoriteId, int page) {
-        IteratorCollectionTotal favoriteVideos = bilibiliUtil.getFavoriteVideos(favoriteId, page);
+        IteratorCollectionTotal favoriteVideos = bilibiliUtil.getFavoriteVideos(favoriteId, page, bilibiliUtil.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         favoriteVideos.getData().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()

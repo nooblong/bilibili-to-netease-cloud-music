@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
+import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.netmusic.module.base.BaseModule;
 import github.nooblong.download.netmusic.module.base.ModuleFactory;
@@ -14,16 +15,13 @@ import github.nooblong.download.netmusic.module.weapi.Login;
 import github.nooblong.download.netmusic.module.weapi.LoginCellphone;
 import github.nooblong.download.netmusic.module.weapi.LoginQrCheck;
 import github.nooblong.download.netmusic.module.weapi.LoginRefresh;
-import github.nooblong.download.utils.CookieUtil;
 import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -33,13 +31,15 @@ public class NetMusicClient {
 
     private final OkHttpClient templateClient;
     private final ModuleFactory moduleFactory;
+    private final IUserService userService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public NetMusicClient(ModuleFactory moduleFactory,
+    public NetMusicClient(ModuleFactory moduleFactory, IUserService userService,
                           LoginQrCheck loginQrCheck,
                           LoginRefresh loginRefresh,
                           Login login,
                           LoginCellphone loginCellphone) {
+        this.userService = userService;
         this.templateClient = new OkHttpClient.Builder()
                 .readTimeout(5, TimeUnit.MINUTES)
                 .writeTimeout(5, TimeUnit.MINUTES)
@@ -60,37 +60,35 @@ public class NetMusicClient {
         return getMusicData(queryMap, key, userId);
     }
 
-    public OkHttpClient generateClient(SysUser user, List<Cookie> cookiesByUser) {
+    public OkHttpClient generateClient(Long userId, List<Cookie> cookiesByUser) {
         return templateClient.newBuilder()
                 .cookieJar(new CookieJar() {
                     @Override
                     public void saveFromResponse(@Nullable HttpUrl url, @Nullable List<Cookie> cookies) {
                         if (cookieLoginApi(url)) {
                             if (cookies != null && cookies.size() > 5) {
-                                ObjectNode objectNode = CookieUtil.parseCookiesIn(cookies);
-                                user.setNetCookies(objectNode.toString());
-                                Db.updateById(user);
+                                userService.updateNeteaseCookieByOkhttpCookie(userId, cookies);
                             }
                         }
-                        if (cookieRefreshApi(url)) {
-                            ObjectNode objectNode = CookieUtil.parseCookiesIn(cookies);
-                            try {
-                                String userNetCookiesStr = user.getNetCookies();
-                                ObjectNode userNetCookies = (ObjectNode) objectMapper.readTree(userNetCookiesStr);
-                                objectNode.fields().forEachRemaining(entry -> {
-                                    if (userNetCookies.has(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
-                                        log.info("更新cookie: {}, 与之前相同? {}", entry.getKey(),
-                                                entry.getValue().asText().equals(userNetCookies.get(entry.getKey()).asText()));
-                                        userNetCookies.put(entry.getKey(), entry.getValue().asText());
-                                    }
-                                });
-                                user.setNetCookies(userNetCookies.toString());
-                            } catch (JsonProcessingException e) {
-                                log.error("刷新token出错: {}", e.getMessage());
-                            }
-                        }
+//                        if (cookieRefreshApi(url)) {
+//                            ObjectNode objectNode = CookieUtil.parseCookiesIn(cookies);
+//                            try {
+//                                String userNetCookiesStr = user.getNetCookies();
+//                                ObjectNode userNetCookies = (ObjectNode) objectMapper.readTree(userNetCookiesStr);
+//                                objectNode.fields().forEachRemaining(entry -> {
+//                                    if (userNetCookies.has(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
+//                                        log.info("更新网易cookie: {}, 与之前相同? {}", entry.getKey(),
+//                                                entry.getValue().asText().equals(userNetCookies.get(entry.getKey()).asText()));
+//                                        userNetCookies.put(entry.getKey(), entry.getValue().asText());
+//                                    }
+//                                });
+//                                user.setNetCookies(userNetCookies.toString());
+//                            } catch (JsonProcessingException e) {
+//                                log.error("刷新网易token出错: {}", e.getMessage());
+//                            }
+//                        }
                         if (url != null && url.toString().contains("/register/anonimous")) {
-                            ObjectNode anonymousCookie = CookieUtil.parseCookiesIn(cookies);
+                            ObjectNode anonymousCookie = userService.cookieListToObjectNode(cookies);
                             if (anonymousCookie.has("MUSIC_A")) {
                                 log.info("设置游客token成功!");
                                 OkUtil.anonymousToken = anonymousCookie.get("MUSIC_A").asText();
@@ -101,7 +99,7 @@ public class NetMusicClient {
                     @Override
                     @Nonnull
                     public List<Cookie> loadForRequest(@Nullable HttpUrl url) {
-                        log.info("对: {} 使用用户cookie: {}", url, user.getUsername());
+                        log.info("对: {} 使用用户cookie: {}", url, userId);
                         log.info("cookie: {}", cookiesByUser);
                         return cookiesByUser;
                     }
@@ -111,8 +109,7 @@ public class NetMusicClient {
     }
 
     public JsonNode getMusicData(Map<String, Object> queryMap, String key, Long userId) {
-        SysUser user = Db.getById(userId, SysUser.class);
-        List<Cookie> cookiesByUser = CookieUtil.getCookiesByUser(user);
+        List<Cookie> cookiesByUser = userService.getNeteaseOkhttpCookie(userId);
         BaseModule baseModule = moduleFactory.getService(key);
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode paramNode = objectMapper.createObjectNode();
@@ -124,7 +121,7 @@ public class NetMusicClient {
         if (csrfToken != null) {
             queryMap.put("csrfToken", csrfToken);
         }
-        OkHttpClient client = generateClient(user, cookiesByUser);
+        OkHttpClient client = generateClient(userId, cookiesByUser);
         JsonNode result = baseModule.execute(paramNode, headerMap, client);
         baseModule.postProcess(result);
         return result;

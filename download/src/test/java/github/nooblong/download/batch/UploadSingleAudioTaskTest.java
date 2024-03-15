@@ -5,7 +5,6 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.bilibili.BilibiliUtil;
 import github.nooblong.download.mq.MessageSender;
-import github.nooblong.download.mq.VideoMessage;
 import github.nooblong.download.netmusic.NetMusicClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.Job;
@@ -18,7 +17,6 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 

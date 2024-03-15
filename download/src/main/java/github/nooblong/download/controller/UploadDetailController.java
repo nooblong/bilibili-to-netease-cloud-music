@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
 import github.nooblong.download.api.DataResponse;
@@ -22,11 +23,9 @@ import github.nooblong.download.bilibili.BilibiliUtil;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
-import github.nooblong.download.mq.MessageSender;
-import github.nooblong.download.mq.VideoMessage;
+import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
@@ -47,16 +46,15 @@ public class UploadDetailController {
     private final UploadDetailService uploadDetailService;
     final NetMusicClient netMusicClient;
     final BilibiliUtil bilibiliUtil;
-    final MessageSender messageSender;
+    final MusicQueue musicQueue;
 
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
-                                  BilibiliUtil bilibiliUtil,
-                                  MessageSender messageSender) {
+                                  BilibiliUtil bilibiliUtil, MusicQueue musicQueue) {
         this.uploadDetailService = uploadDetailService;
-        this.messageSender = messageSender;
         this.netMusicClient = netMusicClient;
         this.bilibiliUtil = bilibiliUtil;
+        this.musicQueue = musicQueue;
     }
 
     @GetMapping("/uploadDetail/{id}")
@@ -89,7 +87,7 @@ public class UploadDetailController {
         uploadDetail.setUserId(userId);
 
         if (req.isCrack()) {
-            if (!userId.equals(Constant.adminUserId) && userId >= 10000) {
+            if (!userId.equals(1L)) {
                 return Result.fail("暂不开放");
             } else {
                 uploadDetail.setCrack(1L);
@@ -98,7 +96,7 @@ public class UploadDetailController {
 
         Db.save(uploadDetail);
         
-        messageSender.sendUploadDetailId(uploadDetail.getId(), 10);
+        musicQueue.enQueue(uploadDetail);
         return Result.ok("添加队列成功");
     }
 
@@ -108,15 +106,6 @@ public class UploadDetailController {
         String token = request.getHeader("Access-Token");
         UploadDetail uploadDetail = Db.getById(req.getVoiceDetailId(), UploadDetail.class);
         SysUser user = JwtUtil.verifierToken(token);
-        VideoMessage videoMessage = new VideoMessage().setUrl(uploadDetail.getBvid())
-                .setUploadVoiceListId(Long.valueOf(req.getVoiceListId()))
-                .setUploadUserId(user.getId());
-        ObjectMapper objectMapper = new ObjectMapper();
-        if (uploadDetail.getVideoInfo() != null &&
-                objectMapper.readTree(uploadDetail.getVideoInfo()).has("cid")
-                && !objectMapper.readTree(uploadDetail.getVideoInfo()).get("cid").equals(NullNode.getInstance())) {
-            videoMessage.setCid(objectMapper.readTree(uploadDetail.getVideoInfo()).get("cid").asText());
-        }
         return Result.ok("没做完");
     }
 
@@ -172,9 +161,11 @@ public class UploadDetailController {
             wrapper.in(UploadDetail::getUserId, list.stream().map(SysUser::getId).collect(Collectors.toList()));
         }
         if (status != null && status.equalsIgnoreCase("other")) {
-            wrapper.notIn(UploadDetail::getDisplayStatus, "ONLINE", "ONLY_SELF_SEE", "AUDITING");
+            wrapper.notIn(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name(),
+                    StatusTypeEnum.ONLY_SELF_SEE.name(),
+                    StatusTypeEnum.AUDITING.name());
         } else {
-            wrapper.like(status != null, UploadDetail::getDisplayStatus, status);
+            wrapper.like(status != null, UploadDetail::getStatus, status);
         }
         IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);
 
@@ -183,7 +174,7 @@ public class UploadDetailController {
             RecentResponse recentResponse = new RecentResponse();
             recentResponse.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
             recentResponse.setId(String.valueOf(record.getId()));
-            recentResponse.setDisplayStatus(record.getDisplayStatus());
+            recentResponse.setDisplayStatus(record.getStatus().name());
             recentResponse.setCreateTime(DateUtil.formatDateTime(record.getCreateTime()));
             if (StrUtil.isNotBlank(record.getUploadName())) {
                 recentResponse.setName(record.getUploadName());
@@ -191,7 +182,7 @@ public class UploadDetailController {
                 recentResponse.setName(record.getTitle());
             }
             recentResponse.setRetryTimes(record.getRetryTimes().intValue());
-            recentResponse.setUploadStatus(record.getStatus());
+            recentResponse.setUploadStatus(record.getStatus().name());
             recentResponse.setVoiceId(record.getVoiceId().toString());
             recentResponse.setVoiceListId(record.getVoiceListId().toString());
             recentResponse.setSubscribeId(record.getSubscribeId());
@@ -211,9 +202,11 @@ public class UploadDetailController {
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<UploadDetail>().orderByDesc(UploadDetail::getId);
         wrapper.like(search != null, UploadDetail::getUploadName, search);
-        wrapper.eq(status != null, UploadDetail::getDisplayStatus, status);
+        wrapper.eq(status != null, UploadDetail::getStatus, status);
         if (status != null && status.equals("other")) {
-            wrapper.notIn(UploadDetail::getDisplayStatus, "ONLINE", "ONLY_SELF_SEE", "AUDITING");
+            wrapper.notIn(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name(),
+                    StatusTypeEnum.ONLY_SELF_SEE.name(),
+                    StatusTypeEnum.AUDITING.name());
         }
         wrapper.eq(UploadDetail::getVoiceListId, voiceListId);
         IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);

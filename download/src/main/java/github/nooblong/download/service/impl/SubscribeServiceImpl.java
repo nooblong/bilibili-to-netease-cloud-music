@@ -19,7 +19,7 @@ import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.SubscribeMapper;
-import github.nooblong.download.mq.MessageSender;
+import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,15 +39,14 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         implements SubscribeService {
 
     private final BilibiliBatchIteratorFactory factory;
-    final MessageSender messageSender;
+    final MusicQueue musicQueue;
     final UploadDetailService uploadDetailService;
 
 
-    public SubscribeServiceImpl(BilibiliBatchIteratorFactory factory,
-                                MessageSender messageSender,
+    public SubscribeServiceImpl(BilibiliBatchIteratorFactory factory, MusicQueue musicQueue,
                                 UploadDetailService uploadDetailService) {
         this.factory = factory;
-        this.messageSender = messageSender;
+        this.musicQueue = musicQueue;
         this.uploadDetailService = uploadDetailService;
     }
 
@@ -151,7 +150,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     Assert.notNull(uploadDetail.getId(), "上传->保存数据库失败");
 
                     log.info("上传" + next.getTitle());
-                    messageSender.sendUploadDetailId(uploadDetail.getId(), subscribe.getPriority());
+                    musicQueue.enQueue(uploadDetail);
                     isProcess = true;
                 }
                 if (isProcess) {

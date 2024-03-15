@@ -2,7 +2,6 @@ package github.nooblong.download.config;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.download.bilibili.BilibiliUtil;
@@ -15,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -58,27 +58,23 @@ public class ScheduleTask {
 
     @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void refreshBiliCookie() {
-        if (user.getBiliCookies().isEmpty()) {
-            log.error("没有b站cookie");
-            return;
-        }
-        try {
-            Boolean need = bilibiliUtil.needRefreshCookie();
-            if (!need) {
-                log.info("b站cookie无需更新");
-            } else {
-                JsonNode refresh = bilibiliUtil.refresh();
-                log.info("refresh: {}", refresh.toPrettyString());
-                bilibiliUtil.validate(refresh);
+        List<SysUser> list = Db.list(SysUser.class);
+        for (SysUser sysUser : list) {
+            if (!sysUser.getBiliCookies().isBlank()) {
+                boolean need = bilibiliUtil.needRefreshCookie(bilibiliUtil.getCurrentCred());
+                if (!need) {
+                    log.info("b站cookie无需更新: {}", sysUser.getUsername());
+                } else {
+                    Map<String, String> refresh = bilibiliUtil.refresh(bilibiliUtil.getCurrentCred());
+                    bilibiliUtil.validate(refresh, sysUser.getId());
+                }
             }
-        } catch (JsonProcessingException e) {
-            log.error("b站cookie解析失败");
         }
     }
 
     @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void checkBilibiliCookie() {
-        bilibiliUtil.checkCredMap();
+        bilibiliUtil.checkCurrentCredMap();
     }
 
 }

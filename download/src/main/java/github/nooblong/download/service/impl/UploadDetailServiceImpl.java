@@ -5,9 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.UploadDetailMapper;
-import github.nooblong.download.mq.MessageSender;
+import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
@@ -28,19 +29,22 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         implements UploadDetailService {
 
     final NetMusicClient netMusicClient;
-    final MessageSender messageSender;
+    final MusicQueue musicQueue;
 
-    public UploadDetailServiceImpl(NetMusicClient netMusicClient, MessageSender messageSender) {
+    public UploadDetailServiceImpl(NetMusicClient netMusicClient, MusicQueue musicQueue) {
         this.netMusicClient = netMusicClient;
-        this.messageSender = messageSender;
+        this.musicQueue = musicQueue;
     }
 
     @Override
     public void checkAllAuditStatus() {
 
-        List<UploadDetail> uploadDetailList = lambdaQuery().notIn(UploadDetail::getDisplayStatus,
-                        Arrays.asList("ONLINE", "ONLY_SELF_SEE", "FAILED", "TRANSCODE_FAILED"))
-                .lt(UploadDetail::getGetDisplayStatusTimes, Constant.MAX_GET_AUDIT_STATUS_TIMES)
+        List<UploadDetail> uploadDetailList = lambdaQuery().notIn(UploadDetail::getStatus,
+                        Arrays.asList(StatusTypeEnum.ONLINE.name(),
+                                StatusTypeEnum.ONLY_SELF_SEE.name(),
+                                StatusTypeEnum.FAILED.name(),
+                                StatusTypeEnum.TRANSCODE_FAILED.name()))
+                .lt(UploadDetail::getStatus, Constant.MAX_GET_AUDIT_STATUS_TIMES)
                 .gt(UploadDetail::getVoiceId, 0)
                 .list();
 
@@ -48,13 +52,16 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         for (UploadDetail item : uploadDetailList) {
             try {
                 auditStatus = getAuditStatus(String.valueOf(item.getVoiceId()), item.getUserId());
-                item.setDisplayStatus(auditStatus);
+                try {
+                    item.setStatus(StatusTypeEnum.valueOf(auditStatus));
+                } catch (Exception e) {
+                    item.setStatus(StatusTypeEnum.UNKNOWN);
+                }
             } catch (Exception e) {
-                log.warn("声音ID:{}获取状态失败:{}", item.getVoiceId(), e.getMessage());
-                item.setGetDisplayStatusTimes(item.getGetDisplayStatusTimes() + 1)
-                        .setUpdateTime(new Date());
+                log.error("声音ID:{}获取状态失败:{}", item.getVoiceId(), e.getMessage());
+                item.setRetryTimes(item.getRetryTimes() + 1);
             }
-            item.setGetDisplayStatusTimes(item.getGetDisplayStatusTimes() + 1);
+            item.setRetryTimes(item.getRetryTimes() + 1);
             item.setUpdateTime(new Date());
             updateById(item);
         }
@@ -74,7 +81,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     @Override
     public boolean hasUploaded(Long userId) {
         Long count = lambdaQuery().eq(UploadDetail::getUserId, userId)
-                .eq(UploadDetail::getDisplayStatus, "ONLINE")
+                .eq(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name())
                 .count();
         return count > 0;
     }
@@ -83,9 +90,10 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     public void uploadAllOnlySelfSee(Long voiceListId) {
         List<UploadDetail> onlySelfSee = lambdaQuery()
                 .eq(UploadDetail::getVoiceListId, voiceListId)
-                .and(i -> i.eq(UploadDetail::getDisplayStatus, "ONLY_SELF_SEE").or().eq(UploadDetail::getDisplayStatus, "FINISHED"))
+                .and(i -> i.eq(UploadDetail::getStatus, StatusTypeEnum.ONLY_SELF_SEE.name()).or()
+                        .eq(UploadDetail::getStatus, StatusTypeEnum.ONLY_SELF_SEE.name()))
                 .list();
-        List<Long> toProcessList = new ArrayList<>();
+        List<UploadDetail> toProcessList = new ArrayList<>();
         List<String> duplicateBvid = new ArrayList<>();
 //        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(String.valueOf(voiceListId));
 //        System.out.println(voiceListDetail);
@@ -96,17 +104,17 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
             } else {
                 duplicateBvid.add(uploadDetail.getBvid());
             }
-            log.info("处理: {}, {}", uploadDetail.getUploadName(), uploadDetail.getDisplayStatus());
-            uploadDetail.setStatus("NOT_UPLOAD")
+            log.info("处理: {}, {}", uploadDetail.getUploadName(), uploadDetail.getStatus());
+            uploadDetail.setStatus(StatusTypeEnum.WAIT)
                     .setCrack(1L)
                     .setUseVideoCover(1L)
-                    .setGetDisplayStatusTimes(0L)
+                    .setRetryTimes(0L)
                     .setUploadName("");
-            toProcessList.add(uploadDetail.getId());
+            toProcessList.add(uploadDetail);
         }
         updateBatchById(onlySelfSee, 100);
-        for (Long uploadDetailId : toProcessList) {
-            messageSender.sendUploadDetailId(uploadDetailId, 1);
+        for (UploadDetail uploadDetail : toProcessList) {
+            musicQueue.enQueue(uploadDetail);
         }
     }
 

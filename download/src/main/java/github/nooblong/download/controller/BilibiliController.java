@@ -29,7 +29,7 @@ public class BilibiliController {
 
     @GetMapping("/bilibili/checkLogin")
     public Result<Boolean> checkLogin() {
-        return Result.ok("执行成功", bilibiliUtil.getLoginRole3());
+        return Result.ok("执行成功", !bilibiliUtil.getCurrentCred().isEmpty());
     }
 
     @GetMapping("/download/getVideoInfo")
@@ -37,8 +37,8 @@ public class BilibiliController {
                                                   @RequestParam(required = false, name = "cid") String cid) {
         BilibiliVideo bilibiliVideo = bilibiliUtil.createByUrl(bvid);
         bilibiliVideo.setCid(cid);
-        bilibiliUtil.init(bilibiliVideo);
-        JsonNode videoStreamUrl = bilibiliUtil.getBestStreamUrl(bilibiliVideo);
+        bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
+        JsonNode videoStreamUrl = bilibiliUtil.getBestStreamUrl(bilibiliVideo, bilibiliUtil.getCurrentCred());
         StringBuilder sb = new StringBuilder();
         videoStreamUrl.forEach(audio -> {
             // todo: 1
@@ -66,27 +66,27 @@ public class BilibiliController {
                 uuid.toString().substring(16, 20),
                 uuid.toString().substring(20));
         JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.
-                get("http://" + Constant.FULL_BILI_API + "/user/User/get_user_info?uid=" + uid
+                get(Constant.FULL_BILI_API + "/user/User/get_user_info?uid=" + uid
                         + "&buvid3=" + formattedUUID), new OkHttpClient());
         return Result.ok("查询成功", jsonResponse);
     }
 
     @GetMapping("/download/getSeriesInfo")
     public Result<JsonNode> getFavoriteInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliUtil.getSeriesMeta(id);
+        JsonNode seriesMeta1 = bilibiliUtil.getSeriesMeta(id, bilibiliUtil.getCurrentCred());
         return Result.ok("查询成功", seriesMeta1);
     }
 
     @GetMapping("/download/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
-        JsonNode favoriteList = bilibiliUtil.getUserFavoriteList(uid);
+        JsonNode favoriteList = bilibiliUtil.getUserFavoriteList(uid, bilibiliUtil.getCurrentCred());
         return Result.ok("查询成功", favoriteList);
     }
 
     @GetMapping("/download/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
         BilibiliVideo video = bilibiliUtil.createByUrl(url);
-        bilibiliUtil.init(video);
+        bilibiliUtil.init(video, bilibiliUtil.getCurrentCred());
         if (!video.getHasSeries()) {
             return Result.fail("视频没有合集");
         }
