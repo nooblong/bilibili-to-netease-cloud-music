@@ -46,6 +46,7 @@ public class UploadDetail implements Serializable, Comparator<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
+    private String failReason;
 
     @Override
     public int compare(UploadDetail o1, UploadDetail o2) {

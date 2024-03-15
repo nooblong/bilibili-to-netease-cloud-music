@@ -15,7 +15,13 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.junit.jupiter.api.Test;
+import ws.schild.jave.Encoder;
+import ws.schild.jave.EncoderException;
+import ws.schild.jave.MultimediaObject;
+import ws.schild.jave.encode.AudioAttributes;
+import ws.schild.jave.encode.EncodingAttributes;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -171,6 +177,23 @@ public class TestJava {
         String format = DateUtil.format(parse, "yyyy-MM-dd HH:mm:ss");
         System.out.println(parse.toLocalDateTime());
         System.out.println(format);
+    }
+
+    @Test
+    void testFfmpeg2() throws EncoderException {
+        File source = new File("/Users/lyl/Documents/GitHub/nosync.nosync/bilibili-to-netease-cloud-music-private/workingDir/download/[null]-[【阿梓】不知道起什么标题总之就是可爱~]-[BV1HK41187ud]-[null].m4a");
+        System.out.println(source.exists());
+        File target = new File("/Users/lyl/Documents/GitHub/nosync.nosync/bilibili-to-netease-cloud-music-private/workingDir/download/target.mp3");
+
+        AudioAttributes audioAttributes = new AudioAttributes();
+        audioAttributes.setBitRate(320000);
+
+        EncodingAttributes encodingAttributes = new EncodingAttributes();
+        encodingAttributes.setAudioAttributes(audioAttributes);
+        encodingAttributes.setOutputFormat("mp3");
+
+        Encoder encoder = new Encoder();
+        encoder.encode(new MultimediaObject(source), target, encodingAttributes);
     }
 
 }

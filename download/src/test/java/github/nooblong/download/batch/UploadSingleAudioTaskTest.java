@@ -45,7 +45,6 @@ class UploadSingleAudioTaskTest extends BaseTest {
     @Autowired
     BilibiliUtil bilibiliUtil;
 
-    @Deprecated
     @Test
     public void testUploadSingleAudioTask() throws Exception {
 
