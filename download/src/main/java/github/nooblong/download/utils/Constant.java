@@ -1,8 +1,6 @@
 package github.nooblong.download.utils;
 
 public class Constant {
-
-    public static final long adminUserId = 1L;
     public static final String BILI_API_URL = "localhost";
     public static final int BILI_API_PORT = 9000;
     public static final String FULL_BILI_API = BILI_API_URL + ":" + BILI_API_PORT;

@@ -16,6 +16,7 @@ import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -36,8 +37,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -47,40 +48,74 @@ public class BilibiliUtil implements InitializingBean {
     @Value("${workingDir:#{null}}")
     private String workingDir;
     private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
-    private final Map<String, String> credMap = new HashMap<>();
-    private static final ThreadLocal<SysUser> threadLocalAdminUser = new ThreadLocal<>();
+
+    @Getter
+    private Map<String, String> credMap = new HashMap<>();
     final OkHttpClient okHttpClient;
     private final IUserService userService;
 
     public BilibiliUtil(IUserService userService) {
         this.okHttpClient = new OkHttpClient.Builder().build();
         this.userService = userService;
-        SysUser user = threadLocalAdminUser.get();
-        if (user == null) {
-            user = userService.getById(Constant.adminUserId);
-            threadLocalAdminUser.set(user);
+        // 选出当前cred
+        SysUser sysUser = availableBilibiliCookieUser();
+        if (sysUser == null) {
+            log.error("初始化BilibiliUtil失败，没有可用cookie");
         }
-        setCredMap(user);
     }
 
-    public void setCredMap(SysUser user) {
+    private Map<String, String> getCredMapByUser(SysUser user) {
         try {
+            Map<String, String> result = new HashMap<>();
             Map<String, String> map = new ObjectMapper().readValue(user.getBiliCookies(), new TypeReference<>() {
             });
-            credMap.put("sessdata", map.get("sessdata"));
-            credMap.put("bili_jct", map.get("bili_jct"));
+            result.put("sessdata", map.get("sessdata"));
+            result.put("bili_jct", map.get("bili_jct"));
             if (map.get("buvid3") != null && !map.get("buvid3").isEmpty()) {
-                credMap.put("buvid3", map.get("buvid3"));
+                result.put("buvid3", map.get("buvid3"));
             }
             if (map.get("buvid4") != null && !map.get("buvid4").isEmpty()) {
-                credMap.put("buvid4", map.get("buvid4"));
+                result.put("buvid4", map.get("buvid4"));
             }
             if (map.get("ac_time_value") != null && !map.get("ac_time_value").isEmpty()) {
-                credMap.put("ac_time_value", map.get("ac_time_value"));
+                result.put("ac_time_value", map.get("ac_time_value"));
             }
+            return result;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void checkCredMap() {
+        boolean loginRole3 = getLoginRole3();
+        if (!loginRole3) {
+            this.credMap = new HashMap<>();
+            log.info("b站cookie失效，清除，选出新cookie");
+            SysUser sysUser = availableBilibiliCookieUser();
+            if (sysUser != null) {
+                this.credMap = getCredMapByUser(sysUser);
+                log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
+            } else {
+                log.info("无可用cookie");
+            }
+        }
+    }
+
+    private SysUser availableBilibiliCookieUser() {
+        List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
+        if (list.isEmpty()) {
+            log.error("没有可用b站cookie");
+            return null;
+        }
+        for (SysUser sysUser : list) {
+            Map<String, String> userCredMap = getCredMapByUser(sysUser);
+            boolean loginRole3 = getLoginRole3(userCredMap);
+            if (loginRole3) {
+                return sysUser;
+            }
+        }
+        log.error("没有可用b站cookie");
+        return null;
     }
 
     public Boolean needRefreshCookie() {
@@ -394,14 +429,24 @@ public class BilibiliUtil implements InitializingBean {
                 + "/session/get_likes", credMap), okHttpClient);
     }
 
-    public boolean getLoginRole3() {
+    private boolean getLoginRole3() {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
                     + "/user/get_self_info", credMap), okHttpClient);
             Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
             return true;
         } catch (Exception e) {
-            log.error("b站大会员未登录");
+            return false;
+        }
+    }
+
+    private boolean getLoginRole3(Map<String, String> credMap) {
+        try {
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get("http://" + Constant.FULL_BILI_API
+                    + "/user/get_self_info", credMap), okHttpClient);
+            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }

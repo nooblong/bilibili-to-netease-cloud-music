@@ -70,7 +70,7 @@ public class MessageReceiver {
             Assert.isTrue(bilibiliUtil.getLoginRole3(), "未登录");
         } catch (Exception e) {
             SysUser sysUser = Db.getById(1, SysUser.class);
-            bilibiliUtil.setCredMap(sysUser);
+            bilibiliUtil.getCredMapByUser(sysUser);
             channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);
             log.info("b站账号过期");
             try {

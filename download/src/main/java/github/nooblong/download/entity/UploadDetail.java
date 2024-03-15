@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Date;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Date;
 @TableName(value = "upload_detail")
 @Data
 @Accessors(chain = true)
-public class UploadDetail implements Serializable {
+public class UploadDetail implements Serializable, Comparator<UploadDetail> {
     private Long id;
     private Long subscribeId;
     /**
@@ -44,4 +45,10 @@ public class UploadDetail implements Serializable {
     private String title;
     private Long useVideoCover;
     private Long crack;
+    private Long priority;
+
+    @Override
+    public int compare(UploadDetail o1, UploadDetail o2) {
+        return o1.getPriority().compareTo(o2.getPriority());
+    }
 }

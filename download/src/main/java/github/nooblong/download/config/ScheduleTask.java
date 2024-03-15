@@ -10,11 +10,9 @@ import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +58,6 @@ public class ScheduleTask {
 
     @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void refreshBiliCookie() {
-        SysUser user = Db.getById(1, SysUser.class);
         if (user.getBiliCookies().isEmpty()) {
             log.error("没有b站cookie");
             return;
@@ -77,6 +74,11 @@ public class ScheduleTask {
         } catch (JsonProcessingException e) {
             log.error("b站cookie解析失败");
         }
+    }
+
+    @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void checkBilibiliCookie() {
+        bilibiliUtil.checkCredMap();
     }
 
 }
