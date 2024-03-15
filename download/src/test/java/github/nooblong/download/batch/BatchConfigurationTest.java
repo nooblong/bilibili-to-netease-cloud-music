@@ -48,9 +48,6 @@ class BatchConfigurationTest extends BaseTest {
     @Autowired
     JobRepository jobRepository;
 
-    @Autowired
-    OkHttpClient okHttpClient;
-
     @Test
     void stopJob() throws Exception {
         Set<Long> getUpJob1 = jobOperator.getRunningExecutions("getUpJob");
@@ -94,7 +91,7 @@ class BatchConfigurationTest extends BaseTest {
         params.put("uid", "16662103");
         Request request = OkUtil.get(Constant.FULL_BILI_API + "/user/User/get_videos", params);
         JsonNode response = retryTemplate.execute(context -> {
-            JsonNode responseIn = OkUtil.getJsonResponse(request, okHttpClient);
+            JsonNode responseIn = OkUtil.getJsonResponse(request, new OkHttpClient());
             Assert.isTrue(responseIn.has("status"), "获取视频失败");
             return responseIn;
         }, context -> new ObjectMapper().createObjectNode().put("recovery", "true"));

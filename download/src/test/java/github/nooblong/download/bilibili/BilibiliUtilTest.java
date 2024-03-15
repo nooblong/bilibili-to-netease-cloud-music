@@ -10,6 +10,8 @@ import github.nooblong.download.utils.Constant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Map;
+
 class BilibiliUtilTest extends BaseTest {
 
     @Autowired
@@ -17,8 +19,8 @@ class BilibiliUtilTest extends BaseTest {
 
     @Test
     void validate() throws JsonProcessingException {
-        SysUser byId = Db.getById(Constant.adminUserId, SysUser.class);
-        JsonNode cookie = new ObjectMapper().readTree(byId.getBiliCookies());
-        bilibiliUtil.validate(cookie);
+        SysUser byId = Db.getById(1L, SysUser.class);
+        Map<String, String> bilibiliCookieMap = userService.getBilibiliCookieMap(1L);
+        bilibiliUtil.validate(bilibiliCookieMap, 1L);
     }
 }

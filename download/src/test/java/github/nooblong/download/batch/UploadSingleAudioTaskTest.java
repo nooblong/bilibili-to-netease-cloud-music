@@ -4,7 +4,6 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.bilibili.BilibiliUtil;
-import github.nooblong.download.mq.MessageSender;
 import github.nooblong.download.netmusic.NetMusicClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.Job;
@@ -44,9 +43,6 @@ class UploadSingleAudioTaskTest extends BaseTest {
     NetMusicClient netMusicClient;
 
     @Autowired
-    MessageSender messageSender;
-
-    @Autowired
     BilibiliUtil bilibiliUtil;
 
     @Deprecated
@@ -80,6 +76,7 @@ class UploadSingleAudioTaskTest extends BaseTest {
 
                 .addLong("crack", 0L)
                 .addLong("useVideoCover", 0L)
+                .addString("privacy", "true")
 
                 .addDate("time", new Date())
                 .toJobParameters();

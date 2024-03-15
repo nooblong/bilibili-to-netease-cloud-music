@@ -80,10 +80,11 @@ public class UploadSingleAudioUploadMusicStep {
                     String voiceId;
                     if (uploadUserId != null) {
                         voiceId = doUpload(netMusicClient, ext, uploadName, path, voiceListId, netImageId,
-                                categoryId, secondCategoryId, desc.toString(), uploadUserId);
+                                categoryId, secondCategoryId, desc.toString(), uploadUserId,
+                                jobContext.getString("privacy"));
                     } else {
                         voiceId = doUploadByHttpUser(netMusicClient, ext, uploadName, path, voiceListId, netImageId,
-                                categoryId, secondCategoryId, desc.toString());
+                                categoryId, secondCategoryId, desc.toString(), jobParameters.getString("privacy"));
                     }
                     assert voiceId != null;
                     bilibiliVideoContext.setVoiceId(voiceId);
@@ -96,7 +97,7 @@ public class UploadSingleAudioUploadMusicStep {
 
     private static String doUpload(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
                                    String voiceListId, String coverImgId, String categoryId,
-                                   String secondCategoryId, String description, Long userId) {
+                                   String secondCategoryId, String description, Long userId, String privacy) {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
@@ -127,7 +128,7 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("coverImgId", coverImgId);
         queryMap.put("categoryId", categoryId);
         queryMap.put("secondCategoryId", secondCategoryId);
-        queryMap.put("privacy", "false");
+        queryMap.put("privacy", privacy);
         queryMap.put("description", description);
 
         JsonNode audiouploadthird = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadthird", userId);
@@ -143,7 +144,7 @@ public class UploadSingleAudioUploadMusicStep {
 
     private static String doUploadByHttpUser(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
                                              String voiceListId, String coverImgId, String categoryId,
-                                             String secondCategoryId, String description) {
+                                             String secondCategoryId, String description, String privacy) {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
@@ -174,7 +175,7 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("coverImgId", coverImgId);
         queryMap.put("categoryId", categoryId);
         queryMap.put("secondCategoryId", secondCategoryId);
-        queryMap.put("privacy", "false");
+        queryMap.put("privacy", privacy);
         queryMap.put("description", description);
 
         JsonNode audiouploadthird = netMusicClient.getMusicDataByContext(queryMap, "audiouploadthird");

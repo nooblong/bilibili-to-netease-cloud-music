@@ -41,7 +41,7 @@ public class AudioPreCheck extends SimpleWeApiModule {
 //                        .put("publishTime", 0)
 //                        .put("orderNo", 1))))
         );
-        objectNode.put("privacy", Boolean.valueOf((String) queryMap.get("privacy")));
+        objectNode.put("privacy", (String) queryMap.get("privacy"));
         objectNode.put("publishTime", "0");
         objectNode.put("orderNo", "1");
         ArrayNode arrayNode = objectMapper.createArrayNode().add(objectNode);
