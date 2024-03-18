@@ -1,7 +1,5 @@
 package github.nooblong.download.mq;
 
-import com.baomidou.mybatisplus.extension.toolkit.Db;
-import github.nooblong.common.entity.SysUser;
 import github.nooblong.download.bilibili.BilibiliUtil;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -57,18 +55,12 @@ public class MusicQueue implements Runnable {
             UploadDetail poll = queue.poll();
             if (poll != null) {
                 log.info("消费: {}", poll.getTitle());
-
                 boolean login = netMusicClient.checkLogin(poll.getUserId());
                 if (!login) {
                     log.info("用户网易云账号过期");
                     return;
                 }
-
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                upload(poll);
             }
         }
     }
@@ -93,8 +85,9 @@ public class MusicQueue implements Runnable {
                 .addDate("date", new Date())
                 .toJobParameters();
         try {
-            jobLauncher.run(uploadSingleAudioJob, jobParameters);
-            log.info("处理完毕: {}", uploadDetail.getUploadName());
+            throw new Exception("okokok");
+//            jobLauncher.run(uploadSingleAudioJob, jobParameters);
+//            log.info("处理完毕: {}", uploadDetail.getUploadName());
         } catch (JobExecutionAlreadyRunningException e) {
             log.error("任务已在运行");
         } catch (JobInstanceAlreadyCompleteException e) {
@@ -104,5 +97,4 @@ public class MusicQueue implements Runnable {
             throw new RuntimeException(e);
         }
     }
-
 }
