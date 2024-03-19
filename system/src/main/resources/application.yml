@@ -37,7 +37,7 @@ powerjob:
     # 单个任务追加的工作流上下文最大长度，超过这个长度的会被直接丢弃，默认值 8192
     max-appended-wf-context-length: 4096
     # 同时运行的重量级任务数量上限
-    max-heavy-task-num: 64
+    max-heavyweight-task-num: 64
     # 同时运行的轻量级任务数量上限
     max-lightweight-task-num: 1024
     # 任务返回结果信息的最大长度，超过这个长度的信息会被截断，默认值 8192

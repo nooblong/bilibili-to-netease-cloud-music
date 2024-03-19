@@ -21,9 +21,11 @@ public class GetDataJob implements BasicProcessor {
         String jobParams = Optional.ofNullable(context.getJobParams()).orElse("S");
         logger.info("Current context:{}", context.getWorkflowContext());
         logger.info("Current job params:{}", jobParams);
-        log.info("Current context:{}", context.getWorkflowContext());
-        log.info("Current job params:{}", jobParams);
-
+        for (int i = 0; i < 10; i++) {
+            logger.info("任务运行中...{}", i);
+            Thread.sleep(1000);
+        }
+        logger.info("Finish!");
         // 测试中文问题 #581
         if (jobParams.contains("CN")) {
             return new ProcessResult(true, "任务成功啦！！！");

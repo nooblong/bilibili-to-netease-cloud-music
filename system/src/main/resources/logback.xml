@@ -5,22 +5,15 @@
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
-    <logger name="org.springframework.web" level="DEBUG">
-        <appender-ref ref="POWERJOB_WORKER_APPENDER"/>
-    </logger>
-    <appender name="POWERJOB_WORKER_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>log/powerjob-worker.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>log/powerjob-worker.%d{yyyy-MM-dd}.log</FileNamePattern>
-            <MaxHistory>7</MaxHistory>
-        </rollingPolicy>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-        <append>true</append>
-    </appender>
+    <logger name="org.springframework.web" level="DEBUG"/>
     <logger name="tech.powerjob.worker" level="INFO" additivity="false">
-        <appender-ref ref="POWERJOB_WORKER_APPENDER"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="com.zaxxer.hikari" level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="tech.powerjob" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
     </logger>
 </configuration>
