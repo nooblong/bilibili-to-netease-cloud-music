@@ -18,4 +18,6 @@ public interface UploadDetailService extends IService<UploadDetail> {
     boolean hasUploaded(Long userId);
 
     void uploadAllOnlySelfSee(Long voiceListId);
+
+    List<UploadDetail> listAllWait();
 }

@@ -44,7 +44,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                                 StatusTypeEnum.ONLY_SELF_SEE.name(),
                                 StatusTypeEnum.FAILED.name(),
                                 StatusTypeEnum.TRANSCODE_FAILED.name()))
-                .lt(UploadDetail::getStatus, Constant.MAX_GET_AUDIT_STATUS_TIMES)
+                .lt(UploadDetail::getStatus, Constant.MAX_RETRY_TIMES)
                 .gt(UploadDetail::getVoiceId, 0)
                 .list();
 
@@ -116,6 +116,13 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         for (UploadDetail uploadDetail : toProcessList) {
             musicQueue.enQueue(uploadDetail);
         }
+    }
+
+    @Override
+    public List<UploadDetail> listAllWait() {
+        return lambdaQuery().eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
+                .list();
     }
 
     private String getAuditStatus(String voiceId, Long userId) {

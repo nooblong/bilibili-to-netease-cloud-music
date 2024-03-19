@@ -2,7 +2,9 @@ package github.nooblong.download.job;
 
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.service.SubscribeService;
+import github.nooblong.download.service.UploadDetailService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +19,7 @@ import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 import tech.powerjob.worker.log.OmsLogger;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -28,29 +27,36 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class GetUpJob implements MapReduceProcessor {
 
-    final
-    SubscribeService subscribeService;
+    final SubscribeService subscribeService;
+    final UploadDetailService uploadDetailService;
 
-    public GetUpJob(SubscribeService subscribeService) {
+    public GetUpJob(SubscribeService subscribeService,
+                    UploadDetailService uploadDetailService) {
         this.subscribeService = subscribeService;
+        this.uploadDetailService = uploadDetailService;
     }
 
     @Override
     public ProcessResult process(TaskContext context) throws Exception {
 
-        // PowerJob 提供的日志 API，可支持在控制台指定多种日志模式（在线查看 / 本地打印）。最佳实践：全部使用 OmsLogger 打印日志，开发阶段控制台配置为 在线日志方便开发；上线后调整为本地日志，与直接使用 SLF4J 无异
+        // PowerJob 提供的日志 API，可支持在控制台指定多种日志模式（在线查看 / 本地打印）。
+        // 最佳实践：全部使用 OmsLogger 打印日志，开发阶段控制台配置为 在线日志方便开发；上线后调整为本地日志，与直接使用 SLF4J 无异
         OmsLogger omsLogger = context.getOmsLogger();
 
         // 是否为根任务，一般根任务进行任务的分发
         boolean isRootTask = isRootTask();
-        // Task 名称，除了 MAP 任务其他 taskName 均由开发者自己创建，某种意义上也可以按参数理解（比如多层 MAP 的情况下，taskName 可以命名为，Map_Level1, Map_Level2，最终按 taskName 判断层级进不同的执行分支）
+        // Task 名称，除了 MAP 任务其他 taskName 均由开发者自己创建，某种意义上也可以按参数理解（比如多层 MAP 的情况下
+        // ，taskName 可以命名为，Map_Level1, Map_Level2，最终按 taskName 判断层级进不同的执行分支）
         String taskName = context.getTaskName();
         // 任务参数，控制台任务配置中直接填写的参数
         String jobParamsStr = context.getJobParams();
         // 任务示例参数，运行任务时手动填写的参数（等同于 OpenAPI runJob 的携带的参数）
         String instanceParamsStr = context.getInstanceParams();
 
-        omsLogger.info("[MapReduceDemo] [startExecuteNewTask] jobId:{}, instanceId:{}, taskId:{}, taskName: {}, RetryTimes: {}, isRootTask:{}, jobParams:{}, instanceParams:{}", context.getJobId(), context.getInstanceId(), context.getTaskId(), taskName, context.getCurrentRetryTimes(), isRootTask, jobParamsStr, instanceParamsStr);
+        omsLogger.info("[MapReduceDemo] [startExecuteNewTask] jobId:{}, instanceId:{}," +
+                        " taskId:{}, taskName: {}, RetryTimes: {}, isRootTask:{}, jobParams:{}, instanceParams:{}",
+                context.getJobId(), context.getInstanceId(), context.getTaskId(), taskName, context.getCurrentRetryTimes(),
+                isRootTask, jobParamsStr, instanceParamsStr);
 
         // 常见写法，优先从 InstanceParams 获取参数，取不到再从 JobParams 中获取，灵活性最佳（相当于实现了实例参数重载任务参数）
         String finalParams = StringUtils.isEmpty(instanceParamsStr) ? jobParamsStr : instanceParamsStr;
@@ -58,7 +64,7 @@ public class GetUpJob implements MapReduceProcessor {
 
         if (isRootTask) {
 
-            omsLogger.info("[MapReduceDemo] [RootTask] start execute root task~");
+            omsLogger.info("[获取UP主] [RootTask] start execute root task~");
 
             /*
              * rootTask 内的核心逻辑，即为按自己的业务需求拆分子任务。比如
@@ -76,36 +82,57 @@ public class GetUpJob implements MapReduceProcessor {
             // 构造子任务
             subscribeService.checkAndSave();
             // 需要读取的文件总数
-            Long num = MapUtils.getLong(params, "num", 10L);
-            // 每个子任务携带多少个文件ID（此参数越大，每个子任务就“越大”，如果失败的重试成本就越高。参数越小，每个子任务就越轻，当相应的分片数量会提升，会让 PowerJob 计算开销增大，建议按业务需求合理调配）
+//            Long num = MapUtils.getLong(params, "num", 10L);
+            List<UploadDetail> toProcess = uploadDetailService.listAllWait();
+            if (toProcess.isEmpty()) {
+                return new ProcessResult(true, "获取UP主_SUCCESS,totalNum: 0");
+            }
+            PriorityQueue<UploadDetail> priorityQueue = new PriorityQueue<>();
+            priorityQueue.addAll(toProcess);
+
+            PriorityQueue<UploadDetail> priorityQueue1 = new PriorityQueue<>(priorityQueue);
+            System.out.println();
+            while (!priorityQueue1.isEmpty()) {
+                System.out.print(priorityQueue1.poll().getPriority());
+            }
+            System.out.println();
+            int num = priorityQueue.size();
+            // 每个子任务携带多少个文件ID（此参数越大，每个子任务就“越大”，如果失败的重试成本就越高。参数越小，每个子任务就越轻，
+            // 当相应的分片数量会提升，会让 PowerJob 计算开销增大，建议按业务需求合理调配）
             Long batchSize = MapUtils.getLong(params, "batchSize", 1L);
 
             // 此处模拟从文件读取 num 个 ID，每个子任务携带 batchSize 个 ID 作为一个分片
             List<Long> ids = new ArrayList<>();
-            for (long i = 0; i < num; i++) {
-                ids.add(i);
+            long i = 0;
+            while (!priorityQueue.isEmpty()) {
+                UploadDetail poll = priorityQueue.poll();
+                ids.add(i++);
 
                 if (ids.size() >= batchSize) {
 
                     // 构造自己的子任务，自行传递所有需要的参数
-                    SubTask subTask = new SubTask(ThreadLocalRandom.current().nextLong(), new ArrayList<>(ids), "extra");
+                    SubTask subTask = new SubTask(poll, ThreadLocalRandom.current().nextLong(),
+                            new ArrayList<>(ids), "extra");
                     ids.clear();
 
                     try {
                         /*
                         第一个参数：List<子任务>，map 支持批量操作以减少网络 IO 提升性能，简单起见此处不再示例，开发者可自行优化性能
-                        第二个参数：子任务名称，即后续 Task 执行时从 TaskContext#taskName 拿到的值。某种意义上也可以按参数理解（比如多层 MAP 的情况下，taskName 可以命名为，Map_Level1, Map_Level2，最终按 taskName 判断层级进不同的执行分支）
+                        第二个参数：子任务名称，即后续 Task 执行时从 TaskContext#taskName 拿到的值。某种意义上也可以按参数理解
+                        （比如多层 MAP 的情况下，taskName 可以命名为，Map_Level1, Map_Level2，最终按 taskName 判断层级进不同的执行分支）
                          */
                         map(new ArrayList<>(Collections.singleton(subTask)), "L1_FILE_PROCESS");
+                        Thread.sleep(500);
                     } catch (Exception e) {
                         // 注意 MAP 操作可能抛出异常，建议进行捕获并按需处理
-                        omsLogger.error("[MapReduceDemo] map task failed!", e);
+                        omsLogger.error("[获取UP主] map task failed!", e);
                         throw e;
                     }
                 }
             }
 
             if (!ids.isEmpty()) {
+                omsLogger.error("不应该出现的。。");
                 map(new ArrayList<>(Collections.singleton(new SubTask())), "L1_FILE_PROCESS");
             }
 
@@ -114,25 +141,27 @@ public class GetUpJob implements MapReduceProcessor {
 
         }
 
-        // 如果是简单的二层结构（ROOT - SubTASK），此处一定是子 Task，无需再次判断。否则可使用 TaskContext#taskName 字符串匹配 或 TaskContext#SubTask 对象内自定义参数匹配，进入目标执行分支
+        // 如果是简单的二层结构（ROOT - SubTASK），此处一定是子 Task，无需再次判断。
+        // 否则可使用 TaskContext#taskName 字符串匹配 或 TaskContext#SubTask 对象内自定义参数匹配，进入目标执行分支
 
         // 获取前置节点 map 传递过来的参数，进行业务处理
         SubTask subTask = (SubTask) context.getSubTask();
-        log.info("[MapReduceDemo] [SubTask] taskId:{}, taskName: {}, subTask: {}", context.getTaskId(), taskName, JsonUtils.toJSONString(subTask));
-//        Thread.sleep(MapUtils.getLong(params, "bizProcessCost", 233L));
-        for (int i = 0; i < 10; i++) {
-            omsLogger.info("running...{}", i);
-            Thread.sleep(1000);
+        log.info("[获取UP主] [SubTask] taskId:{}, taskName: {}, subTask: {}", context.getTaskId(), taskName,
+                JsonUtils.toJSONString(subTask));
+        for (int i = 0; i < 1; i++) {
+            omsLogger.info("上传...{} 优先级:{}",
+                    subTask.getUploadDetail().getTitle(), subTask.getUploadDetail().getPriority());
         }
 
+        return new ProcessResult(true, "上传成功:");
         // 模拟有成功有失败的情况，开发者按真实业务执行情况判断即可
-        long successRate = MapUtils.getLong(params, "successRate", 80L);
-        long randomNum = ThreadLocalRandom.current().nextLong(100);
-        if (successRate > randomNum) {
-            return new ProcessResult(true, "PROCESS_SUCCESS:" + randomNum);
-        } else {
-            return new ProcessResult(false, "PROCESS_FAILED:" + randomNum);
-        }
+//        long successRate = MapUtils.getLong(params, "successRate", 80L);
+//        long randomNum = ThreadLocalRandom.current().nextLong(100);
+//        if (successRate > randomNum) {
+//            return new ProcessResult(true, "上传成功:" + randomNum);
+//        } else {
+//            return new ProcessResult(false, "上传失败:" + randomNum);
+//        }
     }
 
     @Override
@@ -144,7 +173,8 @@ public class GetUpJob implements MapReduceProcessor {
         OmsLogger omsLogger = context.getOmsLogger();
         omsLogger.info("================ MapReduceProcessorDemo#reduce ================");
 
-        // 所有 Task 执行结束后，reduce 将会被执行，taskResults 保存了所有子任务的执行结果。（注意 reduce 由于保存了所有子任务的执行结果，在子任务规模巨大时对内存有极大开销，超大型计算任务慎用或使用流式 reduce（开发中））
+        // 所有 Task 执行结束后，reduce 将会被执行，taskResults 保存了所有子任务的执行结果。
+        // （注意 reduce 由于保存了所有子任务的执行结果，在子任务规模巨大时对内存有极大开销，超大型计算任务慎用或使用流式 reduce（开发中））
 
         // 用法举例：统计执行结果
         AtomicLong successCnt = new AtomicLong(0);
@@ -187,6 +217,8 @@ public class GetUpJob implements MapReduceProcessor {
          */
         public SubTask() {
         }
+
+        private UploadDetail uploadDetail;
 
         private Long siteId;
 

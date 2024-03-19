@@ -9,5 +9,5 @@ public class Constant {
     public static final String FFMPEG_FORMAT_FLAC = "flac";
     public static final String FFMPEG_FORMAT_M4A = "m4a";
     public static final int SEARCH_PAGE_SIZE = 30;
-    public static final int MAX_GET_AUDIT_STATUS_TIMES = 5;
+    public static final int MAX_RETRY_TIMES = 5;
 }

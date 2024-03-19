@@ -60,6 +60,9 @@ public class BilibiliUtil {
         SysUser sysUser = getAvailableBilibiliCookieUser();
         if (sysUser == null) {
             log.error("初始化BilibiliUtil失败，没有可用cookie");
+        } else {
+            log.info("使用用户{}的b站cookie", sysUser.getUsername());
+            this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
         }
     }
 

@@ -3,10 +3,12 @@ package github.nooblong.download.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import github.nooblong.download.StatusTypeEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
@@ -16,8 +18,10 @@ import java.util.Date;
  */
 @TableName(value = "upload_detail")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
-public class UploadDetail implements Serializable, Comparator<UploadDetail> {
+public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long id;
     private Long subscribeId;
     /**
@@ -46,10 +50,10 @@ public class UploadDetail implements Serializable, Comparator<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
-    private String failReason;
+    private String log;
 
     @Override
-    public int compare(UploadDetail o1, UploadDetail o2) {
-        return o1.getPriority().compareTo(o2.getPriority());
+    public int compareTo(@NotNull UploadDetail o) {
+        return this.getPriority().compareTo(o.getPriority());
     }
 }
