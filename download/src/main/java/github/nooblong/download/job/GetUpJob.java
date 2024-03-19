@@ -122,7 +122,6 @@ public class GetUpJob implements MapReduceProcessor {
                         （比如多层 MAP 的情况下，taskName 可以命名为，Map_Level1, Map_Level2，最终按 taskName 判断层级进不同的执行分支）
                          */
                         map(new ArrayList<>(Collections.singleton(subTask)), "L1_FILE_PROCESS");
-                        Thread.sleep(500);
                     } catch (Exception e) {
                         // 注意 MAP 操作可能抛出异常，建议进行捕获并按需处理
                         omsLogger.error("[获取UP主] map task failed!", e);
