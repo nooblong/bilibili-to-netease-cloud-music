@@ -11,6 +11,6 @@ import github.nooblong.download.entity.Subscribe;
  */
 public interface SubscribeService extends IService<Subscribe> {
 
-    void checkAndSendMessage();
+    void checkAndSave();
 
 }

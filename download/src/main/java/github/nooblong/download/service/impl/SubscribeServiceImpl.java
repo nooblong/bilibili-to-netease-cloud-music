@@ -9,10 +9,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
+import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.bilibili.enums.VideoOrder;
 import github.nooblong.download.entity.Subscribe;
@@ -24,7 +24,6 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.util.*;
 
@@ -51,7 +50,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     @Override
-    public void checkAndSendMessage() {
+    public void checkAndSave() {
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
@@ -73,7 +72,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 };
 
                 boolean isProcess = false;
-
+                int processNum = 0;
                 while (iterator.hasNext()) {
                     BilibiliVideo next = iterator.next();
                     if (next.getVideoCreateTime() != null &&
@@ -143,30 +142,31 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                         });
                         uploadDetail.setUploadName(result);
                     }
-                    log.info("上传名字: {}, bvid: {}, date: {}",
+                    log.info("保存: {}, bvid: {}, date: {}",
                             uploadDetail.getUploadName(), uploadDetail.getBvid(),
                             DateUtil.format(next.getVideoCreateTime(), DatePattern.NORM_DATE_PATTERN));
                     Db.save(uploadDetail);
-                    Assert.notNull(uploadDetail.getId(), "上传->保存数据库失败");
-
-                    log.info("上传" + next.getTitle());
-                    musicQueue.enQueue(uploadDetail);
                     isProcess = true;
+                    processNum++;
                 }
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
                     log.info("更新订阅处理时间: {}", DateUtil.formatDateTime(new Date()));
                     if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
                         subscribe.setEnable(0);
-                        // 只有第一次是从老到新
                     }
+                    // 只有第一次是从老到新
                     subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
                     updateById(subscribe);
                 } else {
-                    log.info("未处理，无需更新时间");
+                    log.info(DateUtil.now() + " 未检测到新视频");
+                    subscribe.setLog(DateUtil.now() + " 未检测到新视频:");
+                    updateById(subscribe);
                 }
             } catch (Exception e) {
-                log.error("订阅: {} 处理失败: {}", subscribe.getRemark(), e.getMessage());
+                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
+                subscribe.setLog(DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage());
+                updateById(subscribe);
             }
         }
     }

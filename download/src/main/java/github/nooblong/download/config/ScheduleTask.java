@@ -42,7 +42,7 @@ public class ScheduleTask {
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getUpJob() {
-        subscribeService.checkAndSendMessage();
+        subscribeService.checkAndSave();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")

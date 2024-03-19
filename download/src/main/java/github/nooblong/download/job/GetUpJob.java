@@ -2,6 +2,7 @@ package github.nooblong.download.job;
 
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import github.nooblong.download.service.SubscribeService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,6 @@ import tech.powerjob.common.utils.MapUtils;
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.TaskResult;
-import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 import tech.powerjob.worker.log.OmsLogger;
 
@@ -26,7 +26,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Component
 @Slf4j
-public class MapJob implements MapReduceProcessor {
+public class GetUpJob implements MapReduceProcessor {
+
+    final
+    SubscribeService subscribeService;
+
+    public GetUpJob(SubscribeService subscribeService) {
+        this.subscribeService = subscribeService;
+    }
 
     @Override
     public ProcessResult process(TaskContext context) throws Exception {
@@ -67,7 +74,7 @@ public class MapJob implements MapReduceProcessor {
 
 
             // 构造子任务
-
+            subscribeService.checkAndSave();
             // 需要读取的文件总数
             Long num = MapUtils.getLong(params, "num", 10L);
             // 每个子任务携带多少个文件ID（此参数越大，每个子任务就“越大”，如果失败的重试成本就越高。参数越小，每个子任务就越轻，当相应的分片数量会提升，会让 PowerJob 计算开销增大，建议按业务需求合理调配）
