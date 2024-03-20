@@ -15,6 +15,10 @@ import net.bramp.ffmpeg.probe.FFmpegStream;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
 import org.junit.jupiter.api.Test;
+import tech.powerjob.client.PowerJobClient;
+import tech.powerjob.common.response.InstanceInfoDTO;
+import tech.powerjob.common.response.JobInfoDTO;
+import tech.powerjob.common.response.ResultDTO;
 import ws.schild.jave.Encoder;
 import ws.schild.jave.EncoderException;
 import ws.schild.jave.MultimediaObject;
@@ -194,6 +198,17 @@ public class TestJava {
 
         Encoder encoder = new Encoder();
         encoder.encode(new MultimediaObject(source), target, encodingAttributes);
+    }
+
+    @Test
+    void testJob() {
+        PowerJobClient powerJobClient = new PowerJobClient("127.0.0.1:7700", "****", "****");
+        ResultDTO<JobInfoDTO> jobInfoDTOResultDTO = powerJobClient.fetchJob(1L);
+        System.out.println(jobInfoDTOResultDTO);
+        ResultDTO<Integer> integerResultDTO = powerJobClient.fetchInstanceStatus(650633601515257920L);
+        ResultDTO<InstanceInfoDTO> instanceInfoDTOResultDTO = powerJobClient.fetchInstanceInfo(650633601515257920L);
+        System.out.println(integerResultDTO);
+        System.out.println(instanceInfoDTOResultDTO);
     }
 
 }

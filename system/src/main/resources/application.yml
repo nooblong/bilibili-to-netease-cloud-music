@@ -1,5 +1,6 @@
 workingDir: /root/workingDir
 initialDelay: 1
+main: true
 server:
   port: 25565
   tomcat:

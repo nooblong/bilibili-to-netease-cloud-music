@@ -61,6 +61,11 @@
             <artifactId>powerjob-worker-spring-boot-starter</artifactId>
             <version>4.3.9</version>
         </dependency>
+        <dependency>
+            <groupId>tech.powerjob</groupId>
+            <artifactId>powerjob-client</artifactId>
+            <version>4.3.9</version>
+        </dependency>
     </dependencies>
 
     <build>
