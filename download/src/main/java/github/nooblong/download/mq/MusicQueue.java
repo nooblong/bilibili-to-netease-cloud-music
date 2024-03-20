@@ -5,20 +5,16 @@ import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import java.util.Date;
 import java.util.PriorityQueue;
 
 @Slf4j
 @Component
-public class MusicQueue implements Runnable {
+public class MusicQueue implements Runnable, InitializingBean {
 
     final PriorityQueue<UploadDetail> queue;
     final BilibiliUtil bilibiliUtil;
@@ -41,15 +37,15 @@ public class MusicQueue implements Runnable {
     @Override
     public void run() {
         while (true) {
-            try {
-                Assert.isTrue(bilibiliUtil.isLogin3(bilibiliUtil.getCurrentCred()), "未登录");
-            } catch (Exception e) {
+            boolean login3 = bilibiliUtil.isLogin3(bilibiliUtil.getCurrentCred());
+            if (!login3) {
+                log.info("b站账号未登录");
                 try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
+                    Thread.sleep(3600000);
+                    continue;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                continue;
             }
 
             UploadDetail poll = queue.poll();
@@ -57,44 +53,26 @@ public class MusicQueue implements Runnable {
                 log.info("消费: {}", poll.getTitle());
                 boolean login = netMusicClient.checkLogin(poll.getUserId());
                 if (!login) {
-                    log.info("用户网易云账号过期");
+                    log.info("用户网易云账号过期:用户:{},id:{}", poll.getUserId(), poll.getId());
                     return;
                 }
                 upload(poll);
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
     private void upload(UploadDetail uploadDetail) {
+        log.info("处理: {}", uploadDetail.getTitle());
+    }
 
-        // 检查网易、b站登录状态，
-
-        JobParameters jobParameters = new JobParametersBuilder()
-                .addLong("id", uploadDetail.getId())
-                .addString("url", uploadDetail.getBvid())
-                .addString("cid", uploadDetail.getCid())
-                // music
-                .addLong("uploadUserId", uploadDetail.getUserId())
-                .addLong("voiceListId", uploadDetail.getVoiceListId())
-                .addLong("crack", uploadDetail.getCrack())
-                .addLong("useVideoCover", uploadDetail.getUseVideoCover())
-                .addDouble("beginSec", uploadDetail.getBeginSec())
-                .addDouble("endSec", uploadDetail.getEndSec())
-                .addDouble("voiceOffset", uploadDetail.getOffset())
-                .addString("customUploadName", uploadDetail.getUploadName())
-                .addDate("date", new Date())
-                .toJobParameters();
-        try {
-            throw new Exception("okokok");
-//            jobLauncher.run(uploadSingleAudioJob, jobParameters);
-//            log.info("处理完毕: {}", uploadDetail.getUploadName());
-        } catch (JobExecutionAlreadyRunningException e) {
-            log.error("任务已在运行");
-        } catch (JobInstanceAlreadyCompleteException e) {
-            log.error("任务已运行完毕");
-        } catch (Exception e) {
-            log.error("error: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
+    @Override
+    public void afterPropertiesSet() {
+        new Thread(this).start();
+        log.info("开始消费");
     }
 }

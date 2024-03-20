@@ -23,6 +23,7 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import tech.powerjob.worker.log.OmsLogger;
 
 import java.util.*;
 
@@ -47,7 +48,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     @Override
-    public void checkAndSave() {
+    public void checkAndSave(OmsLogger log) {
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
@@ -69,7 +70,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 };
 
                 boolean isProcess = false;
-                int processNum = 0;
                 while (iterator.hasNext()) {
                     BilibiliVideo next = iterator.next();
                     if (next.getVideoCreateTime() != null &&
@@ -144,7 +144,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             DateUtil.format(next.getVideoCreateTime(), DatePattern.NORM_DATE_PATTERN));
                     Db.save(uploadDetail);
                     isProcess = true;
-                    processNum++;
                 }
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
@@ -161,7 +160,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     updateById(subscribe);
                 }
             } catch (Exception e) {
-                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
+                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e);
                 subscribe.setLog(DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage());
                 updateById(subscribe);
                 throw new RuntimeException(e);

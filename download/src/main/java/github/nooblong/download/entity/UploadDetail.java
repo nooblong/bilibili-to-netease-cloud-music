@@ -24,11 +24,6 @@ import java.util.Date;
 public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long id;
     private Long subscribeId;
-    /**
-     * 保存在本地的名称, partName-title-aid-cid.ext
-     */
-    @TableField(exist = false)
-    private String localName;
     private String uploadName;
     private Long userId;
     private Date createTime;

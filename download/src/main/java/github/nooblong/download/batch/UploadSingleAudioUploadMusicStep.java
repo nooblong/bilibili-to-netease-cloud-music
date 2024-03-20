@@ -68,7 +68,7 @@ public class UploadSingleAudioUploadMusicStep {
                     String ext = BilibiliUtil.getFileExt(path.getFileName().toString());
                     JsonNode voiceListDetail;
                     if (uploadUserId == null) {
-                        voiceListDetail = netMusicClient.getVoiceListDetail(voiceListId);
+                        voiceListDetail = netMusicClient.getVoiceListDetail(voiceListId, 0L);
                     } else {
                         voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
                     }
@@ -148,7 +148,7 @@ public class UploadSingleAudioUploadMusicStep {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
-        JsonNode audiouploadalloc = netMusicClient.getMusicDataByContext(queryMap, "audiouploadalloc");
+        JsonNode audiouploadalloc = netMusicClient.getMusicData(queryMap, "audiouploadalloc", 0L);
 
         String docId = audiouploadalloc.get("result").get("docId").asText();
         String objectKey = audiouploadalloc.get("result").get("objectKey").asText();
@@ -157,7 +157,7 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("objectKey", objectKey);
         queryMap.put("token", token);
 
-        JsonNode audiouploadfirst = netMusicClient.getMusicDataByContext(queryMap, "audiouploadfirst");
+        JsonNode audiouploadfirst = netMusicClient.getMusicData(queryMap, "audiouploadfirst", 0L);
         String uploadId = audiouploadfirst.get("uploadId").asText();
         queryMap.put("uploadId", uploadId);
 
@@ -167,7 +167,7 @@ public class UploadSingleAudioUploadMusicStep {
             throw new RuntimeException(e);
         }
 
-        JsonNode audiouploadsecond = netMusicClient.getMusicDataByContext(queryMap, "audiouploadsecond");
+        JsonNode audiouploadsecond = netMusicClient.getMusicData(queryMap, "audiouploadsecond", 0L);
 
         queryMap.put("name", uploadName);
         queryMap.put("uploadResult", audiouploadsecond);
@@ -178,12 +178,12 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("privacy", privacy);
         queryMap.put("description", description);
 
-        JsonNode audiouploadthird = netMusicClient.getMusicDataByContext(queryMap, "audiouploadthird");
+        JsonNode audiouploadthird = netMusicClient.getMusicData(queryMap, "audiouploadthird", 0L);
 
-        JsonNode audioprecheck = netMusicClient.getMusicDataByContext(queryMap, "audioprecheck");
+        JsonNode audioprecheck = netMusicClient.getMusicData(queryMap, "audioprecheck", 0L);
         Assert.isTrue(audioprecheck.get("code").asInt() == 200, "声音发布失败");
 
-        JsonNode audioupload = netMusicClient.getMusicDataByContext(queryMap, "audiosubmit");
+        JsonNode audioupload = netMusicClient.getMusicData(queryMap, "audiosubmit", 0L);
         Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败");
         ArrayNode result = (ArrayNode) audioupload.get("data");
         return result.get(0).asText();

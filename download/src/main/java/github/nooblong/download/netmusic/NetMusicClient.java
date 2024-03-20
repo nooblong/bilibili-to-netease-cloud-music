@@ -51,11 +51,6 @@ public class NetMusicClient {
         this.loginCellphone = loginCellphone;
     }
 
-    public JsonNode getMusicDataByContext(Map<String, Object> params, String key) {
-        SysUser user = JwtUtil.verifierFromContext();
-        return getMusicData(params, key, user.getId());
-    }
-
     public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
         return getMusicData(queryMap, key, userId);
     }
@@ -157,11 +152,11 @@ public class NetMusicClient {
                 ;
     }
 
-    public JsonNode getVoiceListDetail(String voiceListId) {
+    public JsonNode getVoiceListDetail(String voiceListId, Long userId) {
         Map<String, Object> params = new HashMap<>();
         params.put("voiceListId", voiceListId);
         // 获取歌单信息
-        return this.getMusicDataByContext(params, "voiceListDetail").get("data");
+        return this.getMusicDataByUserId(params, "voiceListDetail", userId).get("data");
     }
 
     public JsonNode getVoiceList(String voiceListId, Long userId, Long offset) {

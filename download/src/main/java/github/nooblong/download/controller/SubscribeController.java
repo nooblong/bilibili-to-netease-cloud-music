@@ -68,7 +68,7 @@ public class SubscribeController {
         }
         if (!subscribe.getVoiceListId().equals(byId.getVoiceListId())) {
             // 获取播客图片
-            JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString());
+            JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(), user.getId());
             String text = voiceListDetail.get("coverUrl").asText();
             subscribe.setNetCover(text);
         }
@@ -101,7 +101,7 @@ public class SubscribeController {
             subscribe.setTargetId(info.get("bvid").asText());
         }
         // 获取播客图片
-        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString());
+        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(), user.getId());
         String text = voiceListDetail.get("coverUrl").asText();
         subscribe.setNetCover(text);
         Db.save(subscribe);

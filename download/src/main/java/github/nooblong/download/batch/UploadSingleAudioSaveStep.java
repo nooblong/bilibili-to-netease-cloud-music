@@ -39,7 +39,7 @@ public class UploadSingleAudioSaveStep {
                     Path path = Paths.get(bilibiliVideoContext.getPath());
                     byId.setBvid(bilibiliVideoContext.getBvid());
                     byId.setCid(bilibiliVideoContext.getCid());
-                    byId.setLocalName(path.getFileName().toString());
+//                    byId.setLocalName(path.getFileName().toString());
                     if (StrUtil.isBlank(byId.getUploadName())) {
                         byId.setUploadName(bilibiliVideoContext.getUploadName());
                     }

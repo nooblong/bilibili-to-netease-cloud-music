@@ -80,7 +80,7 @@ public class GetUpJobTest implements MapReduceProcessor {
 
 
             // 构造子任务
-            subscribeService.checkAndSave();
+            subscribeService.checkAndSave(null);
             // 需要读取的文件总数
 //            Long num = MapUtils.getLong(params, "num", 10L);
             List<UploadDetail> toProcess = uploadDetailService.listAllWait();
