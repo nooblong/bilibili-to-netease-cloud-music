@@ -6,7 +6,7 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.VideoInfoResponse;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.utils.Constant;
@@ -21,24 +21,24 @@ import java.util.UUID;
 @RestController
 public class BilibiliController {
 
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
 
-    public BilibiliController(BilibiliUtil bilibiliUtil) {
-        this.bilibiliUtil = bilibiliUtil;
+    public BilibiliController(BilibiliClient bilibiliClient) {
+        this.bilibiliClient = bilibiliClient;
     }
 
     @GetMapping("/bilibili/checkLogin")
     public Result<Boolean> checkLogin() {
-        return Result.ok("执行成功", !bilibiliUtil.getCurrentCred().isEmpty());
+        return Result.ok("执行成功", !bilibiliClient.getCurrentCred().isEmpty());
     }
 
     @GetMapping("/download/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
-        BilibiliVideo bilibiliVideo = bilibiliUtil.createByUrl(bvid);
+        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(bvid);
         bilibiliVideo.setCid(cid);
-        bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
-        JsonNode videoStreamUrl = bilibiliUtil.getBestStreamUrl(bilibiliVideo, bilibiliUtil.getCurrentCred());
+        bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
+        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliVideo, bilibiliClient.getCurrentCred());
         StringBuilder sb = new StringBuilder();
         videoStreamUrl.forEach(audio -> {
             // todo: 1
@@ -73,20 +73,20 @@ public class BilibiliController {
 
     @GetMapping("/download/getSeriesInfo")
     public Result<JsonNode> getFavoriteInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliUtil.getSeriesMeta(id, bilibiliUtil.getCurrentCred());
+        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getCurrentCred());
         return Result.ok("查询成功", seriesMeta1);
     }
 
     @GetMapping("/download/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
-        JsonNode favoriteList = bilibiliUtil.getUserFavoriteList(uid, bilibiliUtil.getCurrentCred());
+        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getCurrentCred());
         return Result.ok("查询成功", favoriteList);
     }
 
     @GetMapping("/download/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
-        BilibiliVideo video = bilibiliUtil.createByUrl(url);
-        bilibiliUtil.init(video, bilibiliUtil.getCurrentCred());
+        BilibiliVideo video = bilibiliClient.createByUrl(url);
+        bilibiliClient.init(video, bilibiliClient.getCurrentCred());
         if (!video.getHasSeries()) {
             return Result.fail("视频没有合集");
         }

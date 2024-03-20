@@ -1,6 +1,6 @@
 package github.nooblong.download.mq;
 
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.util.PriorityQueue;
 
@@ -17,17 +16,17 @@ import java.util.PriorityQueue;
 public class MusicQueue implements Runnable, InitializingBean {
 
     final PriorityQueue<UploadDetail> queue;
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final JobLauncher jobLauncher;
     final Job uploadSingleAudioJob;
 
-    public MusicQueue(BilibiliUtil bilibiliUtil, NetMusicClient netMusicClient, JobLauncher jobLauncher, Job uploadSingleAudioJob) {
+    public MusicQueue(BilibiliClient bilibiliClient, NetMusicClient netMusicClient, JobLauncher jobLauncher, Job uploadSingleAudioJob) {
         this.netMusicClient = netMusicClient;
         this.jobLauncher = jobLauncher;
         this.uploadSingleAudioJob = uploadSingleAudioJob;
         this.queue = new PriorityQueue<>();
-        this.bilibiliUtil = bilibiliUtil;
+        this.bilibiliClient = bilibiliClient;
     }
 
     public void enQueue(UploadDetail uploadDetail) {
@@ -37,17 +36,6 @@ public class MusicQueue implements Runnable, InitializingBean {
     @Override
     public void run() {
         while (true) {
-            boolean login3 = bilibiliUtil.isLogin3(bilibiliUtil.getCurrentCred());
-            if (!login3) {
-                log.info("b站账号未登录");
-                try {
-                    Thread.sleep(3600000);
-                    continue;
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
             UploadDetail poll = queue.poll();
             if (poll != null) {
                 log.info("消费: {}", poll.getTitle());

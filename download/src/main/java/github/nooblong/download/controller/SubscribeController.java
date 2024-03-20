@@ -14,13 +14,12 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +31,14 @@ import java.util.stream.Collectors;
 @RestController
 public class SubscribeController {
 
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final UploadDetailService uploadDetailService;
 
-    public SubscribeController(BilibiliUtil bilibiliUtil,
+    public SubscribeController(BilibiliClient bilibiliClient,
                                NetMusicClient netMusicClient,
                                UploadDetailService uploadDetailService) {
-        this.bilibiliUtil = bilibiliUtil;
+        this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
     }
@@ -62,7 +61,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
+            bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
             JsonNode info = bilibiliVideo.getVideoInfo();
             subscribe.setTargetId(info.get("data").get("bvid").asText());
         }
@@ -96,7 +95,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
+            bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
             JsonNode info = bilibiliVideo.getVideoInfo();
             subscribe.setTargetId(info.get("bvid").asText());
         }

@@ -74,15 +74,15 @@ public class UploadSingleAudioCutImageStep {
             log.info("获取的封面id: {}", imageuploadsecond.toString());
             return imageuploadsecond.get("id").asText();
         } else {
-            JsonNode imageuploadalloc = netMusicClient.getMusicDataByContext(params, "imageuploadalloc");
+            JsonNode imageuploadalloc = netMusicClient.getMusicDataByUserId(params, "imageuploadalloc", 0L);
             String docId = imageuploadalloc.get("result").get("docId").asText();
             String objectKey = imageuploadalloc.get("result").get("objectKey").asText();
             String token = imageuploadalloc.get("result").get("token").asText();
             params.put("docId", docId);
             params.put("objectKey", objectKey);
             params.put("token", token);
-            netMusicClient.getMusicDataByContext(params, "imageuploadfirst");
-            JsonNode imageuploadsecond = netMusicClient.getMusicDataByContext(params, "imageuploadsecond");
+            netMusicClient.getMusicDataByUserId(params, "imageuploadfirst", 0L);
+            JsonNode imageuploadsecond = netMusicClient.getMusicDataByUserId(params, "imageuploadsecond", 0L);
             log.info("获取的封面id: {}", imageuploadsecond.toString());
             return imageuploadsecond.get("id").asText();
         }

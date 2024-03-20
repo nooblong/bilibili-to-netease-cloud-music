@@ -4,7 +4,9 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +34,8 @@ public class NetMusicController {
     public Result<?> getloginStatus() {
         JsonNode loginstatus;
         try {
-            loginstatus = netMusicClient.getMusicDataByContext(new HashMap<>(), "loginstatus");
+            SysUser sysUser = JwtUtil.verifierFromContext();
+            loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
         } catch (ValidateException | IllegalArgumentException e) {
             log.error(e.getMessage());
             return Result.fail("连接网易失败");
@@ -44,7 +47,8 @@ public class NetMusicController {
     public Result<QrResponse> getQrCode() {
         JsonNode loginqrkey;
         try {
-            loginqrkey = netMusicClient.getMusicDataByContext(new HashMap<>(), "loginqrkey");
+            SysUser sysUser = JwtUtil.verifierFromContext();
+            loginqrkey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginqrkey", sysUser.getId());
         } catch (ValidateException | IllegalArgumentException e) {
             log.error(e.getMessage());
             return Result.fail("连接网易失败");

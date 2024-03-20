@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.FfmpegService;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @Slf4j
 public class UploadJob implements BasicProcessor {
 
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final FfmpegService ffmpegService;
 
@@ -40,10 +40,10 @@ public class UploadJob implements BasicProcessor {
     String netImageId;
     BilibiliVideo bilibiliVideo;
 
-    public UploadJob(BilibiliUtil bilibiliUtil,
+    public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService) {
-        this.bilibiliUtil = bilibiliUtil;
+        this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.ffmpegService = ffmpegService;
     }
@@ -78,15 +78,15 @@ public class UploadJob implements BasicProcessor {
     private void getData(OmsLogger log, String bvid, String cid, boolean useVideoCover, Long userId) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
-        BilibiliVideo bilibiliVideo = bilibiliUtil.createByUrl(bvid);
+        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             bilibiliVideo.setCid(cid);
         }
-        bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
+        bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
         this.bilibiliVideo = bilibiliVideo;
-        musicPath = bilibiliUtil.downloadFile(bilibiliVideo, bilibiliUtil.getCurrentCred());
+        musicPath = bilibiliClient.downloadFile(bilibiliVideo, bilibiliClient.getCurrentCred());
         if (useVideoCover) {
-            Path imagePath = bilibiliUtil.downloadCover(bilibiliVideo);
+            Path imagePath = bilibiliClient.downloadCover(bilibiliVideo);
             log.info("下载封面成功");
             this.netImageId = transImage(log, imagePath, netMusicClient, userId);
         }
@@ -129,7 +129,7 @@ public class UploadJob implements BasicProcessor {
         long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
         Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
         long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
-        String ext = BilibiliUtil.getFileExt(musicPath.getFileName().toString());
+        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         this.musicPath = targetPath;
         String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
         String s2 = "码率:" + bitRate1 + "kbps" + "->" + bitRate2 + "kbps";
@@ -143,7 +143,7 @@ public class UploadJob implements BasicProcessor {
         long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
         Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
         long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
-        String ext = BilibiliUtil.getFileExt(musicPath.getFileName().toString());
+        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         this.musicPath = targetPath;
         String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
         String s2 = "码率:" + bitRate1 + "kbps" + "->" + bitRate2 + "kbps";
@@ -166,7 +166,7 @@ public class UploadJob implements BasicProcessor {
             uploadName = uploadName.substring(0, 40);
         }
 
-        String ext = BilibiliUtil.getFileExt(musicPath.getFileName().toString());
+        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
         String categoryId = voiceListDetail.get("categoryId").asText();
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();

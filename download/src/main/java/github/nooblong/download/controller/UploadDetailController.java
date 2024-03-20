@@ -9,8 +9,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
@@ -19,7 +17,7 @@ import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
 import github.nooblong.download.api.DataResponse;
 import github.nooblong.download.api.RecentResponse;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
@@ -45,15 +43,15 @@ import java.util.stream.Collectors;
 public class UploadDetailController {
     private final UploadDetailService uploadDetailService;
     final NetMusicClient netMusicClient;
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
     final MusicQueue musicQueue;
 
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
-                                  BilibiliUtil bilibiliUtil, MusicQueue musicQueue) {
+                                  BilibiliClient bilibiliClient, MusicQueue musicQueue) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
-        this.bilibiliUtil = bilibiliUtil;
+        this.bilibiliClient = bilibiliClient;
         this.musicQueue = musicQueue;
     }
 
@@ -66,7 +64,7 @@ public class UploadDetailController {
     public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
 
-        BilibiliVideo bilibiliVideo = bilibiliUtil.createByUrl(req.getBvid());
+        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(req.getBvid());
         // 查重
         boolean unique = uploadDetailService.isUnique(bilibiliVideo.getBvid(),
                 req.getCid() == null ? "" : req.getCid(),

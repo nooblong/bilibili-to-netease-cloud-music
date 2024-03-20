@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
@@ -24,15 +24,15 @@ public class ScheduleTask {
     final NetMusicClient netMusicClient;
     final UploadDetailService uploadDetailService;
     final SubscribeService subscribeService;
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
-                        SubscribeService service, BilibiliUtil bilibiliUtil) {
+                        SubscribeService service, BilibiliClient bilibiliClient) {
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
-        this.bilibiliUtil = bilibiliUtil;
+        this.bilibiliClient = bilibiliClient;
     }
 
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
@@ -61,12 +61,12 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (!sysUser.getBiliCookies().isBlank()) {
-                boolean need = bilibiliUtil.needRefreshCookie(bilibiliUtil.getCurrentCred());
+                boolean need = bilibiliClient.needRefreshCookie(bilibiliClient.getCurrentCred());
                 if (!need) {
                     log.info("b站cookie无需更新: {}", sysUser.getUsername());
                 } else {
-                    Map<String, String> refresh = bilibiliUtil.refresh(bilibiliUtil.getCurrentCred());
-                    bilibiliUtil.validate(refresh, sysUser.getId());
+                    Map<String, String> refresh = bilibiliClient.refresh(bilibiliClient.getCurrentCred());
+                    bilibiliClient.validate(refresh, sysUser.getId());
                 }
             }
         }
@@ -74,7 +74,7 @@ public class ScheduleTask {
 
     @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void checkBilibiliCookie() {
-        bilibiliUtil.checkCurrentCredMap();
+        bilibiliClient.checkCurrentCredMap();
     }
 
 }

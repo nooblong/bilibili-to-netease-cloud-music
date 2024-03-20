@@ -51,10 +51,6 @@ public class NetMusicClient {
         this.loginCellphone = loginCellphone;
     }
 
-    public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
-        return getMusicData(queryMap, key, userId);
-    }
-
     public OkHttpClient generateClient(Long userId, List<Cookie> cookiesByUser) {
         return templateClient.newBuilder()
                 .cookieJar(new CookieJar() {
@@ -103,7 +99,7 @@ public class NetMusicClient {
                 .build();
     }
 
-    public JsonNode getMusicData(Map<String, Object> queryMap, String key, Long userId) {
+    public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
         List<Cookie> cookiesByUser = userService.getNeteaseOkhttpCookie(userId);
         BaseModule baseModule = moduleFactory.getService(key);
         ObjectMapper objectMapper = new ObjectMapper();

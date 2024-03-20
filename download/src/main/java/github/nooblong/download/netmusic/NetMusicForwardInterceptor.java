@@ -4,7 +4,9 @@ import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.util.JwtUtil;
 import jakarta.annotation.Nonnull;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -44,10 +46,11 @@ public class NetMusicForwardInterceptor implements HandlerInterceptor {
 
         JsonNode musicData;
         try {
-            musicData = bs.getMusicDataByContext(queryMap, key);
+            SysUser sysUser = JwtUtil.verifierFromContext();
+            musicData = bs.getMusicDataByUserId(queryMap, key, sysUser.getId());
         } catch (ValidateException | IllegalArgumentException e) {
             log.error(e.getMessage());
-            musicData = new ObjectMapper().valueToTree(Result.fail(""));
+            musicData = new ObjectMapper().valueToTree(Result.fail("未登录"));
         }
         log.info("response: {}", musicData.toString());
         PrintWriter writer = null;

@@ -1,6 +1,6 @@
 package github.nooblong.download.batch;
 
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
@@ -13,11 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 @Component
@@ -44,7 +41,7 @@ public class UploadSingleAudioCodecCrackAudioStep {
                             endSec != null ? endSec : 0,
                             voiceOffset != null ? voiceOffset : 0);
                     long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
-                    String ext = BilibiliUtil.getFileExt(sourceUrl.getFileName().toString());
+                    String ext = BilibiliClient.getFileExt(sourceUrl.getFileName().toString());
                     bilibiliVideoContext.setPath(targetPath.toString());
                     String s1 = "编码由" + ext + "转为" + Constant.FFMPEG_FORMAT_MP3;
                     String s2 = "码率由" + bitRate1 + "kbps" + "转为" + bitRate2 + "kbps";

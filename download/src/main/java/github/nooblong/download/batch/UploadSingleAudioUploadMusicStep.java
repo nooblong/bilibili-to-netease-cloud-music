@@ -3,7 +3,7 @@ package github.nooblong.download.batch;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
@@ -65,7 +65,7 @@ public class UploadSingleAudioUploadMusicStep {
                         uploadName = uploadName.substring(0, 40);
                     }
 
-                    String ext = BilibiliUtil.getFileExt(path.getFileName().toString());
+                    String ext = BilibiliClient.getFileExt(path.getFileName().toString());
                     JsonNode voiceListDetail;
                     if (uploadUserId == null) {
                         voiceListDetail = netMusicClient.getVoiceListDetail(voiceListId, 0L);
@@ -148,7 +148,7 @@ public class UploadSingleAudioUploadMusicStep {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
-        JsonNode audiouploadalloc = netMusicClient.getMusicData(queryMap, "audiouploadalloc", 0L);
+        JsonNode audiouploadalloc = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadalloc", 0L);
 
         String docId = audiouploadalloc.get("result").get("docId").asText();
         String objectKey = audiouploadalloc.get("result").get("objectKey").asText();
@@ -157,7 +157,7 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("objectKey", objectKey);
         queryMap.put("token", token);
 
-        JsonNode audiouploadfirst = netMusicClient.getMusicData(queryMap, "audiouploadfirst", 0L);
+        JsonNode audiouploadfirst = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadfirst", 0L);
         String uploadId = audiouploadfirst.get("uploadId").asText();
         queryMap.put("uploadId", uploadId);
 
@@ -167,7 +167,7 @@ public class UploadSingleAudioUploadMusicStep {
             throw new RuntimeException(e);
         }
 
-        JsonNode audiouploadsecond = netMusicClient.getMusicData(queryMap, "audiouploadsecond", 0L);
+        JsonNode audiouploadsecond = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadsecond", 0L);
 
         queryMap.put("name", uploadName);
         queryMap.put("uploadResult", audiouploadsecond);
@@ -178,12 +178,12 @@ public class UploadSingleAudioUploadMusicStep {
         queryMap.put("privacy", privacy);
         queryMap.put("description", description);
 
-        JsonNode audiouploadthird = netMusicClient.getMusicData(queryMap, "audiouploadthird", 0L);
+        JsonNode audiouploadthird = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadthird", 0L);
 
-        JsonNode audioprecheck = netMusicClient.getMusicData(queryMap, "audioprecheck", 0L);
+        JsonNode audioprecheck = netMusicClient.getMusicDataByUserId(queryMap, "audioprecheck", 0L);
         Assert.isTrue(audioprecheck.get("code").asInt() == 200, "声音发布失败");
 
-        JsonNode audioupload = netMusicClient.getMusicData(queryMap, "audiosubmit", 0L);
+        JsonNode audioupload = netMusicClient.getMusicDataByUserId(queryMap, "audiosubmit", 0L);
         Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败");
         ArrayNode result = (ArrayNode) audioupload.get("data");
         return result.get(0).asText();

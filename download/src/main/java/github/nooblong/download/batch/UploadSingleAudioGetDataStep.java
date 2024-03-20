@@ -1,12 +1,8 @@
 package github.nooblong.download.batch;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
-import github.nooblong.download.bilibili.BilibiliUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
-import github.nooblong.download.entity.UploadDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
@@ -20,7 +16,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @Slf4j
@@ -28,22 +23,22 @@ public class UploadSingleAudioGetDataStep {
     @Bean
     public Step getUploadData(JobRepository jobRepository,
                               PlatformTransactionManager platformTransactionManager,
-                              BilibiliUtil bilibiliUtil) {
+                              BilibiliClient bilibiliClient) {
         return new StepBuilder("getUploadData", jobRepository)
                 .tasklet((contribution, chunkContext) -> {
                     JobParameters jobParameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
                     String url = jobParameters.getString("url");
                     String cid = jobParameters.getString("cid");
                     assert url != null;
-                    BilibiliVideo bilibiliVideo = bilibiliUtil.createByUrl(url);
+                    BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(url);
                     if (StrUtil.isNotEmpty(cid)) {
                         bilibiliVideo.setCid(cid);
                     }
-                    bilibiliUtil.init(bilibiliVideo, bilibiliUtil.getCurrentCred());
+                    bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
 
                     log.info("getUploadData: {}", bilibiliVideo.getTitle());
-                    Path path = bilibiliUtil.downloadFile(bilibiliVideo, bilibiliUtil.getCurrentCred());
-                    Path imagePath = bilibiliUtil.downloadCover(bilibiliVideo);
+                    Path path = bilibiliClient.downloadFile(bilibiliVideo, bilibiliClient.getCurrentCred());
+                    Path imagePath = bilibiliClient.downloadCover(bilibiliVideo);
 
                     BilibiliVideoContext bilibiliVideoContext = new BilibiliVideoContext();
                     BeanUtils.copyProperties(bilibiliVideo, bilibiliVideoContext);

@@ -18,10 +18,10 @@ import java.util.List;
 @Slf4j
 public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
 
-    final BilibiliUtil bilibiliUtil;
+    final BilibiliClient bilibiliClient;
 
-    public BilibiliBatchIteratorFactory(BilibiliUtil bilibiliUtil) {
-        this.bilibiliUtil = bilibiliUtil;
+    public BilibiliBatchIteratorFactory(BilibiliClient bilibiliClient) {
+        this.bilibiliClient = bilibiliClient;
     }
 
     @Override
@@ -47,11 +47,11 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<BilibiliVideo> getUpVideoListFromBilibili(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord) {
-        IteratorCollectionTotal collectionTotal = bilibiliUtil.getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliUtil.getCurrentCred());
+        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliClient.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         collectionTotal.getData().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()
-                    .setDuration(BilibiliUtil.parseStrTime(jsonNode.get("length").asText()))
+                    .setDuration(BilibiliClient.parseStrTime(jsonNode.get("length").asText()))
                     .setBvid(jsonNode.get("bvid").asText())
                     .setCreateTime(jsonNode.get("created").asLong())
                     .setTitle(jsonNode.get("title").asText());
@@ -63,8 +63,8 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<BilibiliVideo> getPartVideosFromBilibili(String bvid) {
-        BilibiliVideo video = bilibiliUtil.createByUrl(bvid);
-        bilibiliUtil.init(video, bilibiliUtil.getCurrentCred());
+        BilibiliVideo video = bilibiliClient.createByUrl(bvid);
+        bilibiliClient.init(video, bilibiliClient.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         video.getPartVideos().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()
@@ -92,7 +92,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
         IteratorCollectionTotal collectionVideos = null;
         try {
             collectionVideos = template.execute((RetryCallback<IteratorCollectionTotal, Throwable>)
-                    context -> bilibiliUtil.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliUtil.getCurrentCred()));
+                    context -> bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliClient.getCurrentCred()));
         } catch (Throwable e) {
             log.error("获取合集失败: {}", e.getMessage());
             throw new RuntimeException(e);
@@ -112,7 +112,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<BilibiliVideo> getFavoriteVideoListFromBilibili(String favoriteId, int page) {
-        IteratorCollectionTotal favoriteVideos = bilibiliUtil.getFavoriteVideos(favoriteId, page, bilibiliUtil.getCurrentCred());
+        IteratorCollectionTotal favoriteVideos = bilibiliClient.getFavoriteVideos(favoriteId, page, bilibiliClient.getCurrentCred());
         List<BilibiliVideo> data = new ArrayList<>();
         favoriteVideos.getData().forEach(jsonNode -> {
             BilibiliVideo bilibiliVideo = new BilibiliVideo()

@@ -2,7 +2,6 @@ package github.nooblong.download.bilibili;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +42,7 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Component
-public class BilibiliUtil {
+public class BilibiliClient {
     @Value("${workingDir:#{null}}")
     private String workingDir;
     private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
@@ -53,7 +52,7 @@ public class BilibiliUtil {
     final OkHttpClient okHttpClient;
     final IUserService userService;
 
-    public BilibiliUtil(IUserService userService) {
+    public BilibiliClient(IUserService userService) {
         this.userService = userService;
         this.okHttpClient = new OkHttpClient.Builder().build();
         // 选出当前cred
