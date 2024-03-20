@@ -38,12 +38,6 @@ public class MusicQueue implements Runnable, InitializingBean {
         while (true) {
             UploadDetail poll = queue.poll();
             if (poll != null) {
-                log.info("消费: {}", poll.getTitle());
-                boolean login = netMusicClient.checkLogin(poll.getUserId());
-                if (!login) {
-                    log.info("用户网易云账号过期:用户:{},id:{}", poll.getUserId(), poll.getId());
-                    return;
-                }
                 upload(poll);
             }
             try {

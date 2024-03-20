@@ -32,7 +32,6 @@ public class NetMusicClient {
     private final OkHttpClient templateClient;
     private final ModuleFactory moduleFactory;
     private final IUserService userService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public NetMusicClient(ModuleFactory moduleFactory, IUserService userService,
                           LoginQrCheck loginQrCheck,

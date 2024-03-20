@@ -1,15 +1,21 @@
 package github.nooblong.download.job;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.batch.BilibiliVideoContext;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import tech.powerjob.worker.core.processor.ProcessResult;
@@ -22,10 +28,14 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Component
 @Slf4j
@@ -57,18 +67,18 @@ public class UploadJob implements BasicProcessor {
         logger.info("Current context:{}", context.getWorkflowContext());
         logger.info("Current job params:{}", jobParams);
         ObjectMapper objectMapper = new ObjectMapper();
-        UploadJobParam uploadJobParam = objectMapper.readValue(jobParams, UploadJobParam.class);
+        UploadDetail uploadDetail = objectMapper.readValue(jobParams, UploadDetail.class);
 
-        getData(logger, uploadJobParam.getBvid(), uploadJobParam.getCid(),
-                uploadJobParam.getUseVideoCover() == 1, uploadJobParam.getUserId());
-        if (uploadJobParam.getCrack() == 1L) {
-            codecAudioCrack(logger, uploadJobParam.getBeginSec(), uploadJobParam.getEndSec(), uploadJobParam.getOffset());
+        getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
+                uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
+        if (uploadDetail.getCrack() == 1L) {
+            codecAudioCrack(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
         } else {
-            codecAudio(logger, uploadJobParam.getBeginSec(), uploadJobParam.getEndSec(), uploadJobParam.getOffset());
+            codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
         }
 
-        String voiceId = uploadNetease(logger, String.valueOf(uploadJobParam.getVoiceListId()), uploadJobParam.getUserId(),
-                uploadJobParam.getUploadName(), uploadJobParam.getPrivacy());
+        String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
+                uploadDetail.getUploadName(), uploadDetail.getPrivacy());
 
         logger.info("单曲上传成功, 声音id:[{}]", voiceId);
         return new ProcessResult(true, "单曲上传成功, 声音id:[" + voiceId + "]");
@@ -225,6 +235,29 @@ public class UploadJob implements BasicProcessor {
         Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败");
         ArrayNode result = (ArrayNode) audioupload.get("data");
         return result.get(0).asText();
+    }
+
+    private void clear(OmsLogger log, UploadDetail uploadDetail, Long voiceId) {
+        uploadDetail.setVoiceId(voiceId);
+        uploadDetail.setStatus(StatusTypeEnum.AUDITING);
+        Db.updateById(uploadDetail);
+        log.info("数据库数据已更新");
+        // 清理数据
+        try (Stream<Path> walk = Files.walk(musicPath.getParent())) {
+            walk.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .peek(System.out::println)
+                    .forEach(file -> {
+                        if (!file.equals(musicPath.getParent().toFile())) {
+                            boolean delete = file.delete();
+                            if (!delete) {
+                                log.error("删除失败: {}", file.getName());
+                            }
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

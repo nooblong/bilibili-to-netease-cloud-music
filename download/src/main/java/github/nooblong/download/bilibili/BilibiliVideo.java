@@ -31,10 +31,7 @@ public class BilibiliVideo implements Serializable {
     private Long createTime;
 
     public BilibiliVideo setBvid(String bvid) {
-        Assert.isTrue(!bvid.startsWith("http") &&
-                !bvid.startsWith("www.") &&
-                !bvid.startsWith("b23.tv") &&
-                !bvid.startsWith("bilibili"), "只能是纯正bvid");
+        Assert.isTrue(bvid.toLowerCase().startsWith("bv"), "只能是BV开头");
         this.bvid = bvid;
         return this;
     }
