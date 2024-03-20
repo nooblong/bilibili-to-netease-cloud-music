@@ -3,18 +3,12 @@ initialDelay: 1
 main: true
 server:
   port: 25565
-  tomcat:
-    max-http-form-post-size: 50MB
 spring:
-  session:
-    timeout: 10
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/netmusic?serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: 用户名
     password: 密码
-    hikari:
-      validation-timeout: 1200000
   servlet:
     multipart:
       max-file-size: 100000000
