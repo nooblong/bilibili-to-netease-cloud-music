@@ -6,8 +6,6 @@ import github.nooblong.download.bilibili.enums.VideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -72,8 +70,7 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
                     .setBvid(bvid)
                     .setCid(jsonNode.get("cid").asText())
                     .setPartName(jsonNode.get("part").asText())
-                    .setTitle(jsonNode.get("part").asText())
-                    ;
+                    .setTitle(jsonNode.get("part").asText());
             data.add(simpleVideoInfo);
         });
         IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
@@ -83,16 +80,9 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
 
     public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
                                                                                            CollectionVideoOrder collectionVideoOrder) {
-        RetryTemplate template = RetryTemplate.builder()
-                .maxAttempts(15)
-                .fixedBackoff(1000)
-                .retryOn(Exception.class)
-                .build();
-
         IteratorCollectionTotal collectionVideos = null;
         try {
-            collectionVideos = template.execute((RetryCallback<IteratorCollectionTotal, Throwable>)
-                    context -> bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliClient.getCurrentCred()));
+            collectionVideos = bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliClient.getCurrentCred());
         } catch (Throwable e) {
             log.error("获取合集失败: {}", e.getMessage());
             throw new RuntimeException(e);

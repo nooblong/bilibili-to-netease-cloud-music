@@ -48,11 +48,11 @@ public abstract class SimpleWeApiModule implements BaseModule {
         cookieList.add(OkUtil.netCookieBuilder().name("_ntes_nuid").value(sb.toString()).build());
         if (!getUrl().contains("login")) {
             random.nextBytes(randomBytes);
-            StringBuilder sb2 = new StringBuilder();
+            String sb2 = "";
             for (byte b : randomBytes) {
                 sb.append(String.format("%02x", b & 0xFF));
             }
-            cookieList.add(OkUtil.netCookieBuilder().name("NMTID").value(sb2.toString()).build());
+            cookieList.add(OkUtil.netCookieBuilder().name("NMTID").value(sb2).build());
         }
         boolean hasMusicU = false;
         boolean hasMusicA = false;

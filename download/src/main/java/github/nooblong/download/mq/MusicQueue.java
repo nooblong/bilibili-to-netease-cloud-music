@@ -4,8 +4,6 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
@@ -18,13 +16,9 @@ public class MusicQueue implements Runnable, InitializingBean {
     final PriorityQueue<UploadDetail> queue;
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
-    final JobLauncher jobLauncher;
-    final Job uploadSingleAudioJob;
 
-    public MusicQueue(BilibiliClient bilibiliClient, NetMusicClient netMusicClient, JobLauncher jobLauncher, Job uploadSingleAudioJob) {
+    public MusicQueue(BilibiliClient bilibiliClient, NetMusicClient netMusicClient) {
         this.netMusicClient = netMusicClient;
-        this.jobLauncher = jobLauncher;
-        this.uploadSingleAudioJob = uploadSingleAudioJob;
         this.queue = new PriorityQueue<>();
         this.bilibiliClient = bilibiliClient;
     }

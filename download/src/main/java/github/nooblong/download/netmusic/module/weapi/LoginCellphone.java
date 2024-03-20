@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-;
-
 /**
  * 手机登录
  */

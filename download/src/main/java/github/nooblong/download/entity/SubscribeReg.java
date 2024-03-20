@@ -16,25 +16,10 @@ import lombok.Data;
 @TableName(value ="subscribe_reg")
 @Data
 public class SubscribeReg implements Serializable {
-    /**
-     * 
-     */
     @TableId(type = IdType.AUTO)
     private Long id;
-
-    /**
-     * 
-     */
     private Long subscribeId;
-
-    /**
-     * 
-     */
     private String regex;
-
-    /**
-     * 
-     */
     private Integer pos;
 
 }

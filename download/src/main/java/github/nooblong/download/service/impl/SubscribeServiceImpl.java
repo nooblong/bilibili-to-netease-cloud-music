@@ -72,17 +72,18 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 boolean isProcess = false;
                 while (iterator.hasNext()) {
                     SimpleVideoInfo next = iterator.next();
-                    if (next.getVideoCreateTime() != null &&
+                    if (next.getCreateTime() != null &&
                             // 倒序就全部遍历，没办法看时间
                             subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())
-                            && DateUtil.compare(next.getVideoCreateTime(), subscribe.getProcessTime()) < 0) {
+                            && DateUtil.compare(new Date(next.getCreateTime() * 1000), subscribe.getProcessTime()) < 0) {
                         log.info("遍历达到处理时间: {}", DateUtil.formatDateTime(subscribe.getProcessTime()));
                         break;
                     }
                     // 判断上传时间区间
-                    if (next.getVideoCreateTime() != null &&
-                            !DateUtil.isIn(next.getVideoCreateTime(), subscribe.getFromTime(), subscribe.getToTime())) {
-                        log.info("跳过非区间: {}", DateUtil.formatDateTime(next.getVideoCreateTime()));
+                    if (next.getCreateTime() != null &&
+                            !DateUtil.isIn(new Date(next.getCreateTime() * 1000), subscribe.getFromTime(), subscribe.getToTime())) {
+                        log.info("跳过非区间: {}", DateUtil.formatDateTime(
+                                new Date(next.getCreateTime() * 1000)));
                         continue;
                     }
 
@@ -126,7 +127,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             String content = match.group(0);
                             content = content.substring(1, content.length() - 1);
                             if (content.equals("pubdate")) {
-                                Date videoCreateTime = next.getVideoCreateTime();
+                                Date videoCreateTime = new Date(next.getCreateTime());
                                 return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
                             } else if (NumberUtil.isNumber(content)) {
                                 if (replaceMap.containsKey(Integer.valueOf(content))) {
@@ -141,7 +142,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     }
                     log.info("保存: {}, bvid: {}, date: {}",
                             uploadDetail.getUploadName(), uploadDetail.getBvid(),
-                            DateUtil.format(next.getVideoCreateTime(), DatePattern.NORM_DATE_PATTERN));
+                            DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
                     Db.save(uploadDetail);
                     isProcess = true;
                 }

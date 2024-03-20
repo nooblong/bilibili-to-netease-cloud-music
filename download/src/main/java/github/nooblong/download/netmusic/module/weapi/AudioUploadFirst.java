@@ -48,8 +48,7 @@ public class AudioUploadFirst extends SimpleWeApiModule {
         ObjectMapper objectMapper = new ObjectMapper();
         Document xmlResponse = OkUtil.getXmlResponse(OkUtil.postWeApi(objectMapper.createObjectNode(),
                 getUrl(), headerMap, getMethod()), client);
-        http:
-//nos.netease.com/doc/NOS_User_Manual.pdf
+        //nos.netease.com/doc/NOS_User_Manual.pdf
         assert xmlResponse != null;
         String uploadId = XmlUtil.getRootElement(xmlResponse).getElementsByTagName("UploadId").item(0).getTextContent();
         if (uploadId == null) {
