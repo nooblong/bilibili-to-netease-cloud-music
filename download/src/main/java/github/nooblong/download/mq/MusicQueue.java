@@ -41,6 +41,9 @@ public class MusicQueue implements Runnable, InitializingBean {
     @Value("${powerjob.worker.password}")
     private String password;
 
+    @Value("${main}")
+    private Boolean main;
+
     public MusicQueue(BilibiliClient bilibiliClient,
                       NetMusicClient netMusicClient,
                       IUserService userService) {
@@ -95,8 +98,10 @@ public class MusicQueue implements Runnable, InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        this.powerJobClient = new PowerJobClient(address, name, password);
-        new Thread(this).start();
-        log.info("开始消费");
+        if (main) {
+            this.powerJobClient = new PowerJobClient(address, name, password);
+            new Thread(this).start();
+            log.info("开始消费");
+        }
     }
 }
