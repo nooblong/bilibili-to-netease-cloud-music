@@ -29,11 +29,9 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         implements UploadDetailService {
 
     final NetMusicClient netMusicClient;
-    final MusicQueue musicQueue;
 
-    public UploadDetailServiceImpl(NetMusicClient netMusicClient, MusicQueue musicQueue) {
+    public UploadDetailServiceImpl(NetMusicClient netMusicClient) {
         this.netMusicClient = netMusicClient;
-        this.musicQueue = musicQueue;
     }
 
     @Override
@@ -108,13 +106,13 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
             uploadDetail.setStatus(StatusTypeEnum.WAIT)
                     .setCrack(1L)
                     .setUseVideoCover(1L)
-                    .setRetryTimes(0L)
+                    .setRetryTimes(0)
                     .setUploadName("");
             toProcessList.add(uploadDetail);
         }
         updateBatchById(onlySelfSee, 100);
         for (UploadDetail uploadDetail : toProcessList) {
-            musicQueue.enQueue(uploadDetail);
+//            musicQueue.enQueue(uploadDetail);
         }
     }
 

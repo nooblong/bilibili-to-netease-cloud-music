@@ -105,43 +105,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             .setUseVideoCover(subscribe.getUseVideoCover().longValue())
                             .setVoiceListId(subscribe.getVoiceListId())
                             .setUserId(subscribe.getUserId());
-                    // 根据subscribe设置uploadName
-                    String regName = subscribe.getRegName();
-                    if (regName != null) {
-                        LambdaQueryWrapper<SubscribeReg> eq = Wrappers.lambdaQuery(SubscribeReg.class).eq(SubscribeReg::getSubscribeId, subscribe.getId());
-                        List<SubscribeReg> subscribeRegs = Db.list(eq);
-                        Map<Integer, String> replaceMap = new HashMap<>();
-                        for (SubscribeReg subscribeReg : subscribeRegs) {
-                            // 先读取了原标题的reg生成map
-                            try {
-                                String s1 = ReUtil.extractMulti(subscribeReg.getRegex(), next.getTitle(), "$1");
-                                if (s1 != null) {
-                                    replaceMap.put(subscribeReg.getPos(), s1);
-                                }
-                            } catch (Exception e) {
-                                log.error(e.getMessage());
-                            }
-                        }
-                        // 利用map替换subscribe的Name
-                        String result = ReUtil.replaceAll(regName, "\\{(.*?)}", match -> {
-                            String content = match.group(0);
-                            content = content.substring(1, content.length() - 1);
-                            if (content.equals("pubdate")) {
-                                Date videoCreateTime = new Date(next.getCreateTime());
-                                return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
-                            } else if (NumberUtil.isNumber(content)) {
-                                if (replaceMap.containsKey(Integer.valueOf(content))) {
-                                    return replaceMap.getOrDefault(Integer.valueOf(content), "");
-                                }
-                            } else {
-                                return content;
-                            }
-                            return content;
-                        });
-                        uploadDetail.setUploadName(result);
-                    }
                     log.info("保存: {}, bvid: {}, date: {}",
-                            uploadDetail.getUploadName(), uploadDetail.getBvid(),
+                            uploadDetail.getTitle(), uploadDetail.getBvid(),
                             DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
                     Db.save(uploadDetail);
                     isProcess = true;

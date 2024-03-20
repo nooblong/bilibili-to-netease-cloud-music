@@ -48,7 +48,8 @@ public class UploadDetailController {
 
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
-                                  BilibiliClient bilibiliClient, MusicQueue musicQueue) {
+                                  BilibiliClient bilibiliClient,
+                                  MusicQueue musicQueue) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
@@ -65,14 +66,6 @@ public class UploadDetailController {
         Long userId = JwtUtil.verifierFromContext().getId();
 
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
-        // 查重
-        boolean unique = uploadDetailService.isUnique(simpleVideoInfo.getBvid(),
-                req.getCid() == null ? "" : req.getCid(),
-                req.getVoiceListId());
-        if (!unique) {
-            return Result.fail("查重率100%!");
-        }
-
         UploadDetail uploadDetail = new UploadDetail();
         uploadDetail.setBvid(simpleVideoInfo.getBvid());
         uploadDetail.setCid(req.getCid());
@@ -82,6 +75,8 @@ public class UploadDetailController {
         uploadDetail.setEndSec(req.getVoiceEndSec());
         uploadDetail.setOffset(req.getVoiceOffset());
         uploadDetail.setUploadName(req.getCustomUploadName());
+        uploadDetail.setTitle(req.getTitle());
+        uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
         uploadDetail.setUserId(userId);
 
         if (req.isCrack()) {
@@ -93,8 +88,8 @@ public class UploadDetailController {
         }
 
         Db.save(uploadDetail);
-        
-        musicQueue.enQueue(uploadDetail);
+
+        musicQueue.enQueue(uploadDetailService.getById(uploadDetail.getId()));
         return Result.ok("添加队列成功");
     }
 
@@ -179,7 +174,7 @@ public class UploadDetailController {
             } else {
                 recentResponse.setName(record.getTitle());
             }
-            recentResponse.setRetryTimes(record.getRetryTimes().intValue());
+            recentResponse.setRetryTimes(record.getRetryTimes());
             recentResponse.setUploadStatus(record.getStatus().name());
             recentResponse.setVoiceId(record.getVoiceId().toString());
             recentResponse.setVoiceListId(record.getVoiceListId().toString());

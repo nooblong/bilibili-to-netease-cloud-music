@@ -1,5 +1,8 @@
 package github.nooblong.download.job;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,9 +12,14 @@ import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
+import github.nooblong.download.entity.Subscribe;
+import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.FfmpegService;
+import github.nooblong.download.service.SubscribeRegService;
+import github.nooblong.download.service.SubscribeService;
+import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,10 +36,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Component
@@ -41,18 +46,27 @@ public class UploadJob implements BasicProcessor {
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final FfmpegService ffmpegService;
+    final SubscribeRegService subscribeRegService;
+    final SubscribeService subscribeService;
+    final UploadDetailService uploadDetailService;
 
     Path musicPath;
-    String desc;
+    String desc = "";
     String netImageId;
     BilibiliFullVideo bilibiliFullVideo;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
-                     FfmpegService ffmpegService) {
+                     FfmpegService ffmpegService,
+                     SubscribeRegService subscribeRegService,
+                     SubscribeService subscribeService,
+                     UploadDetailService uploadDetailService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.ffmpegService = ffmpegService;
+        this.subscribeRegService = subscribeRegService;
+        this.subscribeService = subscribeService;
+        this.uploadDetailService = uploadDetailService;
     }
 
     @Override
@@ -66,6 +80,13 @@ public class UploadJob implements BasicProcessor {
         ObjectMapper objectMapper = new ObjectMapper();
         UploadDetail uploadDetail = objectMapper.readValue(jobParams, UploadDetail.class);
 
+        // 先更新了信息先，其他不管
+        Long jobId = context.getJobId();
+        uploadDetail.setRetryTimes(uploadDetail.getRetryTimes() + 1);
+        uploadDetail.setStatus(StatusTypeEnum.PROCESSING);
+        uploadDetail.setJobId(jobId);
+        uploadDetailService.updateById(uploadDetail);
+
         getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
                 uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
         if (uploadDetail.getCrack() == 1L) {
@@ -73,9 +94,11 @@ public class UploadJob implements BasicProcessor {
         } else {
             codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
         }
-
+        // 上传之前先设置名字
+        uploadDetail.setUploadName(handleUploadName(uploadDetail));
         String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
                 uploadDetail.getUploadName(), uploadDetail.getPrivacy());
+        clear(logger, uploadDetail, Long.valueOf(voiceId));
 
         logger.info("单曲上传成功, 声音id:[{}]", voiceId);
         return new ProcessResult(true, "单曲上传成功, 声音id:[" + voiceId + "]");
@@ -246,14 +269,74 @@ public class UploadJob implements BasicProcessor {
                     .peek(System.out::println)
                     .forEach(file -> {
                         if (!file.equals(musicPath.getParent().toFile())) {
-                            boolean delete = file.delete();
-                            if (!delete) {
-                                log.error("删除失败: {}", file.getName());
-                            }
+                            log.info("删除文件: {}", file.getName());
+//                            boolean delete = file.delete();
+//                            if (!delete) {
+//                                log.error("删除失败: {}", file.getName());
+//                            }
                         }
                     });
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private String handleUploadName(UploadDetail uploadDetail) {
+        // 有自定义，一般为单曲上传
+        if (StrUtil.isNotBlank(uploadDetail.getUploadName())) {
+            return uploadDetail.getUploadName();
+        }
+        // 检查是否有正则要求
+        List<SubscribeReg> subscribeRegs = subscribeRegService
+                .lambdaQuery().eq(SubscribeReg::getSubscribeId, uploadDetail.getSubscribeId()).list();
+        if (!subscribeRegs.isEmpty()) {
+            // 有正则
+            Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
+            String regName = subscribe.getRegName();
+            String toRegTitle = bilibiliFullVideo.getHasMultiPart()
+                    ? bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle()
+                    : bilibiliFullVideo.getTitle();
+            if (regName != null) {
+                Map<Integer, String> replaceMap = new HashMap<>();
+                for (SubscribeReg subscribeReg : subscribeRegs) {
+                    // 先读取了原标题的reg生成map
+                    try {
+                        String s1 = ReUtil.extractMulti(subscribeReg.getRegex(), toRegTitle, "$1");
+                        if (s1 != null) {
+                            replaceMap.put(subscribeReg.getPos(), s1);
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
+                    }
+                }
+                // 利用map替换subscribe的Name
+                String result = ReUtil.replaceAll(regName, "\\{(.*?)}", match -> {
+                    String content = match.group(0);
+                    content = content.substring(1, content.length() - 1);
+                    if (content.equals("pubdate")) {
+                        Date videoCreateTime = bilibiliFullVideo.getVideoCreateTime();
+                        return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
+                    } else if (NumberUtil.isNumber(content)) {
+                        if (replaceMap.containsKey(Integer.valueOf(content))) {
+                            return replaceMap.getOrDefault(Integer.valueOf(content), "");
+                        }
+                    } else {
+                        return content;
+                    }
+                    return content;
+                });
+                return result;
+            } else {
+                // 有正则，但是没填regName
+                return bilibiliFullVideo.getTitle();
+            }
+        } else {
+            // 无正则，uploadName就使用 视频名-分p名 或 视频名
+            if (bilibiliFullVideo.getHasMultiPart()) {
+                return bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle();
+            } else {
+                return bilibiliFullVideo.getTitle();
+            }
         }
     }
 

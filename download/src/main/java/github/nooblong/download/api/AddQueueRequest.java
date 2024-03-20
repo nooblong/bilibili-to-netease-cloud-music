@@ -11,6 +11,7 @@ public class AddQueueRequest {
     String bvid;
     String cid;
     String customUploadName;
+    String title;
     @Min(0)
     Long voiceListId;
     boolean useDefaultImg;

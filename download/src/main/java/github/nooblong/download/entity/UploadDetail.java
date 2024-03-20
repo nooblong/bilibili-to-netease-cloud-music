@@ -34,7 +34,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long voiceId;
     private Long voiceListId;
     private Long privacy;
-    private Long retryTimes;
+    private Integer retryTimes;
     private StatusTypeEnum status;
     private String bvid;
     private String cid;
@@ -45,6 +45,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
+    private Long jobId;
     private String log;
 
     @Override

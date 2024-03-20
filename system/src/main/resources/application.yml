@@ -43,3 +43,5 @@ powerjob:
     server-address: 127.0.0.1:7700,127.0.0.1:7701
     # 持久化方式，可选，默认 disk
     store-strategy: disk
+    # pjb密码
+    password: 密码

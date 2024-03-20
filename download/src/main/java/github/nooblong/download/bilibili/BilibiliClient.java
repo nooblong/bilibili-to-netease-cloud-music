@@ -313,6 +313,7 @@ public class BilibiliClient {
         Assert.isTrue(response.get("code").asInt() != -1, "请求视频信息错误");
         BilibiliFullVideo bilibiliFullVideo = new BilibiliFullVideo();
         bilibiliFullVideo.setVideoInfo(response);
+        bilibiliFullVideo.setSelectCid(video.getCid());
         return bilibiliFullVideo;
     }
 
