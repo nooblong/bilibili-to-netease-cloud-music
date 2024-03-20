@@ -7,12 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 
 @Slf4j
-public class PartIterator implements Iterator<BilibiliVideo> {
+public class PartIterator implements Iterator<SimpleVideoInfo> {
 
     BilibiliBatchIteratorFactory factory;
     int limitSec;
     VideoOrder videoOrder;
-    BilibiliVideo[] videos;
+    SimpleVideoInfo[] videos;
     int index;
     int upVideosTotalNum;
     String bvid;
@@ -31,9 +31,9 @@ public class PartIterator implements Iterator<BilibiliVideo> {
     }
 
     @Override
-    public BilibiliVideo next() {
+    public SimpleVideoInfo next() {
         log.info("当前位置: {}, 总数:{}", index, upVideosTotalNum);
-        BilibiliVideo result;
+        SimpleVideoInfo result;
         if (hasNext()) {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
                 result = videos[index];
@@ -56,8 +56,8 @@ public class PartIterator implements Iterator<BilibiliVideo> {
             log.info("初始化集合:");
             // 第一次初始化
             // 先查总数
-            IteratorCollectionTotalList<BilibiliVideo> partVideosFromBilibili = factory.getPartVideosFromBilibili(bvid);
-            videos = partVideosFromBilibili.getData().toArray(new BilibiliVideo[0]);
+            IteratorCollectionTotalList<SimpleVideoInfo> partVideosFromBilibili = factory.getPartVideosFromBilibili(bvid);
+            videos = partVideosFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             upVideosTotalNum = partVideosFromBilibili.getTotalNum();
         }
     }

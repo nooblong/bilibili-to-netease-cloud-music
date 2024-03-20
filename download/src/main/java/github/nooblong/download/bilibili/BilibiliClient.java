@@ -134,12 +134,12 @@ public class BilibiliClient {
         userService.updateBilibiliCookieByCookieMap(userId, oldCookie);
     }
 
-    public JsonNode getBestStreamUrl(BilibiliVideo bilibiliVideo, Map<String, String> cred) {
+    public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
-        builder.addQueryParameter("bvid", bilibiliVideo.getBvid());
-        builder.addQueryParameter("cid", bilibiliVideo.getCidOrDefault());
+        builder.addQueryParameter("bvid", bilibiliFullVideo.getBvid());
+        builder.addQueryParameter("cid", bilibiliFullVideo.getCid());
         builder.addQueryParameter("audio_max_quality", "video.AudioQuality(" + this.expectQuality.getCode() + "):parse");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取最好的流链接失败");
@@ -156,7 +156,7 @@ public class BilibiliClient {
         return response;
     }
 
-    public Path downloadFile(BilibiliVideo video, Map<String, String> cred) {
+    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred) {
         // 文件名: partName-title-aid-cid.ext
         JsonNode bestStreamUrl = getBestStreamUrl(video, cred);
         ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
@@ -168,29 +168,23 @@ public class BilibiliClient {
                 break;
             }
         }
-        String fileName = video.getLocalName();
+        String fileName = video.getBvid();
         Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
         AtomicBoolean isDownloaded = new AtomicBoolean(false);
         try (Stream<Path> filesWalk = Files.walk(path, 1)) {
             String finalExt = ext;
             filesWalk.forEach(fw -> {
-                if (path.endsWith(fw)) {
-                    // skip parent directory
-                } else if (Files.isDirectory(fw)) {
-                    // skip
-                } else if (Files.isRegularFile(fw) && fw.getFileName().toString()
-                        .equals(assembleFileExt(fileName, finalExt))) {
+                if (Files.isRegularFile(fw) && fw.getFileName().toString()
+                        .equals(fileName + "." + finalExt)) {
                     log.info("文件已存在: {}", fileName);
                     isDownloaded.set(true);
-                } else {
-                    log.debug("getFilesInfo skipped: {} is not regular file nor directory !", path);
                 }
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         if (isDownloaded.get()) {
-            return path.resolve(assembleFileExt(fileName, ext));
+            return path.resolve(fileName + "." + ext);
         }
         return doDownload(path.toString(), fileName, bestStreamUrl, video.getBvid());
     }
@@ -209,7 +203,7 @@ public class BilibiliClient {
                     File downloadedFile = new File(path, fileName + "." + ext);
                     BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
                     assert response.body() != null;
-                    log.info("文件大小: {}M", response.body().contentLength() / 1024 / 1024);
+                    log.info("音频文件大小: {}M", response.body().contentLength() / 1024 / 1024);
                     sink.writeAll(response.body().source());
                     sink.close();
                     return downloadedFile.toPath();
@@ -221,14 +215,14 @@ public class BilibiliClient {
         return null;
     }
 
-    public Path downloadCover(BilibiliVideo video) throws RuntimeException {
+    public Path downloadCover(BilibiliFullVideo video) throws RuntimeException {
         String url = video.getVideoInfo().get("data").get("pic").asText();
         Map<String, String> headers = new HashMap<>();
         Request request = OkUtil.get(url, Collections.emptyMap(), headers);
         try (Response response = okHttpClient.newCall(request).execute()) {
             Assert.notNull(response.body(), "下载封面失败");
-            log.info("文件大小: {}K", response.body().contentLength() / 1024);
-            String fileName = assembleFileExt(video.getLocalCoverName(), "jpg");
+            log.info("封面文件大小: {}K", response.body().contentLength() / 1024);
+            String fileName = video.getBvid() + "." + "jpg";
             Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
             File downloadedFile = new File(path.toFile(), fileName);
             BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
@@ -248,37 +242,6 @@ public class BilibiliClient {
             return true;
         } catch (Exception e) {
             return false;
-        }
-    }
-
-    private String getUrlBvid(String url) {
-        if (!url.startsWith("http")) {
-            url = "https://" + url;
-        }
-        HttpUrl parse = HttpUrl.parse(url);
-        assert parse != null;
-        String topPrivateDomain = parse.topPrivateDomain();
-        assert topPrivateDomain != null;
-        if (topPrivateDomain.equals("b23.tv")) {
-            Request request = new Request.Builder().url(url)
-                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
-            try (Response response = okHttpClient.newCall(request).execute()) {
-                HttpUrl httpUrl = response.request().url();
-                String topPrivateDomain1 = httpUrl.topPrivateDomain();
-                assert topPrivateDomain1 != null;
-                Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
-                String s = httpUrl.pathSegments().get(1);
-                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-                return s;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (topPrivateDomain.equals("bilibili.com")) {
-            String s = parse.pathSegments().get(1);
-            Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-            return s;
-        } else {
-            throw new RuntimeException("错误url");
         }
     }
 
@@ -338,22 +301,9 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("count").asInt());
     }
 
-    public BilibiliVideo createByUrl(String url) {
-        if (url.startsWith("http") ||
-                url.startsWith("www.") ||
-                url.startsWith("b23.tv") ||
-                url.startsWith("bilibili")) {
-            String bvid = getUrlBvid(url);
-            return new BilibiliVideo().setBvid(bvid);
-        } else if (url.toLowerCase().startsWith("bv")){
-            return new BilibiliVideo().setBvid(url);
-        } else {
-            throw new RuntimeException("未知的输入");
-        }
-    }
-
-    public void init(BilibiliVideo video, Map<String, String> cred) {
+    public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
+        Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
@@ -361,15 +311,9 @@ public class BilibiliClient {
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.notNull(response, "请求视频信息错误");
         Assert.isTrue(response.get("code").asInt() != -1, "请求视频信息错误");
-        video.setVideoInfo(response);
-        if (video.getHasMultiPart() && video.getCid() == null) {
-            log.info("这是一个多p视频，且没有设置cid，默认使用p1");
-            video.setCid(video.getDefaultCid());
-        }
-    }
-
-    private static String assembleFileExt(String fileName, String ext) {
-        return fileName + "." + ext;
+        BilibiliFullVideo bilibiliFullVideo = new BilibiliFullVideo();
+        bilibiliFullVideo.setVideoInfo(response);
+        return bilibiliFullVideo;
     }
 
     public static String getFileExt(String fileName) {
@@ -400,5 +344,50 @@ public class BilibiliClient {
 
         // 计算总秒数
         return (hours * 60 * 60) + (minutes * 60) + seconds;
+    }
+
+    public SimpleVideoInfo createByUrl(String url) {
+        if (url.startsWith("http") ||
+                url.startsWith("www.") ||
+                url.startsWith("b23.tv") ||
+                url.startsWith("bilibili")) {
+            String bvid = getUrlBvid(url);
+            return new SimpleVideoInfo().setBvid(bvid);
+        } else if (url.toLowerCase().startsWith("bv")){
+            return new SimpleVideoInfo().setBvid(url);
+        } else {
+            throw new RuntimeException("未知的输入");
+        }
+    }
+
+    private String getUrlBvid(String url) {
+        if (!url.startsWith("http")) {
+            url = "https://" + url;
+        }
+        HttpUrl parse = HttpUrl.parse(url);
+        assert parse != null;
+        String topPrivateDomain = parse.topPrivateDomain();
+        assert topPrivateDomain != null;
+        if (topPrivateDomain.equals("b23.tv")) {
+            Request request = new Request.Builder().url(url)
+                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
+            try (Response response = okHttpClient.newCall(request).execute()) {
+                HttpUrl httpUrl = response.request().url();
+                String topPrivateDomain1 = httpUrl.topPrivateDomain();
+                assert topPrivateDomain1 != null;
+                Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
+                String s = httpUrl.pathSegments().get(1);
+                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+                return s;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (topPrivateDomain.equals("bilibili.com")) {
+            String s = parse.pathSegments().get(1);
+            Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+            return s;
+        } else {
+            throw new RuntimeException("错误url");
+        }
     }
 }

@@ -7,7 +7,8 @@ import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.VideoInfoResponse;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
@@ -35,10 +36,10 @@ public class BilibiliController {
     @GetMapping("/download/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
-        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(bvid);
-        bilibiliVideo.setCid(cid);
-        bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
-        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliVideo, bilibiliClient.getCurrentCred());
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
+        simpleVideoInfo.setCid(cid);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, bilibiliClient.getCurrentCred());
         StringBuilder sb = new StringBuilder();
         videoStreamUrl.forEach(audio -> {
             // todo: 1
@@ -47,11 +48,11 @@ public class BilibiliController {
             }
         });
         VideoInfoResponse videoInfoResponse = new VideoInfoResponse()
-                .setImage(bilibiliVideo.getVideoInfo().get("data").get("pic").asText())
-                .setTitle(bilibiliVideo.getTitle())
-                .setPages(bilibiliVideo.getVideoInfo().get("data").get("pages"))
-                .setAuthor(bilibiliVideo.getAuthor())
-                .setUid(bilibiliVideo.getUserId())
+                .setImage(bilibiliFullVideo.getVideoInfo().get("data").get("pic").asText())
+                .setTitle(bilibiliFullVideo.getTitle())
+                .setPages(bilibiliFullVideo.getVideoInfo().get("data").get("pages"))
+                .setAuthor(bilibiliFullVideo.getAuthor())
+                .setUid(bilibiliFullVideo.getUserId())
                 .setQuality(sb.toString());
         return Result.ok("查询成功", videoInfoResponse);
     }
@@ -85,12 +86,12 @@ public class BilibiliController {
 
     @GetMapping("/download/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
-        BilibiliVideo video = bilibiliClient.createByUrl(url);
-        bilibiliClient.init(video, bilibiliClient.getCurrentCred());
-        if (!video.getHasSeries()) {
+        SimpleVideoInfo video = bilibiliClient.createByUrl(url);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getCurrentCred());
+        if (!bilibiliFullVideo.getHasSeries()) {
             return Result.fail("视频没有合集");
         }
-        return Result.ok("ok", video.getMySeriesId());
+        return Result.ok("ok", bilibiliFullVideo.getMySeriesId());
     }
 
     @PostMapping("/setBiliCookies")

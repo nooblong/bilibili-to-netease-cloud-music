@@ -6,16 +6,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import github.nooblong.download.StatusTypeEnum;
-import github.nooblong.download.batch.BilibiliVideoContext;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import tech.powerjob.worker.core.processor.ProcessResult;
@@ -30,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Optional;
@@ -48,7 +45,7 @@ public class UploadJob implements BasicProcessor {
     Path musicPath;
     String desc;
     String netImageId;
-    BilibiliVideo bilibiliVideo;
+    BilibiliFullVideo bilibiliFullVideo;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
@@ -88,15 +85,15 @@ public class UploadJob implements BasicProcessor {
     private void getData(OmsLogger log, String bvid, String cid, boolean useVideoCover, Long userId) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
-        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(bvid);
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
-            bilibiliVideo.setCid(cid);
+            simpleVideoInfo.setCid(cid);
         }
-        bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
-        this.bilibiliVideo = bilibiliVideo;
-        musicPath = bilibiliClient.downloadFile(bilibiliVideo, bilibiliClient.getCurrentCred());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+        this.bilibiliFullVideo = bilibiliFullVideo;
+        musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, bilibiliClient.getCurrentCred());
         if (useVideoCover) {
-            Path imagePath = bilibiliClient.downloadCover(bilibiliVideo);
+            Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
             log.info("下载封面成功");
             this.netImageId = transImage(log, imagePath, netMusicClient, userId);
         }
@@ -166,8 +163,8 @@ public class UploadJob implements BasicProcessor {
     private String uploadNetease(OmsLogger log, String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
         log.info("开始上传网易云");
-        desc += ("\n视频bvid: " + bilibiliVideo.getBvid());
-        desc += ("\nb站作者: " + bilibiliVideo.getAuthor());
+        desc += ("\n视频bvid: " + bilibiliFullVideo.getBvid());
+        desc += ("\nb站作者: " + bilibiliFullVideo.getAuthor());
         desc += ("\n一键上传工具: www.nooblong.tech");
         desc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
 

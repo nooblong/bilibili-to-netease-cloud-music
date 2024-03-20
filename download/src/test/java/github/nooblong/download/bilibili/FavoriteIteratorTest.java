@@ -14,11 +14,11 @@ class FavoriteIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<BilibiliVideo> upIterator = factory.createFavoriteIterator("2698957987",
+        Iterator<SimpleVideoInfo> upIterator = factory.createFavoriteIterator("2698957987",
                 VideoOrder.PUB_NEW_FIRST_THEN_OLD, 9999);
         int times = 0;
         while (upIterator.hasNext()) {
-            BilibiliVideo next = upIterator.next();
+            SimpleVideoInfo next = upIterator.next();
             System.out.println(next.getTitle());
             if (++times >= 100) {
                 break;

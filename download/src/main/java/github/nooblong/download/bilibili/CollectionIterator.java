@@ -19,15 +19,15 @@ public class CollectionIterator extends SimplePageIterator {
     }
 
     @Override
-    BilibiliVideo[] getNextPage(int currentPn, int pageSize) {
+    SimpleVideoInfo[] getNextPage(int currentPn, int pageSize) {
         return factory.getCollectionVideoListFromBilibili(collectionId, pageSize, currentPn + 1,
-                collectionVideoOrder).getData().toArray(new BilibiliVideo[0]);
+                collectionVideoOrder).getData().toArray(new SimpleVideoInfo[0]);
     }
 
     @Override
-    BilibiliVideo[] getPreviousPage(int currentPn, int pageSize) {
+    SimpleVideoInfo[] getPreviousPage(int currentPn, int pageSize) {
         return factory.getCollectionVideoListFromBilibili(collectionId, pageSize, currentPn - 1,
-                collectionVideoOrder).getData().toArray(new BilibiliVideo[0]);
+                collectionVideoOrder).getData().toArray(new SimpleVideoInfo[0]);
     }
 
     @Override
@@ -39,26 +39,22 @@ public class CollectionIterator extends SimplePageIterator {
 
 
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
-                IteratorCollectionTotalList<BilibiliVideo> collectionVideoListFromBilibili =
-                        factory.getCollectionVideoListFromBilibili(collectionId, pageSize,
-                                videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ? 1 : (upVideosTotalNum / pageSize) + 1,
-                                collectionVideoOrder);
-                videos = collectionVideoListFromBilibili.getData().toArray(new BilibiliVideo[0]);
+                IteratorCollectionTotalList<SimpleVideoInfo> collectionVideoListFromBilibili =
+                        factory.getCollectionVideoListFromBilibili(collectionId, pageSize, 1, collectionVideoOrder);
+                videos = collectionVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
                 upVideosTotalNum = collectionVideoListFromBilibili.getTotalNum();
             } else {
                 if (upVideosTotalNum == 0) {
-                    IteratorCollectionTotalList<BilibiliVideo> collectionVideoListFromBilibili =
-                            factory.getCollectionVideoListFromBilibili(collectionId, pageSize,
-                                    videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ? 1 : (upVideosTotalNum / pageSize) + 1,
-                                    collectionVideoOrder);
+                    IteratorCollectionTotalList<SimpleVideoInfo> collectionVideoListFromBilibili =
+                            factory.getCollectionVideoListFromBilibili(collectionId, pageSize, 1, collectionVideoOrder);
                     log.info("先获取一遍总数: {}", collectionVideoListFromBilibili.getTotalNum());
                     upVideosTotalNum = collectionVideoListFromBilibili.getTotalNum();
                 }
-                IteratorCollectionTotalList<BilibiliVideo> collectionVideoListFromBilibili =
+                IteratorCollectionTotalList<SimpleVideoInfo> collectionVideoListFromBilibili =
                         factory.getCollectionVideoListFromBilibili(collectionId, pageSize,
                                 videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ? 1 : (upVideosTotalNum / pageSize) + 1,
                                 collectionVideoOrder);
-                videos = collectionVideoListFromBilibili.getData().toArray(new BilibiliVideo[0]);
+                videos = collectionVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
                 upVideosTotalNum = collectionVideoListFromBilibili.getTotalNum();
             }
         }

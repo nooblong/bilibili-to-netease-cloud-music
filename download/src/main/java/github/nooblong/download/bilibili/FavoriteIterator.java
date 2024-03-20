@@ -7,30 +7,27 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 
 @Slf4j
-public class FavoriteIterator implements Iterator<BilibiliVideo> {
+public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
 
     private final String favoriteId;
     private final BilibiliBatchIteratorFactory factory;
     private final int limitSec;
-    private final VideoOrder videoOrder;// 只能正序
     private int index;
-    private BilibiliVideo[] videos;
-    private static final int NUM_PER_PAGE = 20;
+    private SimpleVideoInfo[] videos;
     private int page = 1;
     private int hasNextPage;
 
-    public FavoriteIterator(String favoriteId, BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder) {
+    public FavoriteIterator(String favoriteId, BilibiliBatchIteratorFactory factory, int limitSec) {
         this.favoriteId = favoriteId;
         this.factory = factory;
         this.limitSec = limitSec;
-        this.videoOrder = videoOrder;
     }
 
     public void lazyInit() {
         if (videos == null) {
             log.info("初始化集合:");
-            IteratorCollectionTotalList<BilibiliVideo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, page);
-            videos = favoriteVideoListFromBilibili.getData().toArray(new BilibiliVideo[0]);
+            IteratorCollectionTotalList<SimpleVideoInfo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, page);
+            videos = favoriteVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             hasNextPage = favoriteVideoListFromBilibili.getTotalNum();
         }
     }
@@ -40,8 +37,8 @@ public class FavoriteIterator implements Iterator<BilibiliVideo> {
         lazyInit();
         if (index == videos.length && hasNextPage != 0) {
             log.info("收藏夹还有下一页");
-            IteratorCollectionTotalList<BilibiliVideo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, ++page);
-            videos = favoriteVideoListFromBilibili.getData().toArray(new BilibiliVideo[0]);
+            IteratorCollectionTotalList<SimpleVideoInfo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, ++page);
+            videos = favoriteVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             hasNextPage = favoriteVideoListFromBilibili.getTotalNum();
             index = 0;
             return true;
@@ -50,9 +47,9 @@ public class FavoriteIterator implements Iterator<BilibiliVideo> {
     }
 
     @Override
-    public BilibiliVideo next() {
+    public SimpleVideoInfo next() {
         log.info("当前位置: {}", index);
-        BilibiliVideo result;
+        SimpleVideoInfo result;
         if (hasNext()) {
             result = videos[index];
             index++;

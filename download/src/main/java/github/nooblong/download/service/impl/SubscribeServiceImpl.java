@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
-import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
@@ -54,7 +54,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             try {
                 log.info("处理订阅: {}, id: {}, 类型: {}, targetId: {}", subscribe.getRemark(), subscribe.getId(),
                         subscribe.getType(), subscribe.getTargetId());
-                Iterator<BilibiliVideo> iterator = switch (SubscribeTypeEnum.valueOf(subscribe.getType())) {
+                Iterator<SimpleVideoInfo> iterator = switch (SubscribeTypeEnum.valueOf(subscribe.getType())) {
                     case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
                             subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE);
                     case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
@@ -71,7 +71,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
                 boolean isProcess = false;
                 while (iterator.hasNext()) {
-                    BilibiliVideo next = iterator.next();
+                    SimpleVideoInfo next = iterator.next();
                     if (next.getVideoCreateTime() != null &&
                             // 倒序就全部遍历，没办法看时间
                             subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())

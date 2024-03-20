@@ -9,12 +9,12 @@ import java.math.RoundingMode;
 import java.util.Iterator;
 
 @Slf4j
-public abstract class SimplePageIterator implements Iterator<BilibiliVideo> {
+public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 
     BilibiliBatchIteratorFactory factory;
     final int limitSec;
     VideoOrder videoOrder;
-    BilibiliVideo[] videos;
+    SimpleVideoInfo[] videos;
     int index;
     int totalIndex;// 当total为30时，也就是第31个视频，第二页的开始，30/pageSize为1
     int upVideosTotalNum;
@@ -55,18 +55,18 @@ public abstract class SimplePageIterator implements Iterator<BilibiliVideo> {
         return index < videos.length;
     }
 
-    abstract BilibiliVideo[] getNextPage(int currentPn, int pageSize);
+    abstract SimpleVideoInfo[] getNextPage(int currentPn, int pageSize);
 
-    abstract BilibiliVideo[] getPreviousPage(int currentPn, int pageSize);
+    abstract SimpleVideoInfo[] getPreviousPage(int currentPn, int pageSize);
 
     @Override
-    public BilibiliVideo next() {
+    public SimpleVideoInfo next() {
         int currentRealPageNo = videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ?
                 (int) NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP)
                 : ((int) NumberUtil.div(upVideosTotalNum, pageSize, 0, RoundingMode.UP) -
                 (int) (NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP))) + 1;
         log.info("当前位置: {}, 第{}页, 总数:{}, 总位置:{}", index, currentRealPageNo, upVideosTotalNum, totalIndex);
-        BilibiliVideo result;
+        SimpleVideoInfo result;
         if (hasNext()) {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
                 result = videos[index];

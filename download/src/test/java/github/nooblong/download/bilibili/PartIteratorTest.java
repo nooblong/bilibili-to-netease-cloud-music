@@ -14,11 +14,11 @@ class PartIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<BilibiliVideo> partIterator = factory.createPartIterator("BV1FQ4y1z7eD",
+        Iterator<SimpleVideoInfo> partIterator = factory.createPartIterator("BV1FQ4y1z7eD",
                 VideoOrder.PUB_OLD_FIRST_THEN_NEW, 9999);
         int times = 0;
         while (partIterator.hasNext()) {
-            BilibiliVideo next = partIterator.next();
+            SimpleVideoInfo next = partIterator.next();
             System.out.println(next.getPartName());
             if (++times >= 1000) {
                 break;

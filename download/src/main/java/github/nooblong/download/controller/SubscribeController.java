@@ -13,9 +13,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -60,9 +61,9 @@ public class SubscribeController {
         if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
-            BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
-            JsonNode info = bilibiliVideo.getVideoInfo();
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+            JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("data").get("bvid").asText());
         }
         if (!subscribe.getVoiceListId().equals(byId.getVoiceListId())) {
@@ -94,9 +95,9 @@ public class SubscribeController {
         if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
-            BilibiliVideo bilibiliVideo = new BilibiliVideo().setBvid(subscribe.getTargetId());
-            bilibiliClient.init(bilibiliVideo, bilibiliClient.getCurrentCred());
-            JsonNode info = bilibiliVideo.getVideoInfo();
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+            JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("bvid").asText());
         }
         // 获取播客图片

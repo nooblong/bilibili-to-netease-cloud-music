@@ -18,7 +18,7 @@ import github.nooblong.download.api.AddToMyRequest;
 import github.nooblong.download.api.DataResponse;
 import github.nooblong.download.api.RecentResponse;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mq.MusicQueue;
@@ -64,9 +64,9 @@ public class UploadDetailController {
     public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
 
-        BilibiliVideo bilibiliVideo = bilibiliClient.createByUrl(req.getBvid());
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
         // 查重
-        boolean unique = uploadDetailService.isUnique(bilibiliVideo.getBvid(),
+        boolean unique = uploadDetailService.isUnique(simpleVideoInfo.getBvid(),
                 req.getCid() == null ? "" : req.getCid(),
                 req.getVoiceListId());
         if (!unique) {
@@ -74,7 +74,7 @@ public class UploadDetailController {
         }
 
         UploadDetail uploadDetail = new UploadDetail();
-        uploadDetail.setBvid(bilibiliVideo.getBvid());
+        uploadDetail.setBvid(simpleVideoInfo.getBvid());
         uploadDetail.setCid(req.getCid());
         uploadDetail.setVoiceListId(req.getVoiceListId());
         uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);

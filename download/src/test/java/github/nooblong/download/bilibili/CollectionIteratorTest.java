@@ -16,11 +16,11 @@ class CollectionIteratorTest extends BaseTest {
     @Test
     void next() {
         // collectionId: 1284839
-        Iterator<BilibiliVideo> upIterator = factory.createCollectionIterator("1284839", 9999,
+        Iterator<SimpleVideoInfo> upIterator = factory.createCollectionIterator("1284839", 9999,
                 VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.CHANGE);
         int times = 0;
         while (upIterator.hasNext()) {
-            BilibiliVideo next = upIterator.next();
+            SimpleVideoInfo next = upIterator.next();
             System.out.println(next.getTitle());
             if (++times >= 40) {
                 break;
