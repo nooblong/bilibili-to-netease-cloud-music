@@ -43,8 +43,6 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 public class BilibiliClient {
-    @Value("${workingDir:#{null}}")
-    private String workingDir;
     private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
 
     @Getter
@@ -169,7 +167,7 @@ public class BilibiliClient {
             }
         }
         String fileName = video.getBvid();
-        Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
+        Path path = Paths.get(Constant.TMP_FOLDER, Constant.BILI_DOWNLOAD_FOLDER);
         AtomicBoolean isDownloaded = new AtomicBoolean(false);
         try (Stream<Path> filesWalk = Files.walk(path, 1)) {
             String finalExt = ext;
@@ -223,7 +221,7 @@ public class BilibiliClient {
             Assert.notNull(response.body(), "下载封面失败");
             log.info("封面文件大小: {}K", response.body().contentLength() / 1024);
             String fileName = video.getBvid() + "." + "jpg";
-            Path path = Paths.get(workingDir, Constant.BILI_DOWNLOAD_FOLDER);
+            Path path = Paths.get(Constant.TMP_FOLDER, Constant.BILI_DOWNLOAD_FOLDER);
             File downloadedFile = new File(path.toFile(), fileName);
             BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
             sink.writeAll(response.body().source());

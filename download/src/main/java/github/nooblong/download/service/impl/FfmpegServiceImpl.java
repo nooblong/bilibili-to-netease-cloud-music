@@ -1,96 +1,83 @@
 package github.nooblong.download.service.impl;
 
-import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
 import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.FFmpegExecutor;
-import net.bramp.ffmpeg.FFprobe;
-import net.bramp.ffmpeg.builder.FFmpegBuilder;
-import net.bramp.ffmpeg.job.FFmpegJob;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import ws.schild.jave.Encoder;
+import ws.schild.jave.EncoderException;
+import ws.schild.jave.MultimediaObject;
+import ws.schild.jave.encode.AudioAttributes;
+import ws.schild.jave.encode.EncodingAttributes;
+import ws.schild.jave.encode.VideoAttributes;
+import ws.schild.jave.info.MultimediaInfo;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
 
-    @Value("${workingDir}")
-    private String workingDir;
-
-    FFmpeg fFmpeg;
-    FFprobe fFprobe;
-
     @Override
     public Path encodeMp3(Path sourceUrl, double beginSec, double endSec, double voiceOffset) {
         Assert.isTrue(Files.exists(sourceUrl), "转码失败，" + sourceUrl + "不是文件");
-        boolean cutLength = beginSec != 0 && endSec != 0;
-        double duration = endSec - beginSec;
-
-        FFmpegBuilder builder = new FFmpegBuilder();
-        long millStartOffset = Math.round(beginSec * 1000);
-        long millDuration = Math.round(duration * 1000);
+        File source = sourceUrl.toFile();
         String targetPath = sourceUrl.toAbsolutePath() + "." + Constant.FFMPEG_FORMAT_MP3;
-        if (cutLength) {
-            builder
-                    .setInput(sourceUrl.toAbsolutePath().toString())
-                    .overrideOutputFiles(true)
-                    .addOutput(targetPath)
-                    .setFormat(Constant.FFMPEG_FORMAT_MP3)
-                    .setAudioBitRate(320000)
-                    .setStartOffset(millStartOffset, TimeUnit.MILLISECONDS)
-                    .setDuration(millDuration, TimeUnit.MILLISECONDS)
-                    .setAudioFilter("volume=" + NumberUtil.round(voiceOffset, 2) + "dB")
-                    .done();
-        } else {
-            builder
-                    .setInput(sourceUrl.toAbsolutePath().toString())
-                    .overrideOutputFiles(true)
-                    .addOutput(targetPath)
-                    .setFormat(Constant.FFMPEG_FORMAT_MP3)
-                    .setAudioBitRate(320000)
-                    .setAudioFilter("volume=" + NumberUtil.round(voiceOffset, 2) + "dB")
-                    .done();
+        File target = new File(targetPath);
+        EncodingAttributes encodingAttributes = getEncodingAttributes(beginSec, endSec, (int) voiceOffset);
+        Encoder encoder = new Encoder();
+        try {
+            encoder.encode(new MultimediaObject(source), target, encodingAttributes);
+        } catch (EncoderException e) {
+            log.error("转码失败: ", e);
+            throw new RuntimeException(e);
         }
-
-        FFmpegExecutor executor = new FFmpegExecutor(fFmpeg, fFprobe);
-        FFmpegJob job = executor.createJob(builder);
         log.info("转码: {}", sourceUrl);
-        job.run();
         return Paths.get(targetPath);
     }
 
+    @NotNull
+    private EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset) {
+        double duration = endSec - beginSec;
+
+        AudioAttributes audioAttributes = new AudioAttributes();
+        // 设置编码过程的音量值。如果为 null 或未指定，则将选择默认值。如果是 256，则不会执行任何音量更改。
+        // 音量是“振幅比”或“声压级”比率 2560 是音量=20dB 公式是 dBnumber=20*lg(振幅比) 128 表示减小 50% 512 表示音量加倍
+        audioAttributes.setVolume(voiceOffset);
+        EncodingAttributes encodingAttributes = new EncodingAttributes();
+        encodingAttributes.setAudioAttributes(audioAttributes);
+        encodingAttributes.setOutputFormat(Constant.FFMPEG_FORMAT_MP3);
+        encodingAttributes.setDuration((float) duration);
+        encodingAttributes.setOffset((float) beginSec);
+
+        VideoAttributes videoAttributes = new VideoAttributes();
+        encodingAttributes.setVideoAttributes(videoAttributes);
+        return encodingAttributes;
+    }
+
     @Override
-    public FFmpegProbeResult probeInfo(Path sourceUrl) {
-        FFmpegProbeResult probe;
+    public MultimediaInfo probeInfo(Path sourceUrl) {
+        MultimediaObject multimediaObject = new MultimediaObject(sourceUrl.toFile());
         try {
-            probe = fFprobe.probe(sourceUrl.toAbsolutePath().toString());
-        } catch (IOException e) {
+            MultimediaInfo info = multimediaObject.getInfo();
+            log.info("format: {}", info.getFormat());
+            return info;
+        } catch (EncoderException e) {
+            log.error("查看音频信息错误: ", e);
             throw new RuntimeException(e);
         }
-        return probe;
     }
 
     @Override
     public void afterPropertiesSet() {
-        Assert.notNull(workingDir, "ffmpeg文件夹未找到");
-        try {
-            fFmpeg = new FFmpeg(Paths.get(workingDir, "ffmpeg").toString());
-            fFprobe = new FFprobe(Paths.get(workingDir, "ffprobe").toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Assert.isTrue(StrUtil.isNotBlank(Constant.TMP_FOLDER),
+                "工作目录为空");
     }
 }

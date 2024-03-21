@@ -2,12 +2,11 @@ package github.nooblong.download.service.impl;
 
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.service.FfmpegService;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import net.bramp.ffmpeg.probe.FFmpegStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import ws.schild.jave.info.MultimediaInfo;
 
-import java.nio.file.Paths;
+import java.io.File;
 
 class FfmpegServiceImplTest extends BaseTest {
 
@@ -16,21 +15,14 @@ class FfmpegServiceImplTest extends BaseTest {
 
     @Test
     void probeInfo() {
-        String s = "/Users/lyl/Documents/GitHub/nosync.nosync/little/workingDir/oss/bilibili/";
-        String s1 = "【阿梓歌】《一样的月光》徐佳莹（2022.5.17）-811739303-722822266.m4a";
-        String s2 = ".mp3";
+        File file = new File("/Users/lyl/Downloads/mp4-tmp/卫兰-大哥.mp3");
+        MultimediaInfo multimediaInfo = ffmpegService.probeInfo(file.toPath());
+        System.out.println(multimediaInfo);
+    }
 
-        FFmpegProbeResult fFmpegProbeResult = ffmpegService.probeInfo(Paths.get(s + s1));
-        System.out.println(fFmpegProbeResult.getFormat().bit_rate / 1000);
-        for (FFmpegStream stream : fFmpegProbeResult.getStreams()) {
-            System.out.println(stream.bits_per_raw_sample);
-        }
-        System.out.println("-----");
-        FFmpegProbeResult fFmpegProbeResult2 = ffmpegService.probeInfo(Paths.get(s + s1 + s2));
-        System.out.println(fFmpegProbeResult2.getFormat().bit_rate / 1000);
-        for (FFmpegStream stream : fFmpegProbeResult2.getStreams()) {
-            System.out.println(stream.bits_per_raw_sample);
-        }
-
+    @Test
+    void getTmpFolder() {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        System.out.println("临时文件夹路径：" + tempDir);
     }
 }

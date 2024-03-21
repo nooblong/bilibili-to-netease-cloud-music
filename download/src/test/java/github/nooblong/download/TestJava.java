@@ -5,17 +5,6 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.download.utils.OkUtil;
-import net.bramp.ffmpeg.FFmpeg;
-import net.bramp.ffmpeg.FFmpegExecutor;
-import net.bramp.ffmpeg.FFmpegUtils;
-import net.bramp.ffmpeg.FFprobe;
-import net.bramp.ffmpeg.builder.FFmpegBuilder;
-import net.bramp.ffmpeg.job.FFmpegJob;
-import net.bramp.ffmpeg.probe.FFmpegFormat;
-import net.bramp.ffmpeg.probe.FFmpegProbeResult;
-import net.bramp.ffmpeg.probe.FFmpegStream;
-import net.bramp.ffmpeg.progress.Progress;
-import net.bramp.ffmpeg.progress.ProgressListener;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.junit.jupiter.api.Test;
@@ -30,108 +19,12 @@ import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class TestJava {
-
-    @Test
-    public void testFfmpeg() throws IOException {
-        FFmpeg fFmpeg = new FFmpeg("/Users/lyl/Documents/GitHub/nosync.nosync/little/oss/src/main/resources/tmpSound/ffmpeg");
-        FFprobe fFprobe = new FFprobe("/Users/lyl/Documents/GitHub/nosync.nosync/little/oss/src/main/resources/tmpSound/ffprobe");
-
-        String resource = "http://localhost:8888/services/files/download/anonymous-readwrite/%E3%80%90%E9%98%BF%E6%A2%93%E6%AD%8C%E3%80%91%E3%80%8A%E8%AE%A9%E9%A3%8E%E5%91%8A%E8%AF%89%E4%BD%A0%E3%80%8B%EF%BC%81%EF%BC%81%EF%BC%81vrc%E9%99%90%E5%AE%9A%E7%89%88%EF%BC%81-643739732";
-        String output = "/Users/lyl/Documents/GitHub/nosync.nosync/little/oss/src/main/resources/filesystem-configs/anonymous-readwrite/output.mp3";
-        FFmpegProbeResult probe = fFprobe.probe(resource);
-
-//        System.out.println(probe.getFormat().duration);
-        FFmpegStream x = probe.getStreams().get(0);
-//        System.out.println(x);
-
-        FFmpegBuilder builder = new FFmpegBuilder()
-                .setInput(resource)
-                .overrideOutputFiles(true)
-                .addOutput(output)
-                .setFormat("null")
-                .setAudioBitRate(probe.getFormat().bit_rate)
-                .setStartOffset(30, TimeUnit.SECONDS)
-                .setDuration(60, TimeUnit.SECONDS)
-                .done();
-
-        FFmpegBuilder avg = new FFmpegBuilder()
-                .setInput(resource)
-                .setAudioFilter("volumedetect")
-                .addStdoutOutput()
-                .setFormat("null")
-                .done();
-
-        FFmpegExecutor executor = new FFmpegExecutor(fFmpeg, fFprobe);
-
-        executor.createJob(avg, new ProgressListener() {
-            final double duration_ns = probe.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
-
-            @Override
-            public void progress(Progress progress) {
-                double percentage = progress.out_time_ns / duration_ns;
-                System.out.printf(
-                        "[%.0f%%] status:%s frame:%d time:%s ms fps:%.0f speed:%.2fx%n",
-                        percentage * 100,
-                        progress.status,
-                        progress.frame,
-                        FFmpegUtils.toTimecode(progress.out_time_ns, TimeUnit.NANOSECONDS),
-                        progress.fps.doubleValue(),
-                        progress.speed
-                );
-            }
-        }).run();
-
-        FFmpegJob fFmpegJob = executor.createJob(builder, new ProgressListener() {
-            // Using the FFmpegProbeResult determine the duration of the input
-            final double duration_ns = probe.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
-
-            @Override
-            public void progress(Progress progress) {
-                try {
-                    double percentage = progress.out_time_ns / duration_ns;
-                    System.out.printf(
-                            "[%.0f%%] status:%s frame:%d time:%s ms fps:%.0f speed:%.2fx%n",
-                            percentage * 100,
-                            progress.status,
-                            progress.frame,
-                            FFmpegUtils.toTimecode(progress.out_time_ns, TimeUnit.NANOSECONDS),
-                            progress.fps.doubleValue(),
-                            progress.speed
-                    );
-                } catch (IllegalArgumentException e) {
-                    System.out.println(e);
-                }
-            }
-        });
-        fFmpegJob.run();
-
-        FFmpegFormat format = probe.getFormat();
-//        System.out.format("%nFile: '%s' ; Format: '%s' ; Duration: %.3fs ; BitRate: %d",
-//                format.filename,
-//                format.format_long_name,
-//                format.duration,
-//                format.bit_rate
-//        );
-
-        FFmpegStream stream = probe.getStreams().get(0);
-//        System.out.format("%nCodec: '%s' ; Width: %dpx ; Height: %dpx ; BitRate: %d",
-//                stream.codec_long_name,
-//                stream.width,
-//                stream.height,
-//                stream.bit_rate
-//        );
-
-//        FFmpegJob job = executor.createJob(builder);
-//        job.run();
-    }
 
     @Test
     public void testCharacters() {

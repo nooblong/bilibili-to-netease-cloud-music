@@ -156,13 +156,13 @@ public class UploadJob implements BasicProcessor {
     }
 
     private void codecAudio(OmsLogger log, double beginSec, double endSec, double voiceOffset) {
-        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
+//        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
         Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
-        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
+//        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
         String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         this.musicPath = targetPath;
         String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
-        String s2 = "码率:" + bitRate1 + "kbps" + "->" + bitRate2 + "kbps";
+        String s2 = "码率:" + 1 + "kbps" + "->" + 1 + "kbps";
         desc += s1;
         desc += "\n";
         desc += s2;
@@ -170,13 +170,13 @@ public class UploadJob implements BasicProcessor {
     }
 
     private void codecAudioCrack(OmsLogger log, double beginSec, double endSec, double voiceOffset) {
-        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
+//        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
         Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
-        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
+//        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
         String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         this.musicPath = targetPath;
         String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
-        String s2 = "码率:" + bitRate1 + "kbps" + "->" + bitRate2 + "kbps";
+        String s2 = "码率:" + 1 + "kbps" + "->" + 1 + "kbps";
         desc += s1;
         desc += "\n";
         desc += s2;

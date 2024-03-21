@@ -1,4 +1,3 @@
-workingDir: /root/workingDir
 initialDelay: 1
 main: true
 server:

@@ -15,14 +15,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>be.0110.repo-releases</id>
-            <name>0110.be repository</name>
-            <url>https://mvn.0110.be/releases</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>github.nooblong</groupId>
@@ -36,11 +28,6 @@
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.bramp.ffmpeg</groupId>
-            <artifactId>ffmpeg</artifactId>
-            <version>0.8.0</version>
         </dependency>
         <dependency>
             <groupId>ws.schild</groupId>
