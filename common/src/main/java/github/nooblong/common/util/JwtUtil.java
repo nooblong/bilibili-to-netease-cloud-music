@@ -50,11 +50,15 @@ public class JwtUtil {
     }
 
     public static SysUser verifierFromContext() {
-        ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (servletRequestAttributes != null) {
-            HttpServletRequest request = servletRequestAttributes.getRequest();
-            String token = request.getHeader("Access-Token");
-            return JwtUtil.verifierToken(token);
+        try {
+            ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (servletRequestAttributes != null) {
+                HttpServletRequest request = servletRequestAttributes.getRequest();
+                String token = request.getHeader("Access-Token");
+                return JwtUtil.verifierToken(token);
+            }
+        } catch (Exception e) {
+            throw new ValidateException("验证用户失败");
         }
         throw new ValidateException("验证用户失败");
     }

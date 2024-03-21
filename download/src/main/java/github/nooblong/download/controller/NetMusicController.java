@@ -1,7 +1,6 @@
 package github.nooblong.download.controller;
 
 import cn.hutool.core.codec.Base64;
-import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
@@ -10,7 +9,6 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,26 +31,16 @@ public class NetMusicController {
     @GetMapping("/netmusic/loginStatus")
     public Result<?> getloginStatus() {
         JsonNode loginstatus;
-        try {
-            SysUser sysUser = JwtUtil.verifierFromContext();
-            loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
-        } catch (ValidateException | IllegalArgumentException e) {
-            log.error(e.getMessage());
-            return Result.fail("连接网易失败");
-        }
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
         return Result.ok("ok", loginstatus);
     }
 
     @GetMapping("/netmusic/getQrCode")
     public Result<QrResponse> getQrCode() {
         JsonNode loginqrkey;
-        try {
-            SysUser sysUser = JwtUtil.verifierFromContext();
-            loginqrkey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginqrkey", sysUser.getId());
-        } catch (ValidateException | IllegalArgumentException e) {
-            log.error(e.getMessage());
-            return Result.fail("连接网易失败");
-        }
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        loginqrkey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginqrkey", sysUser.getId());
         String unikey = loginqrkey.get("unikey").asText();
         BufferedImage generate = QrCodeUtil.generate("https://music.163.com/login?codekey=" +
                 unikey, 300, 300);
