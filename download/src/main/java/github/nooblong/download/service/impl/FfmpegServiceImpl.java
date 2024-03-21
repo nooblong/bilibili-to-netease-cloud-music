@@ -31,7 +31,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
         File source = sourceUrl.toFile();
         String targetPath = sourceUrl.toAbsolutePath() + "." + Constant.FFMPEG_FORMAT_MP3;
         File target = new File(targetPath);
-        EncodingAttributes encodingAttributes = getEncodingAttributes(beginSec, endSec, (int) voiceOffset);
+        EncodingAttributes encodingAttributes = getEncodingAttributes(beginSec, endSec, (int) voiceOffset, Constant.FFMPEG_FORMAT_MP3);
         Encoder encoder = new Encoder();
         try {
             encoder.encode(new MultimediaObject(source), target, encodingAttributes);
@@ -44,7 +44,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     }
 
     @NotNull
-    public static EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset) {
+    public static EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset, String ext) {
         double duration = endSec - beginSec;
 
         AudioAttributes audioAttributes = new AudioAttributes();
@@ -53,7 +53,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
         audioAttributes.setVolume(voiceOffset);
         EncodingAttributes encodingAttributes = new EncodingAttributes();
         encodingAttributes.setAudioAttributes(audioAttributes);
-        encodingAttributes.setOutputFormat(Constant.FFMPEG_FORMAT_MP3);
+        encodingAttributes.setOutputFormat(ext);
         encodingAttributes.setDuration((float) duration);
         encodingAttributes.setOffset((float) beginSec);
 
