@@ -21,7 +21,7 @@ import java.util.List;
 public class GetUpJob implements BroadcastProcessor {
 
     /*
-
+        {"id":null,"jobName":"GetUpJob_EXPORT_1710991920759","jobDescription":"获取up主","appId":1,"jobParams":null,"timeExpressionType":"CRON","timeExpression":"0 0 0/1 * * ? ","executeType":"BROADCAST","processorType":"BUILT_IN","processorInfo":"github.nooblong.download.job.GetUpJob","maxInstanceNum":0,"concurrency":1,"instanceTimeLimit":0,"instanceRetryNum":0,"taskRetryNum":1,"minCpuCores":0,"minMemorySpace":0,"minDiskSpace":0,"enable":true,"designatedWorkers":"","maxWorkerCount":0,"notifyUserIds":null,"extra":null,"dispatchStrategy":"HEALTH_FIRST","dispatchStrategyConfig":null,"lifeCycle":{"start":null,"end":null},"alarmConfig":{"alertThreshold":0,"statisticWindowLen":0,"silenceWindowLen":0},"tag":null,"logConfig":{"type":4,"level":null,"loggerName":null},"advancedRuntimeConfig":{"taskTrackerBehavior":null}}
      */
 
     @Value("${main}")
