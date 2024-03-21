@@ -89,11 +89,7 @@ public class UploadJob implements BasicProcessor {
 
         getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
                 uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
-        if (uploadDetail.getCrack() == 1L) {
-            codecAudioCrack(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
-        } else {
-            codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
-        }
+        codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
         // 上传之前先设置名字
         uploadDetail.setUploadName(handleUploadName(uploadDetail));
         String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
@@ -167,20 +163,6 @@ public class UploadJob implements BasicProcessor {
         desc += "\n";
         desc += s2;
         log.info("音频转码成功");
-    }
-
-    private void codecAudioCrack(OmsLogger log, double beginSec, double endSec, double voiceOffset) {
-//        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
-        Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
-//        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
-        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
-        this.musicPath = targetPath;
-        String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
-        String s2 = "码率:" + 1 + "kbps" + "->" + 1 + "kbps";
-        desc += s1;
-        desc += "\n";
-        desc += s2;
-        log.info("音频转码!成功");
     }
 
     private String uploadNetease(OmsLogger log, String voiceListId, Long uploadUserId,

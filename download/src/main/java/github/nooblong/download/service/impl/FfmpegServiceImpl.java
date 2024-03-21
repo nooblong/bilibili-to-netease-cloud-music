@@ -44,7 +44,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     }
 
     @NotNull
-    private EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset) {
+    public static EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset) {
         double duration = endSec - beginSec;
 
         AudioAttributes audioAttributes = new AudioAttributes();
