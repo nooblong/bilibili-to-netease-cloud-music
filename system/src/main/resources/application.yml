@@ -45,3 +45,4 @@ powerjob:
     store-strategy: disk
     # pjb密码
     password: 密码
+    health-report-interval: 5

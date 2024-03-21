@@ -109,6 +109,21 @@ public class OkUtil {
     }
 
     @SafeVarargs
+    public static JsonNode getJsonResponseNoLog(Request request, OkHttpClient client, Consumer<Response>... peeks) {
+        try (Response response = client.newCall(request).execute()) {
+            for (Consumer<Response> peek : peeks) {
+                peek.accept(response);
+            }
+            ResponseBody body = response.body();
+            assert body != null;
+            String s = body.string();
+            return new ObjectMapper().readTree(s);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @SafeVarargs
     public static JsonNode getJsonResponse(Request request, OkHttpClient client, Consumer<Response>... peeks) {
         try (Response response = client.newCall(request).execute()) {
             for (Consumer<Response> peek : peeks) {
@@ -176,6 +191,10 @@ public class OkUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Request getNoLog(String url) {
+        return new Request.Builder().url(url).get().build();
     }
 
     public static Request get(String url) {

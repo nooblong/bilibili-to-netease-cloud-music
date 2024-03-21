@@ -3,6 +3,8 @@ package github.nooblong.download;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.download.utils.OkUtil;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFmpegUtils;
@@ -14,6 +16,8 @@ import net.bramp.ffmpeg.probe.FFmpegProbeResult;
 import net.bramp.ffmpeg.probe.FFmpegStream;
 import net.bramp.ffmpeg.progress.Progress;
 import net.bramp.ffmpeg.progress.ProgressListener;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.junit.jupiter.api.Test;
 import tech.powerjob.client.PowerJobClient;
 import tech.powerjob.common.response.InstanceInfoDTO;
@@ -209,6 +213,15 @@ public class TestJava {
         ResultDTO<InstanceInfoDTO> instanceInfoDTOResultDTO = powerJobClient.fetchInstanceInfo(650633601515257920L);
         System.out.println(integerResultDTO);
         System.out.println(instanceInfoDTOResultDTO);
+    }
+
+    @Test
+    void testApi() {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        String url = "http://127.0.0.1:7700/system/listWorker?appId=1";
+        Request request = OkUtil.get(url);
+        JsonNode jsonResponse = OkUtil.getJsonResponse(request, okHttpClient);
+        System.out.println(jsonResponse.toPrettyString());
     }
 
 }

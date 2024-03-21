@@ -14,17 +14,17 @@ class SimpleVideoInfoTest extends BaseTest {
     @Test
     void getBestStreamUrl1() {
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        System.out.println(bilibiliClient.getBestStreamUrl(simpleVideoInfo, bilibiliClient.getCurrentCred()).toPrettyString());
-        System.out.println(simpleVideoInfo.getHasMultiPart());
-        System.out.println(simpleVideoInfo.getHasSeries());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+        System.out.println(bilibiliClient.getBestStreamUrl(bilibiliFullVideo, bilibiliClient.getCurrentCred()).toPrettyString());
+        System.out.println(bilibiliFullVideo.getHasMultiPart());
+        System.out.println(bilibiliFullVideo.getHasSeries());
     }
 
     @Test
     void getSeriesMeta1() {
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        System.out.println(bilibiliClient.getSeriesMeta(simpleVideoInfo.getMySeriesId(), bilibiliClient.getCurrentCred()).toPrettyString());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+        System.out.println(bilibiliClient.getSeriesMeta(bilibiliFullVideo.getMySeriesId(), bilibiliClient.getCurrentCred()).toPrettyString());
     }
 
     @Test
