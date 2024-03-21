@@ -56,6 +56,15 @@ public class UploadDetailController {
         this.musicQueue = musicQueue;
     }
 
+//    @GetMapping("/test")
+//    public Result<String> test() throws Exception {
+//        UploadDetail a1 = uploadDetailService.getById(12727L);
+//        UploadDetail a2 = uploadDetailService.getById(12728L);
+//        musicQueue.enQueue(a1);
+//        musicQueue.enQueue(a2);
+//        return Result.ok("1");
+//    }
+
     @GetMapping("/uploadDetail/{id}")
     public Result<UploadDetail> get(@PathVariable(name = "id") Long id) {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
@@ -130,7 +139,7 @@ public class UploadDetailController {
                                                 @RequestParam(required = false, name = "title") String title,
                                                 @RequestParam(required = false, name = "remark") String remark,
                                                 @RequestParam(required = false, name = "username") String username,
-                                                @RequestParam(required = false, name = "status")String status) {
+                                                @RequestParam(required = false, name = "status") String status) {
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
 
