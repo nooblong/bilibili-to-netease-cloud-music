@@ -54,6 +54,8 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
 
     @TableField(exist = false)
     private String userName;
+    @TableField(exist = false)
+    private String statusDesc;
 
     @Override
     public int compareTo(@NotNull UploadDetail o) {

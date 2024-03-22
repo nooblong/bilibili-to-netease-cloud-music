@@ -173,6 +173,7 @@ public class UploadDetailController {
 
         for (UploadDetail record : page.getRecords()) {
             record.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
+            record.setStatusDesc(record.getStatus().getDesc());
         }
         return Result.ok("查询成功", page);
     }
