@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import lombok.Data;
 
 import java.io.Serial;
@@ -25,7 +26,7 @@ public class Subscribe implements Serializable {
     private Long userId;
     private Long voiceListId;
     private String targetId;
-    private String type;
+    private SubscribeTypeEnum type;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date processTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -47,5 +48,7 @@ public class Subscribe implements Serializable {
 
     @TableField(exist = false)
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();
+    @TableField(exist = false)
+    private String typeDesc;
 
 }

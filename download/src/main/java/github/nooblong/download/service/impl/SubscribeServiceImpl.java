@@ -3,10 +3,6 @@ package github.nooblong.download.service.impl;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.NumberUtil;
-import cn.hutool.core.util.ReUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
@@ -16,7 +12,6 @@ import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.bilibili.enums.VideoOrder;
 import github.nooblong.download.entity.Subscribe;
-import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.SubscribeMapper;
 import github.nooblong.download.service.SubscribeService;
@@ -25,7 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tech.powerjob.worker.log.OmsLogger;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author lyl
@@ -54,7 +51,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             try {
                 log.info("处理订阅: {}, id: {}, 类型: {}, targetId: {}", subscribe.getRemark(), subscribe.getId(),
                         subscribe.getType(), subscribe.getTargetId());
-                Iterator<SimpleVideoInfo> iterator = switch (SubscribeTypeEnum.valueOf(subscribe.getType())) {
+                Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
                     case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
                             subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE);
                     case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
@@ -114,7 +111,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
                     log.info("更新订阅处理时间: {}", DateUtil.formatDateTime(new Date()));
-                    if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
+                    if (subscribe.getType() == SubscribeTypeEnum.PART) {
                         subscribe.setEnable(0);
                     }
                     // 只有第一次是从老到新

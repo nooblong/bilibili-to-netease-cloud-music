@@ -58,7 +58,7 @@ public class SubscribeController {
             }
         }
         Assert.isTrue(byId.getUserId().equals(user.getId()), "你想干嘛?");
-        if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
+        if (subscribe.getType() == SubscribeTypeEnum.PART) {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
@@ -92,7 +92,7 @@ public class SubscribeController {
                 return Result.fail("暂不开放绕过订阅");
             }
         }
-        if (subscribe.getType().equals(SubscribeTypeEnum.PART.name())) {
+        if (subscribe.getType() == SubscribeTypeEnum.PART) {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
@@ -132,6 +132,7 @@ public class SubscribeController {
             if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
                 subscribe.getSubscribeRegs().add(subscribeReg);
             }
+            subscribe.setTypeDesc(subscribe.getType().getDesc());
         }));
         response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
         return Result.ok("ok", list);
