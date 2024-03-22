@@ -2,12 +2,14 @@ package github.nooblong.download.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import github.nooblong.download.StatusTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -26,7 +28,9 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long subscribeId;
     private String uploadName;
     private Long userId;
+    @JsonFormat(pattern = "MM-dd HH:mm")
     private Date createTime;
+    @JsonFormat(pattern = "MM-dd HH:mm")
     private Date updateTime;
     private Double offset;
     private Double beginSec;
@@ -47,6 +51,9 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long priority;
     private Long jobId;
     private String log;
+
+    @TableField(exist = false)
+    private String userName;
 
     @Override
     public int compareTo(@NotNull UploadDetail o) {

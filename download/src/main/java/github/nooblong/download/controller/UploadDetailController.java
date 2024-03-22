@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
@@ -16,7 +17,6 @@ import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
 import github.nooblong.download.api.DataResponse;
-import github.nooblong.download.api.RecentResponse;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
@@ -134,7 +134,7 @@ public class UploadDetailController {
     }
 
     @GetMapping("/data/recent")
-    public Result<IPage<RecentResponse>> recent(@RequestParam(name = "pageNo") int pageNo,
+    public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
                                                 @RequestParam(name = "pageSize") int pageSize,
                                                 @RequestParam(required = false, name = "title") String title,
                                                 @RequestParam(required = false, name = "remark") String remark,
@@ -171,28 +171,10 @@ public class UploadDetailController {
         }
         IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);
 
-        List<RecentResponse> recentResponses = new ArrayList<>();
         for (UploadDetail record : page.getRecords()) {
-            RecentResponse recentResponse = new RecentResponse();
-            recentResponse.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
-            recentResponse.setId(String.valueOf(record.getId()));
-            recentResponse.setDisplayStatus(record.getStatus().name());
-            recentResponse.setCreateTime(DateUtil.formatDateTime(record.getCreateTime()));
-            if (StrUtil.isNotBlank(record.getUploadName())) {
-                recentResponse.setName(record.getUploadName());
-            } else {
-                recentResponse.setName(record.getTitle());
-            }
-            recentResponse.setRetryTimes(record.getRetryTimes());
-            recentResponse.setUploadStatus(record.getStatus().name());
-            recentResponse.setVoiceId(record.getVoiceId().toString());
-            recentResponse.setVoiceListId(record.getVoiceListId().toString());
-            recentResponse.setSubscribeId(record.getSubscribeId());
-            recentResponses.add(recentResponse);
+            record.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
         }
-        Page<RecentResponse> result = new Page<RecentResponse>(page.getCurrent(), page.getSize(),
-                page.getTotal()).setRecords(recentResponses);
-        return Result.ok("查询成功", result);
+        return Result.ok("查询成功", page);
     }
 
     @GetMapping("/data/voiceListSong")
