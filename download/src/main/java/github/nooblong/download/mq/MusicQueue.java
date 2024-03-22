@@ -9,12 +9,15 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import tech.powerjob.client.PowerJobClient;
@@ -29,7 +32,7 @@ import java.util.PriorityQueue;
 
 @Slf4j
 @Component
-public class MusicQueue implements Runnable, InitializingBean {
+public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshedEvent> {
 
     final PriorityQueue<UploadDetail> queue;
     final BilibiliClient bilibiliClient;
@@ -37,20 +40,11 @@ public class MusicQueue implements Runnable, InitializingBean {
     PowerJobClient powerJobClient;
     final IUserService userService;
 
-    @Value("${powerjob.worker.server-address}")
-    private String address;
-
-    @Value("${powerjob.worker.app-name}")
-    private String name;
-
-    @Value("${powerjob.worker.password}")
-    private String password;
+    @Value("${powerjob.worker.health-report-interval}")
+    private int reportInterval;
 
     @Value("${main}")
     private Boolean main;
-
-    @Value("${powerjob.worker.health-report-interval}")
-    private int reportInterval;
 
     final OkHttpClient okHttpClient;
 
@@ -71,7 +65,7 @@ public class MusicQueue implements Runnable, InitializingBean {
     @Override
     public void run() {
         while (true) {
-            List<String> list = listWorkersAddrAvailable();
+            List<String> list = JobUtil.listWorkersAddrAvailable();
             if (list.isEmpty()) {
                 log.warn("没有可用worker");
             } else {
@@ -124,32 +118,11 @@ public class MusicQueue implements Runnable, InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void onApplicationEvent(ContextRefreshedEvent event) {
         if (main) {
-            this.powerJobClient = new PowerJobClient(address, name, password);
+            this.powerJobClient = new PowerJobClient(JobUtil.address, JobUtil.name, JobUtil.password);
             new Thread(this).start();
             log.info("开始消费");
         }
-    }
-
-    public List<String> listWorkersAddrAvailable() {
-        try {
-            JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
-                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=1"), okHttpClient);
-            Assert.isTrue(jsonResponse.get("success").asBoolean(), "查询worker失败=false");
-            ArrayNode data = (ArrayNode) jsonResponse.get("data");
-            ArrayList<String> result = new ArrayList<>();
-            for (JsonNode datum : data) {
-                if (datum.get("status").asInt() != 9999
-                && datum.get("lightTaskTrackerNum").asInt() == 0
-                && datum.get("heavyTaskTrackerNum").asInt() == 0) {
-                    result.add(datum.get("address").asText());
-                }
-            }
-            return result;
-        } catch (Exception e) {
-            log.error("查询worker失败", e);
-        }
-        return new ArrayList<>();
     }
 }

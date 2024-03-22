@@ -47,6 +47,8 @@ public class BilibiliClient {
 
     @Getter
     private Map<String, String> currentCred = new HashMap<>();
+    @Getter
+    private SysUser currentUser;
     final OkHttpClient okHttpClient;
     final IUserService userService;
 
@@ -71,8 +73,11 @@ public class BilibiliClient {
             SysUser sysUser = getAvailableBilibiliCookieUser();
             if (sysUser != null) {
                 this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
+                this.currentUser = sysUser;
                 log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
             } else {
+                this.currentUser = null;
+                this.currentCred = new HashMap<>();
                 log.info("无可用cookie");
             }
         }

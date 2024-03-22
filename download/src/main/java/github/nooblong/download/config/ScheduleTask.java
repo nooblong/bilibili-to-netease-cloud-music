@@ -72,9 +72,9 @@ public class ScheduleTask {
         }
     }
 
-    @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
-    public void checkBilibiliCookie() {
-        bilibiliClient.checkCurrentCredMap();
-    }
+//    @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+//    public void checkBilibiliCookie() {
+//        bilibiliClient.checkCurrentCredMap();
+//    }
 
 }

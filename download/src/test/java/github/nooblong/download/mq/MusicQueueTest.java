@@ -2,6 +2,7 @@ package github.nooblong.download.mq;
 
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.job.JobUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,7 +13,7 @@ class MusicQueueTest extends BaseTest {
 
     @Test
     void listWorkersAddrAvailable() {
-        List<String> strings = musicQueue.listWorkersAddrAvailable();
+        List<String> strings = JobUtil.listWorkersAddrAvailable();
         System.out.println(strings);
     }
 
