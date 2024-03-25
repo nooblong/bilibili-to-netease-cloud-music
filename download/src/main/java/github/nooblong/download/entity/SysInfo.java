@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 @Data
 public class SysInfo {
 
+    private int id;
     private String activeBilibiliUserName;
 
     public List<WorkerStatus> getWorkerStatusList() {

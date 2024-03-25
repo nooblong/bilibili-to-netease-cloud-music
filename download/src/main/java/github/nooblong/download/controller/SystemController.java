@@ -27,7 +27,7 @@ public class SystemController {
         sysInfo.setWorkerStatusList(workerStatusList);
         sysInfo.setActiveBilibiliUserName(bilibiliClient.getCurrentUser() != null
                 ? bilibiliClient.getCurrentUser().getUsername()
-                : "no bilibili cookie, stop the world!");
+                : null);
         return Result.ok("ok", sysInfo);
     }
 
