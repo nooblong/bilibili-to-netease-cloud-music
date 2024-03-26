@@ -133,7 +133,8 @@ public class BilibiliController {
 
     @GetMapping("/checkQrBili")
     public Result<JsonNode> getQrUrl(@RequestParam("key") String key) {
-        return Result.ok("ok", bilibiliClient.loginWithKey(key));
+        SysUser user = JwtUtil.verifierFromContext();
+        return Result.ok("ok", bilibiliClient.loginWithKey(key, user));
     }
 
 }

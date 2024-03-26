@@ -17,10 +17,7 @@ import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import okio.BufferedSink;
 import okio.Okio;
 import org.springframework.http.HttpHeaders;
@@ -32,10 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -53,7 +47,29 @@ public class BilibiliClient {
 
     public BilibiliClient(IUserService userService) {
         this.userService = userService;
-        this.okHttpClient = new OkHttpClient.Builder().build();
+        this.okHttpClient = new OkHttpClient.Builder()
+//                .cookieJar(new CookieJar() {
+//            @Override
+//            public void saveFromResponse(@NotNull HttpUrl httpUrl, @NotNull List<Cookie> list) {
+//                if (!list.isEmpty()) {
+//                    if (httpUrl.toString().contains("/login/login_with_key")) {
+//                        try {
+//                            SysUser user = JwtUtil.verifierFromContext();
+//                            userService.updateBilibiliCookieByOkhttpCookie(user.getId(), list);
+//                        } catch (ValidateException e) {
+//                            log.error("登录成功，但cookie不属于任何用户");
+//                        }
+//                    }
+//                }
+//            }
+//
+//            @NotNull
+//            @Override
+//            public List<Cookie> loadForRequest(@NotNull HttpUrl httpUrl) {
+//                return new ArrayList<>();
+//            }
+//        })
+                .build();
         // 选出当前cred
         SysUser sysUser = getAvailableBilibiliCookieUser();
         if (sysUser == null) {
@@ -397,7 +413,32 @@ public class BilibiliClient {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/update_qrcode_data"), okHttpClient);
     }
 
-    public JsonNode loginWithKey(String key) {
+    public JsonNode loginWithKey(String key, SysUser user) {
+        // 查询到成功就保存到用户cookie
+        /*
+          def parse_credential_url(events: dict) -> Credential:
+              url = events["url"]
+              cookies_list = url.split("?")[1].split("&")
+              sessdata = ""
+              bili_jct = ""
+              dedeuserid = ""
+              for cookie in cookies_list:
+                  if cookie[:8] == "SESSDATA":
+                      sessdata = cookie[9:]
+                  if cookie[:8] == "bili_jct":
+                      bili_jct = cookie[9:]
+                  if cookie[:11].upper() == "DEDEUSERID=":
+                      dedeuserid = cookie[11:]
+              ac_time_value = events["refresh_token"]
+              buvid3 = get_spi_buvid_sync()["b_3"]
+              return Credential(
+                  sessdata=sessdata,
+                  bili_jct=bili_jct,
+                  buvid3=buvid3,
+                  dedeuserid=dedeuserid,
+                  ac_time_value=ac_time_value,
+              )
+         */
         return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/login_with_key?key=" + key),
                 okHttpClient);
     }

@@ -92,6 +92,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         }
     }
 
+    @Override
+    public void updateBilibiliCookieByOkhttpCookie(Long id, List<Cookie> cookieList) {
+        SysUser byId = getById(id);
+        if (cookieList == null || cookieList.isEmpty()) {
+            return;
+        }
+        ObjectNode jsonNodes = cookieListToObjectNode(cookieList);
+        byId.setBiliCookies(jsonNodes.toString());
+        updateById(byId);
+    }
+
     public ObjectNode cookieListToObjectNode(List<Cookie> cookieList) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();

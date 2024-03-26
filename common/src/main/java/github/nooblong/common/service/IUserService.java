@@ -19,5 +19,7 @@ public interface IUserService extends IService<SysUser> {
 
     void updateBilibiliCookieByCookieMap(Long id, Map<String, String> cookieMap);
 
+    void updateBilibiliCookieByOkhttpCookie(Long id, List<Cookie> cookieList);
+
     ObjectNode cookieListToObjectNode(List<Cookie> cookieList);
 }
