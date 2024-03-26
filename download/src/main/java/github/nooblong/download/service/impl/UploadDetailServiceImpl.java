@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.UploadDetailMapper;
-import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;

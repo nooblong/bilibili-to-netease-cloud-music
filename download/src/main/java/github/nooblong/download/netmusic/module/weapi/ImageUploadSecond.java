@@ -9,7 +9,6 @@ import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j

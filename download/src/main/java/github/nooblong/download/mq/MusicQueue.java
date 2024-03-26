@@ -2,19 +2,14 @@ package github.nooblong.download.mq;
 
 import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONUtil;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
-import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -26,7 +21,6 @@ import tech.powerjob.common.model.LogConfig;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.response.ResultDTO;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
 

@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import lombok.Data;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;

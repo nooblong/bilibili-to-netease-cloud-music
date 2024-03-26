@@ -1,14 +1,9 @@
 package github.nooblong.download.netmusic;
 
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
-import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.netmusic.module.base.BaseModule;
 import github.nooblong.download.netmusic.module.base.ModuleFactory;
 import github.nooblong.download.netmusic.module.weapi.Login;
@@ -22,7 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j

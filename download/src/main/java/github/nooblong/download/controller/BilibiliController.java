@@ -20,7 +20,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.UUID;
 
 @RestController

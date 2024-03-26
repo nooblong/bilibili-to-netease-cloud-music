@@ -1,6 +1,5 @@
 package github.nooblong.download;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -9,11 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 
-import java.io.File;
 import java.time.LocalTime;
-import java.util.HashMap;
 
 @Slf4j
 @SpringBootTest(properties = {"spring.config.location=classpath:application-local.yml"})

@@ -1,14 +1,11 @@
 package github.nooblong.download.controller;
 
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
@@ -34,7 +31,6 @@ import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -135,11 +131,11 @@ public class UploadDetailController {
 
     @GetMapping("/data/recent")
     public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
-                                                @RequestParam(name = "pageSize") int pageSize,
-                                                @RequestParam(required = false, name = "title") String title,
-                                                @RequestParam(required = false, name = "remark") String remark,
-                                                @RequestParam(required = false, name = "username") String username,
-                                                @RequestParam(required = false, name = "status") String status) {
+                                              @RequestParam(name = "pageSize") int pageSize,
+                                              @RequestParam(required = false, name = "title") String title,
+                                              @RequestParam(required = false, name = "remark") String remark,
+                                              @RequestParam(required = false, name = "username") String username,
+                                              @RequestParam(required = false, name = "status") String status) {
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
 

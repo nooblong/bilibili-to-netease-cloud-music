@@ -200,23 +200,23 @@ class VoiceListTest extends BaseTest {
                 JsonNode audioprogramtrans = netMusicClient.getMusicDataByUserId(param, "audioprogramtrans", 1L);
                 int code = audioprogramtrans.get("code").asInt();
 //                if (audioprogramtrans.get("code").asInt() == 200) {
-                    // 获取一遍第一页
-                    JsonNode voiceList = netMusicClient.getVoiceList(voiceListId, 1L, 0L);
-                    // 确保移动到第一
-                    ArrayNode list = (ArrayNode) voiceList.get("list");
-                    JsonNode first = list.get(0);
-                    for (int j = 0; j < 2; j++) {
-                        if (first.get("voiceId").asText().equals(sortSong.getVoiceId())) {
-                            ok = true;
-                            break;
-                        }
-                        log.error("失败重试: {}", sortSong.getVoiceName());
-                        if (code == 200) {
-                            Thread.sleep(1000);
-                        } else {
-                            Thread.sleep(500);
-                        }
+                // 获取一遍第一页
+                JsonNode voiceList = netMusicClient.getVoiceList(voiceListId, 1L, 0L);
+                // 确保移动到第一
+                ArrayNode list = (ArrayNode) voiceList.get("list");
+                JsonNode first = list.get(0);
+                for (int j = 0; j < 2; j++) {
+                    if (first.get("voiceId").asText().equals(sortSong.getVoiceId())) {
+                        ok = true;
+                        break;
                     }
+                    log.error("失败重试: {}", sortSong.getVoiceName());
+                    if (code == 200) {
+                        Thread.sleep(1000);
+                    } else {
+                        Thread.sleep(500);
+                    }
+                }
 
 //                } else {
 //                }

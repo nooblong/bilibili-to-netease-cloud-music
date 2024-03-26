@@ -30,7 +30,6 @@ public class RegisterAnonymous extends SimpleWeApiModule {
      */
 
 
-
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
         node.put("username", "Tk1VU0lDIGdtVG82R2lvNEZoRWY5MFZqZzhPenc9PQ==");

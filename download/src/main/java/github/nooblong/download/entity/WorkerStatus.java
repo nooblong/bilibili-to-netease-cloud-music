@@ -1,6 +1,5 @@
 package github.nooblong.download.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,11 +36,11 @@ public class WorkerStatus {
     private int status;
 
     /**
-     *  12.3%(4 cores)
+     * 12.3%(4 cores)
      */
     private static final String CPU_FORMAT = "%s / %s cores";
     /**
-     *  27.7%(2.9/8.0 GB)
+     * 27.7%(2.9/8.0 GB)
      */
     private static final String OTHER_FORMAT = "%s%%（%s / %s GB）";
     private static final DecimalFormat df = new DecimalFormat("#.#");
@@ -56,7 +55,7 @@ public class WorkerStatus {
         this.address = workerInfo.getAddress();
         this.cpuLoad = String.format(CPU_FORMAT, df.format(systemMetrics.getCpuLoad()), systemMetrics.getCpuProcessors());
         if (systemMetrics.getCpuLoad() > systemMetrics.getCpuProcessors() * THRESHOLD) {
-            this.status ++;
+            this.status++;
         }
 
         String menL = df.format(systemMetrics.getJvmMemoryUsage() * 100);
@@ -64,7 +63,7 @@ public class WorkerStatus {
         String menMax = df.format(systemMetrics.getJvmMaxMemory());
         this.memoryLoad = String.format(OTHER_FORMAT, menL, menUsed, menMax);
         if (systemMetrics.getJvmMemoryUsage() > THRESHOLD) {
-            this.status ++;
+            this.status++;
         }
 
         String diskL = df.format(systemMetrics.getDiskUsage() * 100);
@@ -72,10 +71,10 @@ public class WorkerStatus {
         String diskMax = df.format(systemMetrics.getDiskTotal());
         this.diskLoad = String.format(OTHER_FORMAT, diskL, diskUsed, diskMax);
         if (systemMetrics.getDiskUsage() > THRESHOLD) {
-            this.status ++;
+            this.status++;
         }
 
-        if (workerInfo.overload()){
+        if (workerInfo.overload()) {
             // 超载的情况直接置为 3
             this.status = 3;
         }
