@@ -56,17 +56,22 @@ public class JobUtil implements InitializingBean {
             }
             return result;
         } catch (Exception e) {
-            log.error("查询worker失败", e);
+            log.error("查询worker失败: {}", e.getMessage());
         }
         return new ArrayList<>();
     }
 
     public static List<WorkerStatus> workerStatusList() {
-        JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
-                OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=1"), client);
-        Assert.isTrue(jsonResponse.get("success").asBoolean(), "查询worker失败=false");
-        WorkerStatus[] data = new ObjectMapper().convertValue(jsonResponse.get("data"), WorkerStatus[].class);
-        return Arrays.stream(data).toList();
+        try {
+            JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
+                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=1"), client);
+            Assert.isTrue(jsonResponse.get("success").asBoolean(), "success=false");
+            WorkerStatus[] data = new ObjectMapper().convertValue(jsonResponse.get("data"), WorkerStatus[].class);
+            return Arrays.stream(data).toList();
+        } catch (Exception e) {
+            log.error("查询worker状态失败: {}", e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     @Override

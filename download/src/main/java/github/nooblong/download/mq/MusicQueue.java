@@ -59,25 +59,29 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     @Override
     public void run() {
         while (true) {
-            List<String> list = JobUtil.listWorkersAddrAvailable();
-            if (list.isEmpty()) {
-                log.warn("没有可用worker");
-            } else {
-                UploadDetail poll = queue.poll();
-                if (poll != null) {
-                    upload(poll, list.get(0));
-                    try {
-                        Thread.sleep(reportInterval * 1000L + 1);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+            UploadDetail peek = queue.peek();
+            if (peek != null) {
+                List<String> list = JobUtil.listWorkersAddrAvailable();
+                if (list.isEmpty()) {
+                    log.warn("没有可用worker");
+                } else {
+                    log.info("有可用worker");
+                    UploadDetail poll = queue.poll();
+                    if (poll != null) {
+                        upload(poll, list.get(0));
+                        try {
+                            Thread.sleep(reportInterval * 1000L + 1);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        continue;
                     }
-                    continue;
                 }
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
