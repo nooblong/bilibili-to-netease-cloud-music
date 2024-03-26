@@ -23,7 +23,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -275,7 +274,6 @@ public class BilibiliClient {
     }
 
 
-
     public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
         cred.forEach(builder::addQueryParameter);
@@ -357,7 +355,7 @@ public class BilibiliClient {
                 url.startsWith("bilibili")) {
             String bvid = getUrlBvid(url);
             return new SimpleVideoInfo().setBvid(bvid);
-        } else if (url.toLowerCase().startsWith("bv")){
+        } else if (url.toLowerCase().startsWith("bv")) {
             return new SimpleVideoInfo().setBvid(url);
         } else {
             throw new RuntimeException("未知的输入");
@@ -393,5 +391,14 @@ public class BilibiliClient {
         } else {
             throw new RuntimeException("错误url");
         }
+    }
+
+    public JsonNode updateQrcodeData() {
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/update_qrcode_data"), okHttpClient);
+    }
+
+    public JsonNode loginWithKey(String key) {
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/login_with_key?key=" + key),
+                okHttpClient);
     }
 }

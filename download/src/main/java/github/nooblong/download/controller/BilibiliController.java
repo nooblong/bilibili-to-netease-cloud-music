@@ -1,10 +1,12 @@
 package github.nooblong.download.controller;
 
+import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
+import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.api.VideoInfoResponse;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
@@ -17,6 +19,8 @@ import okhttp3.OkHttpClient;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.UUID;
 
 @RestController
@@ -114,6 +118,23 @@ public class BilibiliController {
         SysUser user = JwtUtil.verifierToken(token);
         Assert.isTrue(user.getId().intValue() == 1, "你为什么要这么做?");
         return Result.ok(user.getBiliCookies());
+    }
+
+    @GetMapping("/getQrBili")
+    public Result<QrResponse> getQrUrl() {
+        JwtUtil.verifierFromContext();
+        JsonNode data = bilibiliClient.updateQrcodeData();
+        String unikey = data.get("data").get("qrcode_key").asText();
+        BufferedImage generate = QrCodeUtil.generate(data.get("data").get("url").asText(), 300, 300);
+        QrResponse qrResponse = new QrResponse();
+        qrResponse.setImage(NetMusicController.bufferedImageToBase64(generate));
+        qrResponse.setUniqueKey(unikey);
+        return Result.ok("ok", qrResponse);
+    }
+
+    @GetMapping("/checkQrBili")
+    public Result<JsonNode> getQrUrl(@RequestParam("key") String key) {
+        return Result.ok("ok", bilibiliClient.loginWithKey(key));
     }
 
 }

@@ -53,7 +53,7 @@ public class NetMusicController {
     /**
      * BufferedImage 编码转换为 base64
      */
-    private static String bufferedImageToBase64(BufferedImage bufferedImage) {
+    public static String bufferedImageToBase64(BufferedImage bufferedImage) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();//io流
         try {
             ImageIO.write(bufferedImage, "png", baos);//写入流中
