@@ -13,10 +13,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
-import github.nooblong.download.bilibili.BilibiliFullVideo;
-import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
+import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -122,9 +122,9 @@ public class SubscribeController {
 
     @GetMapping("/subscribe")
     public Result<IPage<Subscribe>> subscribeList(@RequestParam(name = "pageNo") int pageNo,
-                                                 @RequestParam(name = "pageSize") int pageSize,
-                                                 HttpServletResponse response) {
-        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize) ,Subscribe.class);
+                                                  @RequestParam(name = "pageSize") int pageSize,
+                                                  HttpServletResponse response) {
+        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize), Subscribe.class);
         LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
                 .in(SubscribeReg::getSubscribeId, list.getRecords().stream().map(Subscribe::getId).collect(Collectors.toList()));
         List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);

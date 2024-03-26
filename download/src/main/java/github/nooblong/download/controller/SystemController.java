@@ -5,7 +5,6 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.WorkerStatus;
 import github.nooblong.download.job.JobUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
