@@ -27,6 +27,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class GetUpJobTest implements MapReduceProcessor {
 
+    /*
+    {"id":null,"jobName":"map_EXPORT_1711525310965","jobDescription":"map","appId":1,"jobParams":null,"timeExpressionType":"API","timeExpression":null,"executeType":"MAP_REDUCE","processorType":"BUILT_IN","processorInfo":"github.nooblong.download.job.GetUpJob","maxInstanceNum":0,"concurrency":1,"instanceTimeLimit":0,"instanceRetryNum":0,"taskRetryNum":0,"minCpuCores":0,"minMemorySpace":0,"minDiskSpace":0,"enable":true,"designatedWorkers":"","maxWorkerCount":0,"notifyUserIds":null,"extra":null,"dispatchStrategy":"SPECIFY","dispatchStrategyConfig":"10.0.0.12:27777","lifeCycle":{"start":null,"end":null},"alarmConfig":{"alertThreshold":0,"statisticWindowLen":0,"silenceWindowLen":0},"tag":null,"logConfig":{"type":4,"level":null,"loggerName":null},"advancedRuntimeConfig":{"taskTrackerBehavior":null}}
+     */
+
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
 

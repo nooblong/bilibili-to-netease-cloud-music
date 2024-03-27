@@ -96,7 +96,7 @@ CREATE TABLE `upload_detail`
     `use_video_cover` tinyint        NOT NULL DEFAULT '0',
     `crack`           tinyint        NOT NULL DEFAULT '0',
     `priority`        int            NOT NULL DEFAULT '0',
-    `job_id`          bigint         NOT NULL DEFAULT '0',
+    `instance_id`          bigint         NOT NULL DEFAULT '0',
     `log`             varchar(8192)  NOT NULL DEFAULT '',
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB

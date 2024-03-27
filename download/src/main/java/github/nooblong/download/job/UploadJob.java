@@ -22,6 +22,7 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import tech.powerjob.worker.core.processor.ProcessResult;
@@ -74,17 +75,18 @@ public class UploadJob implements BasicProcessor {
 
         OmsLogger logger = context.getOmsLogger();
 
-        String jobParams = Optional.ofNullable(context.getJobParams()).orElse("S");
-        logger.info("Current context:{}", context.getWorkflowContext());
-        logger.info("Current job params:{}", jobParams);
+        String param;
+        //（允许动态[instanceParams]覆盖静态参数[jobParams]）
+        param = StringUtils.isBlank(context.getInstanceParams()) ? context.getJobParams() : context.getInstanceParams();
+
         ObjectMapper objectMapper = new ObjectMapper();
-        UploadDetail uploadDetail = objectMapper.readValue(jobParams, UploadDetail.class);
+        UploadDetail uploadDetail = objectMapper.readValue(param, UploadDetail.class);
 
         // 先更新了信息先，其他不管
-        Long jobId = context.getJobId();
+        Long instanceId = context.getInstanceId();
         uploadDetail.setRetryTimes(uploadDetail.getRetryTimes() + 1);
         uploadDetail.setStatus(StatusTypeEnum.PROCESSING);
-        uploadDetail.setJobId(jobId);
+        uploadDetail.setInstanceId(instanceId);
         uploadDetailService.updateById(uploadDetail);
 
         getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),

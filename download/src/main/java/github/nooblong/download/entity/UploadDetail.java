@@ -47,7 +47,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
-    private Long jobId;
+    private Long instanceId;
     private String log;
 
     @TableField(exist = false)

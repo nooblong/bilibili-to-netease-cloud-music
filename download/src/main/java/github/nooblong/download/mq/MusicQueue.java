@@ -2,7 +2,6 @@ package github.nooblong.download.mq;
 
 import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONUtil;
-import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
@@ -10,15 +9,15 @@ import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import tech.powerjob.client.PowerJobClient;
-import tech.powerjob.common.enums.*;
-import tech.powerjob.common.model.LogConfig;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
+import tech.powerjob.common.response.JobInfoDTO;
 import tech.powerjob.common.response.ResultDTO;
 
 import java.util.List;
@@ -90,29 +89,36 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
         Assert.notNull(uploadDetail.getId(), "上传时detailId不应该为空");
         log.info("处理: {}, 优先级: {}, 交给: {}", uploadDetail.getTitle(), uploadDetail.getPriority(), address);
         SaveJobInfoRequest req = new SaveJobInfoRequest();
-        SysUser user = userService.getById(uploadDetail.getUserId());
-        req.setJobName(user.getId() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getCid());
-        req.setDispatchStrategy(DispatchStrategy.SPECIFY);
-        req.setDesignatedWorkers(address);
-        req.setJobDescription(user.getUsername() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getVoiceListId());
-        req.setJobParams(JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)));
-        req.setTimeExpressionType(TimeExpressionType.API);
-        req.setExecuteType(ExecuteType.STANDALONE);
-        req.setProcessorType(ProcessorType.BUILT_IN);
-        req.setProcessorInfo("github.nooblong.download.job.UploadJob");
-        req.setMaxInstanceNum(1);
-        req.setConcurrency(1);
-        req.setInstanceRetryNum(0);
-        req.setTaskRetryNum(0);
-        req.setEnable(false);
-        req.setLogConfig(new LogConfig().setLevel(LogLevel.INFO.getV()).setType(LogType.LOCAL_AND_ONLINE.getV()));
-        req.setInstanceTimeLimit(900000L);
-        req.setDispatchStrategy(DispatchStrategy.HEALTH_FIRST);
-        ResultDTO<Long> saveJob = powerJobClient.saveJob(req);
-        if (!saveJob.isSuccess()) {
-            log.error("请求powerJobClient失败");
-        }
-        powerJobClient.runJob(saveJob.getData());
+        ResultDTO<JobInfoDTO> jobInfoDTOResultDTO = powerJobClient.fetchJob(JobUtil.uploadJobId);
+        BeanUtils.copyProperties(jobInfoDTOResultDTO, req);
+        req.setDispatchStrategyConfig(address);
+        powerJobClient.saveJob(req);
+        powerJobClient.runJob(JobUtil.uploadJobId,
+                JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)), 0);
+//        SaveJobInfoRequest req = new SaveJobInfoRequest();
+//        SysUser user = userService.getById(uploadDetail.getUserId());
+//        req.setJobName(user.getId() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getCid());
+//        req.setDispatchStrategy(DispatchStrategy.SPECIFY);
+//        req.setDesignatedWorkers(address);
+//        req.setJobDescription(user.getUsername() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getVoiceListId());
+//        req.setJobParams(JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)));
+//        req.setTimeExpressionType(TimeExpressionType.API);
+//        req.setExecuteType(ExecuteType.STANDALONE);
+//        req.setProcessorType(ProcessorType.BUILT_IN);
+//        req.setProcessorInfo("github.nooblong.download.job.UploadJob");
+//        req.setMaxInstanceNum(1);
+//        req.setConcurrency(1);
+//        req.setInstanceRetryNum(0);
+//        req.setTaskRetryNum(0);
+//        req.setEnable(false);
+//        req.setLogConfig(new LogConfig().setLevel(LogLevel.INFO.getV()).setType(LogType.LOCAL_AND_ONLINE.getV()));
+//        req.setInstanceTimeLimit(900000L);
+//        req.setDispatchStrategy(DispatchStrategy.HEALTH_FIRST);
+//        ResultDTO<Long> saveJob = powerJobClient.saveJob(req);
+//        if (!saveJob.isSuccess()) {
+//            log.error("请求powerJobClient失败");
+//        }
+//        powerJobClient.runJob(saveJob.getData());
     }
 
     @Override

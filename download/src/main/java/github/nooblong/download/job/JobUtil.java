@@ -36,6 +36,11 @@ public class JobUtil implements InitializingBean {
         JobUtil.name = name;
     }
 
+    public static final long appId = 1;
+    public static final long getUpJobId = 3;
+    public static final long uploadJobId = 13;
+    public static final long checkBilibiliCookieJobId = 124;
+
     public static String address;
     public static String password;
     public static String name;
@@ -43,7 +48,7 @@ public class JobUtil implements InitializingBean {
     public static List<String> listWorkersAddrAvailable() {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
-                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=1"), client);
+                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=" + appId), client);
             Assert.isTrue(jsonResponse.get("success").asBoolean(), "查询worker失败=false");
             WorkerStatus[] data = new ObjectMapper().convertValue(jsonResponse.get("data"), WorkerStatus[].class);
             List<String> result = new ArrayList<>();
@@ -64,7 +69,7 @@ public class JobUtil implements InitializingBean {
     public static List<WorkerStatus> workerStatusList() {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
-                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=1"), client);
+                    OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=" + appId), client);
             Assert.isTrue(jsonResponse.get("success").asBoolean(), "success=false");
             WorkerStatus[] data = new ObjectMapper().convertValue(jsonResponse.get("data"), WorkerStatus[].class);
             return Arrays.stream(data).toList();
