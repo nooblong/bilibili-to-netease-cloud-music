@@ -1,7 +1,9 @@
 package github.nooblong.download.job;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import github.nooblong.download.api.StringPage;
 import github.nooblong.download.entity.WorkerStatus;
 import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import tech.powerjob.client.PowerJobClient;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +43,7 @@ public class JobUtil implements InitializingBean {
     public static final long getUpJobId = 3;
     public static final long uploadJobId = 13;
     public static final long checkBilibiliCookieJobId = 124;
+    public static PowerJobClient powerJobClient;
 
     public static String address;
     public static String password;
@@ -70,7 +74,7 @@ public class JobUtil implements InitializingBean {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
                     OkUtil.getNoLog("http://" + address + "/system/listWorker?appId=" + appId), client);
-            Assert.isTrue(jsonResponse.get("success").asBoolean(), "success=false");
+            Assert.isTrue(jsonResponse.get("success").asBoolean(), "workerStatusList success=false");
             WorkerStatus[] data = new ObjectMapper().convertValue(jsonResponse.get("data"), WorkerStatus[].class);
             return Arrays.stream(data).toList();
         } catch (Exception e) {
@@ -79,8 +83,18 @@ public class JobUtil implements InitializingBean {
         }
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public static StringPage logPage(Long instanceId, Long index) {
+        // index从0开始
+        JsonNode jsonResponse = OkUtil.getJsonResponseNoLog(
+                OkUtil.getNoLog("http://" + address +
+                        "/instance/log?instanceId=" + instanceId + "&index=" + index + "&appId=" + appId), client);
+        Assert.isTrue(jsonResponse.get("success").asBoolean(), "logPage success=false");
+        JsonNode data = jsonResponse.get("data");
+        return new StringPage(index, data.get("totalPages").asInt(), data.get("data").asText());
+    }
 
+    @Override
+    public void afterPropertiesSet() {
+        powerJobClient = new PowerJobClient(JobUtil.address, JobUtil.name, JobUtil.password);
     }
 }

@@ -13,11 +13,12 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
-import github.nooblong.download.api.DataResponse;
+import github.nooblong.download.api.StringPage;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
@@ -25,19 +26,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import tech.powerjob.common.response.InstanceInfoDTO;
+import tech.powerjob.common.response.ResultDTO;
 
-import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/uploadDetail")
 public class UploadDetailController {
-    private final UploadDetailService uploadDetailService;
+    final UploadDetailService uploadDetailService;
     final NetMusicClient netMusicClient;
     final BilibiliClient bilibiliClient;
     final MusicQueue musicQueue;
@@ -61,12 +60,12 @@ public class UploadDetailController {
 //        return Result.ok("1");
 //    }
 
-    @GetMapping("/uploadDetail/{id}")
+    @GetMapping("/{id}")
     public Result<UploadDetail> get(@PathVariable(name = "id") Long id) {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
-    @PostMapping("/download/addQueue")
+    @PostMapping("/addQueue")
     public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
 
@@ -98,7 +97,7 @@ public class UploadDetailController {
         return Result.ok("添加队列成功");
     }
 
-    @PostMapping("/download/addToMyList")
+    @PostMapping("/addToMyList")
     public Result<String> addToMyList(@RequestBody @Validated AddToMyRequest req, HttpServletRequest request) throws JsonProcessingException {
         // todo: 没做完
         String token = request.getHeader("Access-Token");
@@ -107,29 +106,7 @@ public class UploadDetailController {
         return Result.ok("没做完");
     }
 
-    @GetMapping("/data/info")
-    public Result<DataResponse> getVideoInfo() {
-        DataResponse dataResponse = new DataResponse();
-        dataResponse.setRegisterNum(Db.count(SysUser.class));
-        Path path = FileSystems.getDefault().getPath("/");
-        long usableSpace;
-        long totalSpace;
-        try {
-            FileStore fileStore = Files.getFileStore(path);
-            usableSpace = fileStore.getUsableSpace();
-            totalSpace = fileStore.getTotalSpace();
-
-            System.out.println("Usable space: " + usableSpace + " mb");
-            System.out.println("Total space: " + totalSpace + " bytes");
-        } catch (IOException e) {
-            return Result.fail("系统错误");
-        }
-        dataResponse.setAddQueueNum(Db.count(UploadDetail.class));
-        dataResponse.setDiskUseNum((totalSpace - usableSpace) / 1024 / 1024);
-        return Result.ok("获取成功", dataResponse);
-    }
-
-    @GetMapping("/data/recent")
+    @GetMapping("/recent")
     public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
                                               @RequestParam(name = "pageSize") int pageSize,
                                               @RequestParam(required = false, name = "title") String title,
@@ -174,37 +151,31 @@ public class UploadDetailController {
         return Result.ok("查询成功", page);
     }
 
-    @GetMapping("/data/voiceListSong")
-    public Result<IPage<UploadDetail>> voiceListSong(@RequestParam(name = "pageNo") int pageNo,
-                                                     @RequestParam(name = "pageSize") int pageSize,
-                                                     @RequestParam(required = false, name = "search") String search,
-                                                     @RequestParam(name = "voiceListId") String voiceListId,
-                                                     String status) {
-        IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
-        LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<UploadDetail>().orderByDesc(UploadDetail::getId);
-        wrapper.like(search != null, UploadDetail::getUploadName, search);
-        wrapper.eq(status != null, UploadDetail::getStatus, status);
-        if (status != null && status.equals("other")) {
-            wrapper.notIn(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name(),
-                    StatusTypeEnum.ONLY_SELF_SEE.name(),
-                    StatusTypeEnum.AUDITING.name());
-        }
-        wrapper.eq(UploadDetail::getVoiceListId, voiceListId);
-        IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);
-        page.getRecords().forEach(i -> i.setUserId(null));
-        return Result.ok("查询成功", page);
-    }
-
-    @GetMapping("/uploadDetail/checkHasUploaded")
+    @GetMapping("/checkHasUploaded")
     public Result<Boolean> checkHasUploaded() {
         return Result.ok("ok", uploadDetailService.hasUploaded(JwtUtil.verifierFromContext().getId()));
     }
 
-    @GetMapping("/uploadDetail/uploadAllOnlySelfSee")
+    @GetMapping("/uploadAllOnlySelfSee")
     public Result<String> uploadAllOnlySelfSee(@RequestParam(name = "voiceListId") Long voiceListId) {
         Assert.isTrue(JwtUtil.verifierFromContext().getId().equals(1L), "???");
         uploadDetailService.uploadAllOnlySelfSee(voiceListId);
         return Result.ok("ok!");
+    }
+
+    @GetMapping("/instanceInfo")
+    public Result<InstanceInfoDTO> instanceInfo(@RequestParam(name = "instanceId") Long instanceId) {
+        ResultDTO<InstanceInfoDTO> instanceInfoDTOResultDTO = JobUtil.powerJobClient.fetchInstanceInfo(instanceId);
+        Assert.isTrue(instanceInfoDTOResultDTO.isSuccess(), "获取详细信息出错");
+        InstanceInfoDTO data = instanceInfoDTOResultDTO.getData();
+        return Result.ok("ok", data);
+    }
+
+    @GetMapping("/instanceLog")
+    public Result<StringPage> instanceLog(@RequestParam(name = "instanceId") Long instanceId,
+                                          @RequestParam(name = "index") Long index) {
+        StringPage stringPage = JobUtil.logPage(instanceId, index);
+        return Result.ok("ok", stringPage);
     }
 
 }

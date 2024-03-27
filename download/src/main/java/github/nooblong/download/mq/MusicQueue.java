@@ -30,7 +30,6 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     final PriorityQueue<UploadDetail> queue;
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
-    PowerJobClient powerJobClient;
     final IUserService userService;
 
     @Value("${powerjob.worker.health-report-interval}")
@@ -89,11 +88,11 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
         Assert.notNull(uploadDetail.getId(), "上传时detailId不应该为空");
         log.info("处理: {}, 优先级: {}, 交给: {}", uploadDetail.getTitle(), uploadDetail.getPriority(), address);
         SaveJobInfoRequest req = new SaveJobInfoRequest();
-        ResultDTO<JobInfoDTO> jobInfoDTOResultDTO = powerJobClient.fetchJob(JobUtil.uploadJobId);
+        ResultDTO<JobInfoDTO> jobInfoDTOResultDTO = JobUtil.powerJobClient.fetchJob(JobUtil.uploadJobId);
         BeanUtils.copyProperties(jobInfoDTOResultDTO, req);
         req.setDispatchStrategyConfig(address);
-        powerJobClient.saveJob(req);
-        powerJobClient.runJob(JobUtil.uploadJobId,
+        JobUtil.powerJobClient.saveJob(req);
+        JobUtil.powerJobClient.runJob(JobUtil.uploadJobId,
                 JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)), 0);
 //        SaveJobInfoRequest req = new SaveJobInfoRequest();
 //        SysUser user = userService.getById(uploadDetail.getUserId());
@@ -124,7 +123,6 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (main) {
-            this.powerJobClient = new PowerJobClient(JobUtil.address, JobUtil.name, JobUtil.password);
             new Thread(this).start();
             log.info("开始消费");
         }
