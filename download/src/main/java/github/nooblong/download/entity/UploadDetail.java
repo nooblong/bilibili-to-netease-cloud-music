@@ -3,6 +3,8 @@ package github.nooblong.download.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import github.nooblong.download.StatusTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -47,6 +49,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long instanceId;
     private String log;
 
