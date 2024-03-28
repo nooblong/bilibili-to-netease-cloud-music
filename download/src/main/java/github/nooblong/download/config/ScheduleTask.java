@@ -40,7 +40,7 @@ public class ScheduleTask {
         uploadDetailService.checkAllAuditStatus();
     }
 
-    @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+//    @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getUpJob() {
         subscribeService.checkAndSave(null);
     }
@@ -56,7 +56,7 @@ public class ScheduleTask {
         }
     }
 
-    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+//    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void refreshBiliCookie() {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
@@ -71,10 +71,4 @@ public class ScheduleTask {
             }
         }
     }
-
-//    @Scheduled(fixedDelay = 300, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
-//    public void checkBilibiliCookie() {
-//        bilibiliClient.checkCurrentCredMap();
-//    }
-
 }
