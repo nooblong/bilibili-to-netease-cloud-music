@@ -117,4 +117,10 @@ public class TestJava {
         System.out.println(jsonResponse.toPrettyString());
     }
 
+    @Test
+    void testSubstring() {
+        String substring = "bili_jct=9dc72e5c01a78c51569778830e0b7767".substring(9);
+        System.out.println(substring);
+    }
+
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.enums.AudioQuality;
@@ -17,7 +18,10 @@ import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +33,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -77,25 +84,26 @@ public class BilibiliClient {
         } else {
             log.info("使用用户{}的b站cookie", sysUser.getUsername());
             this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
+            this.currentUser = sysUser;
         }
     }
 
     public void checkCurrentCredMap() {
-        boolean login3 = isLogin3(currentCred);
-        if (!login3) {
+//        boolean login3 = isLogin3(currentCred);
+//        if (!login3) {
+//            this.currentCred = new HashMap<>();
+//            log.info("b站cookie失效，清除，选出新cookie");
+        SysUser sysUser = getAvailableBilibiliCookieUser();
+        if (sysUser != null) {
+            this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
+            this.currentUser = sysUser;
+            log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
+        } else {
+            this.currentUser = null;
             this.currentCred = new HashMap<>();
-            log.info("b站cookie失效，清除，选出新cookie");
-            SysUser sysUser = getAvailableBilibiliCookieUser();
-            if (sysUser != null) {
-                this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
-                this.currentUser = sysUser;
-                log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
-            } else {
-                this.currentUser = null;
-                this.currentCred = new HashMap<>();
-                log.info("无可用cookie");
-            }
+            log.info("无可用cookie");
         }
+//        }
     }
 
     private SysUser getAvailableBilibiliCookieUser() {
@@ -409,6 +417,10 @@ public class BilibiliClient {
         }
     }
 
+    public JsonNode getSpiBuvidSync() {
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/get_spi_buvid_sync"), okHttpClient);
+    }
+
     public JsonNode updateQrcodeData() {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/update_qrcode_data"), okHttpClient);
     }
@@ -439,7 +451,47 @@ public class BilibiliClient {
                   ac_time_value=ac_time_value,
               )
          */
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/login_with_key?key=" + key),
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/login_with_key?key=" + key),
                 okHttpClient);
+        /*
+        {"code":0,
+        "data":{"url":"https://passport.biligame.com/x/passport-login/web/crossDomain?
+        DedeUserID=6906052&
+        DedeUserID__ckMd5=b315fd91d7ea6429&
+        Expires=1727148141&
+        SESSDATA=8612c6f2,1727148141,64aee*31CjBBJuas5w5n3IIiyB-SuoXW8U24PTGOzUG_qj5x0ttYehM2GJLvBX0F-242_vW2OCcSVmVVZllFNGk4RF9qYTd4YktYS1ZoUnpmNnI1a3RBUkhfY3V2NUM1cHp1aDRMcnA0SVlzVFR4RV9tYVNRTnhuQ01GUzgwZEE2OTlPaUstaWNLczh2V3RBIIEC&
+        bili_jct=9dc72e5c01a78c51569778830e0b7767&
+        gourl=https%3A%2F%2Fwww.bilibili.com",
+        "refresh_token":"86ca36a2b4e264e1deb21823d93bb531","timestamp":1711596141317,"code":0,"message":""}}
+         */
+
+        if (response.get("data").get("code").asInt() == 0) {
+            JsonNode data = response.get("data");
+            String url = data.get("url").asText();
+            String refreshToken = data.get("refresh_token").asText();
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode cookieNode = objectMapper.createObjectNode();
+            String[] cookieList = url.split("\\?")[1].split("&");
+            for (String cookie : cookieList) {
+                if (cookie.startsWith("SESSDATA")) {
+                    cookie = cookie.replaceAll(",", "%2F");
+                    cookieNode.put("sessdata", cookie.substring(9));
+                }
+                if (cookie.startsWith("bili_jct")) {
+                    cookieNode.put("bili_jct", cookie.substring(9));
+                }
+                if (cookie.toUpperCase().startsWith("DEDEUSERID=")) {
+                    cookieNode.put("dedeuserid", cookie.substring(11));
+                }
+            }
+            cookieNode.put("ac_time_value", refreshToken);
+            JsonNode spiBuvidSync = getSpiBuvidSync();
+            String buvid3 = spiBuvidSync.get("data").get("b_3").asText();
+            cookieNode.put("buvid3", buvid3);
+            user.setBiliCookies(cookieNode.toString());
+            userService.updateById(user);
+        }
+
+        return response;
     }
 }
