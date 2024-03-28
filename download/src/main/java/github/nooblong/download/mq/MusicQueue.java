@@ -51,6 +51,7 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     }
 
     public void enQueue(UploadDetail uploadDetail) {
+        log.info("入队: {}", uploadDetail.getTitle());
         queue.offer(uploadDetail);
     }
 
@@ -80,6 +81,8 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+            } else {
+                log.info("队列为空");
             }
         }
     }
