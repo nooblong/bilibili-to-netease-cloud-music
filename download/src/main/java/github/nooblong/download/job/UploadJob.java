@@ -88,19 +88,26 @@ public class UploadJob implements BasicProcessor {
         uploadDetail.setStatus(StatusTypeEnum.PROCESSING);
         uploadDetail.setInstanceId(instanceId);
         uploadDetailService.updateById(uploadDetail);
+        try {
+            // 收集错误信息
+            getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
+                    uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
+            codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
+            // 上传之前先设置名字
+            uploadDetail.setUploadName(handleUploadName(uploadDetail));
+            String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
+                    uploadDetail.getUploadName(), uploadDetail.getPrivacy());
+            clear(logger, uploadDetail, Long.valueOf(voiceId));
 
-        getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
-                uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
-        codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
-        // 上传之前先设置名字
-        uploadDetail.setUploadName(handleUploadName(uploadDetail));
-        String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
-                uploadDetail.getUploadName(), uploadDetail.getPrivacy());
-        clear(logger, uploadDetail, Long.valueOf(voiceId));
-
-        logger.info("单曲上传成功, 声音id:[{}]", voiceId);
-        return new ProcessResult(true, "单曲上传成功, 声音id:[" + voiceId + "]");
-
+            logger.info("单曲上传成功, 声音id:[{}]", voiceId);
+            return new ProcessResult(true, "单曲上传成功, 声音id:[" + voiceId + "]");
+        } catch (Exception e) {
+            uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
+            Db.updateById(uploadDetail);
+            log.error(e.getMessage());
+            logger.error("声音上传失败: {}", e.getMessage());
+            return new ProcessResult(false, "单曲上传失败: " + e.getMessage());
+        }
     }
 
     private void getData(OmsLogger log, String bvid, String cid, boolean useVideoCover, Long userId) {
@@ -233,10 +240,10 @@ public class UploadJob implements BasicProcessor {
         JsonNode audiouploadthird = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadthird", userId);
 
         JsonNode audioprecheck = netMusicClient.getMusicDataByUserId(queryMap, "audioprecheck", userId);
-        Assert.isTrue(audioprecheck.get("code").asInt() == 200, "声音发布失败");
+        Assert.isTrue(audioprecheck.get("code").asInt() == 200, "声音发布失败: " + audioprecheck.get("message").asText());
 
         JsonNode audioupload = netMusicClient.getMusicDataByUserId(queryMap, "audiosubmit", userId);
-        Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败");
+        Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败: " + audioprecheck.get("message").asText());
         ArrayNode result = (ArrayNode) audioupload.get("data");
         return result.get(0).asText();
     }
