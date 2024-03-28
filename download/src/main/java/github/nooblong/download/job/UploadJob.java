@@ -41,7 +41,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Component
-@Slf4j
 public class UploadJob implements BasicProcessor {
 
     final BilibiliClient bilibiliClient;
@@ -95,7 +94,7 @@ public class UploadJob implements BasicProcessor {
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
             codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
             // 上传之前先设置名字
-            uploadDetail.setUploadName(handleUploadName(uploadDetail));
+            uploadDetail.setUploadName(handleUploadName(uploadDetail, logger));
             String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
             clear(logger, uploadDetail, Long.valueOf(voiceId));
@@ -105,7 +104,6 @@ public class UploadJob implements BasicProcessor {
         } catch (Exception e) {
             uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
             Db.updateById(uploadDetail);
-            log.error(e.getMessage());
             logger.error("声音上传失败: {}", e.getMessage());
             return new ProcessResult(false, "单曲上传失败: " + e.getMessage());
         }
@@ -272,19 +270,16 @@ public class UploadJob implements BasicProcessor {
                     .peek(System.out::println)
                     .forEach(file -> {
                         if (!file.equals(musicPath.getParent().toFile())) {
-                            log.info("删除文件: {}", file.getName());
                             boolean delete = file.delete();
-                            if (!delete) {
-                                log.error("删除失败: {}", file.getName());
-                            }
                         }
                     });
+            log.info("删除下载文件成功");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String handleUploadName(UploadDetail uploadDetail) {
+    private String handleUploadName(UploadDetail uploadDetail, OmsLogger log) {
         // 有自定义，一般为单曲上传
         if (StrUtil.isNotBlank(uploadDetail.getUploadName())) {
             return uploadDetail.getUploadName();
