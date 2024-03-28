@@ -28,9 +28,9 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long subscribeId;
     private String uploadName;
     private Long userId;
-    @JsonFormat(pattern = "MM-dd HH:mm")
+    @JsonFormat(pattern = "MM-dd HH:mm", timezone="GMT+8")
     private Date createTime;
-    @JsonFormat(pattern = "MM-dd HH:mm")
+    @JsonFormat(pattern = "MM-dd HH:mm", timezone="GMT+8")
     private Date updateTime;
     private Double offset;
     private Double beginSec;

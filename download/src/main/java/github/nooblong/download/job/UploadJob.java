@@ -20,7 +20,6 @@ import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -29,6 +28,7 @@ import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
 import tech.powerjob.worker.log.OmsLogger;
+import ws.schild.jave.info.MultimediaInfo;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -89,6 +89,7 @@ public class UploadJob implements BasicProcessor {
         uploadDetail.setInstanceId(instanceId);
         uploadDetailService.updateById(uploadDetail);
         try {
+            desc = "";
             // 收集错误信息
             getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
@@ -161,26 +162,37 @@ public class UploadJob implements BasicProcessor {
     }
 
     private void codecAudio(OmsLogger log, double beginSec, double endSec, double voiceOffset) {
-//        long bitRate1 = ffmpegService.probeInfo(musicPath).getFormat().bit_rate / 1000;
+        MultimediaInfo multimediaInfo1 = ffmpegService.probeInfo(musicPath);
+        long bitRate1 = multimediaInfo1.getAudio().getBitRate();
+        long samplingRate1 = multimediaInfo1.getAudio().getSamplingRate();
         Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
-//        long bitRate2 = ffmpegService.probeInfo(targetPath).getFormat().bit_rate / 1000;
+        MultimediaInfo multimediaInfo2 = ffmpegService.probeInfo(targetPath);
+        long bitRate2 = multimediaInfo2.getAudio().getBitRate();
+        long samplingRate2 = multimediaInfo2.getAudio().getSamplingRate();
         String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
         this.musicPath = targetPath;
-        String s1 = "编码:" + ext + "->" + Constant.FFMPEG_FORMAT_MP3;
-        String s2 = "码率:" + 1 + "kbps" + "->" + 1 + "kbps";
+        String s1 = "编码:" + ext;
+        String s2 = "码率:" + bitRate1 / 1000 + "kbps" + "->" + bitRate2 / 1000 + "kbps";
+        String s3 = "采样率:" + samplingRate1 + "hz" + "->" + samplingRate2 + "hz";
         desc += s1;
         desc += "\n";
         desc += s2;
+        desc += "\n";
+        desc += s3;
+        log.info("添加介绍: {}", s1 + "\n" + s2 + "\n" + s3);
         log.info("音频转码成功");
     }
 
     private String uploadNetease(OmsLogger log, String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
         log.info("开始上传网易云");
-        desc += ("\n视频bvid: " + bilibiliFullVideo.getBvid());
-        desc += ("\nb站作者: " + bilibiliFullVideo.getAuthor());
-        desc += ("\n一键上传工具: www.nooblong.tech");
-        desc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
+        String toAddDesc = "";
+        toAddDesc += ("\n视频bvid: " + bilibiliFullVideo.getBvid());
+        toAddDesc += ("\nb站作者: " + bilibiliFullVideo.getAuthor());
+        toAddDesc += ("\n一键上传工具: www.nooblong.tech");
+        toAddDesc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
+        desc += toAddDesc;
+        log.info("添加介绍: {}", toAddDesc);
 
         Assert.notNull(uploadName, "上传名字为空");
         if (uploadName.length() > 40) {
@@ -261,10 +273,10 @@ public class UploadJob implements BasicProcessor {
                     .forEach(file -> {
                         if (!file.equals(musicPath.getParent().toFile())) {
                             log.info("删除文件: {}", file.getName());
-//                            boolean delete = file.delete();
-//                            if (!delete) {
-//                                log.error("删除失败: {}", file.getName());
-//                            }
+                            boolean delete = file.delete();
+                            if (!delete) {
+                                log.error("删除失败: {}", file.getName());
+                            }
                         }
                     });
         } catch (IOException e) {

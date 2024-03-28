@@ -26,13 +26,13 @@ public class Subscribe implements Serializable {
     private Long voiceListId;
     private String targetId;
     private SubscribeTypeEnum type;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date processTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date updateTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date fromTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
     private Date toTime;
     private String keyWord;
     private Integer limitSec;
