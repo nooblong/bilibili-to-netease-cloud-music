@@ -82,6 +82,11 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                     throw new RuntimeException(e);
                 }
             } else {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 log.info("队列为空");
             }
         }
