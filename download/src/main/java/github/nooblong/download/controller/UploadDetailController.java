@@ -1,5 +1,6 @@
 package github.nooblong.download.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -79,7 +80,7 @@ public class UploadDetailController {
         uploadDetail.setEndSec(req.getVoiceEndSec());
         uploadDetail.setOffset(req.getVoiceOffset());
         uploadDetail.setUploadName(req.getCustomUploadName());
-        uploadDetail.setTitle(req.getTitle());
+        uploadDetail.setTitle(simpleVideoInfo.getTitle());
         uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
         uploadDetail.setUserId(userId);
 
@@ -147,6 +148,7 @@ public class UploadDetailController {
         for (UploadDetail record : page.getRecords()) {
             record.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
             record.setStatusDesc(record.getStatus().getDesc());
+            record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() : record.getTitle());
         }
         return Result.ok("查询成功", page);
     }
