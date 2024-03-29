@@ -32,7 +32,7 @@ CREATE TABLE `subscribe`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 60
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci;
+  COLLATE = utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Table structure for subscribe_reg
@@ -49,7 +49,7 @@ CREATE TABLE `subscribe_reg`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 9
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci;
+  COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for sys_user
@@ -68,7 +68,7 @@ CREATE TABLE `sys_user`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 53
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci;
+  COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for upload_detail
@@ -102,6 +102,6 @@ CREATE TABLE `upload_detail`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 12745
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci;
+  COLLATE = utf8mb4_general_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
