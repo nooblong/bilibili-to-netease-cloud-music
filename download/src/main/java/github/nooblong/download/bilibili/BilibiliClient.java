@@ -279,7 +279,7 @@ public class BilibiliClient {
         builder.addQueryParameter("ps", String.valueOf(ps));
         builder.addQueryParameter("pn", String.valueOf(pn));
         builder.addQueryParameter("id_", String.valueOf(collectionId));
-        builder.addQueryParameter("type_", "ChannelSeriesType(1):parse");
+        builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(1):parse");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.notNull(response, "获取合集视频失败");
         return new IteratorCollectionTotal().setData((ArrayNode) response.get("data").get("archives"))
@@ -304,7 +304,7 @@ public class BilibiliClient {
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
-        builder.addQueryParameter("type_", "CommentResourceType(1):parse");
+        builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(1):parse");
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 
