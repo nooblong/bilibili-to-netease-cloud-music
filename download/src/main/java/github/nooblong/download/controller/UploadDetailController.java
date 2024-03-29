@@ -66,6 +66,18 @@ public class UploadDetailController {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
+    @PutMapping("/{id}")
+    public Result<String> update(@PathVariable(name = "id") Long id, @RequestBody UploadDetail uploadDetail) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        UploadDetail byId = uploadDetailService.getById(id);
+        if (!userId.equals(byId.getUserId())) {
+            throw new RuntimeException("只能修改自己的");
+        }
+        byId.setUploadName(uploadDetail.getUploadName());
+        uploadDetailService.updateById(byId);
+        return Result.ok("ok");
+    }
+
     @PostMapping("/addQueue")
     public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -178,6 +190,16 @@ public class UploadDetailController {
                                           @RequestParam(name = "index") Long index) {
         StringPage stringPage = JobUtil.logPage(instanceId, index);
         return Result.ok("ok", stringPage);
+    }
+
+    @GetMapping("/restartJob")
+    public Result<String> restartJob(@RequestParam(name = "id") Long id) {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        UploadDetail byId = uploadDetailService.getById(id);
+        Assert.notNull(byId, "空id");
+        Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "只能操作自己的");
+        musicQueue.enQueue(byId);
+        return Result.ok("ok");
     }
 
 }

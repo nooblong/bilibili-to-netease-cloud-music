@@ -1,7 +1,9 @@
 package github.nooblong.download.mq;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
@@ -15,11 +17,12 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import tech.powerjob.client.PowerJobClient;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.response.JobInfoDTO;
 import tech.powerjob.common.response.ResultDTO;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -53,6 +56,22 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     public void enQueue(UploadDetail uploadDetail) {
         log.info("入队: {}", uploadDetail.getTitle());
         queue.offer(uploadDetail);
+    }
+
+    public List<UploadDetail> listAllQueue() {
+        PriorityQueue<UploadDetail> copy = new PriorityQueue<>(queue);
+        List<UploadDetail> result = new ArrayList<>();
+        while (true) {
+            UploadDetail poll = copy.poll();
+            if (poll != null) {
+                poll.setMergeTitle(StrUtil.isNotBlank(poll.getUploadName()) ? poll.getUploadName() : poll.getTitle());
+                result.add(poll);
+            } else {
+                break;
+            }
+        }
+        Collections.reverse(result);
+        return result;
     }
 
     @Override

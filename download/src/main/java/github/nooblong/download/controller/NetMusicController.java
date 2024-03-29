@@ -10,6 +10,7 @@ import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.imageio.ImageIO;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 @RestController
+@RequestMapping("/netmusic")
 @Slf4j
 public class NetMusicController {
 
@@ -28,7 +30,7 @@ public class NetMusicController {
         this.netMusicClient = netMusicClient;
     }
 
-    @GetMapping("/netmusic/loginStatus")
+    @GetMapping("/loginStatus")
     public Result<?> getloginStatus() {
         JsonNode loginstatus;
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -36,7 +38,7 @@ public class NetMusicController {
         return Result.ok("ok", loginstatus);
     }
 
-    @GetMapping("/netmusic/getQrCode")
+    @GetMapping("/getQrCode")
     public Result<QrResponse> getQrCode() {
         JsonNode loginqrkey;
         SysUser sysUser = JwtUtil.verifierFromContext();
