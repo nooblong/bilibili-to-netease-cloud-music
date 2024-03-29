@@ -88,7 +88,10 @@ public class UploadJob implements BasicProcessor {
         uploadDetail.setInstanceId(instanceId);
         uploadDetailService.updateById(uploadDetail);
         try {
+            netImageId = "";
             desc = "";
+            musicPath = null;
+            bilibiliFullVideo = null;
             // 收集错误信息
             getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
@@ -123,6 +126,8 @@ public class UploadJob implements BasicProcessor {
             Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
             log.info("下载封面成功");
             this.netImageId = transImage(log, imagePath, netMusicClient, userId);
+        } else {
+            log.info("跳过下载封面");
         }
     }
 
@@ -142,6 +147,7 @@ public class UploadJob implements BasicProcessor {
             }
             params.put("size", String.valueOf(size));
         } catch (IOException e) {
+            log.error("下载的封面图片读取失败: {}", path);
             throw new RuntimeException("下载的封面图片读取失败: " + path);
         }
         params.put("imagePath", path.toString());
@@ -202,8 +208,10 @@ public class UploadJob implements BasicProcessor {
         String categoryId = voiceListDetail.get("categoryId").asText();
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
         String coverImgId = voiceListDetail.get("coverImgId").asText();
-        String netImageId = this.netImageId != null ? this.netImageId : coverImgId;
-
+        String netImageId = StrUtil.isNotBlank(this.netImageId) ? this.netImageId : coverImgId;
+        log.info("获取播客信息: {}", voiceListDetail);
+        log.info("voiceListId: {}, imageId: {}, uploadName: {}, uploadUserId: {}",
+                voiceListId, netImageId, uploadName, uploadUserId);
         String voiceId = doUpload(netMusicClient, ext, uploadName, musicPath, voiceListId, netImageId,
                 categoryId, secondCategoryId, desc, uploadUserId,
                 privacy == 1 ? "true" : "false");
@@ -289,6 +297,7 @@ public class UploadJob implements BasicProcessor {
                 .lambdaQuery().eq(SubscribeReg::getSubscribeId, uploadDetail.getSubscribeId()).list();
         if (!subscribeRegs.isEmpty()) {
             // 有正则
+            log.info("需要进行正则匹配");
             Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
             String regName = subscribe.getRegName();
             String toRegTitle = bilibiliFullVideo.getHasMultiPart()
@@ -323,12 +332,14 @@ public class UploadJob implements BasicProcessor {
                     }
                     return content;
                 });
+                log.info("正则匹配后的名字: {}", result);
                 return result;
             } else {
                 // 有正则，但是没填regName
                 return bilibiliFullVideo.getTitle();
             }
         } else {
+            log.info("不用进行正则匹配");
             // 无正则，uploadName就使用 视频名-分p名 或 视频名
             if (bilibiliFullVideo.getHasMultiPart()) {
                 return bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle();

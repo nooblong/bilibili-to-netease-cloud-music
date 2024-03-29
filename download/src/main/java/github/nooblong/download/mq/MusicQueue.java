@@ -62,7 +62,7 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
             if (peek != null) {
                 List<String> list = JobUtil.listWorkersAddrAvailable();
                 if (list.isEmpty()) {
-                    log.warn("没有可用worker");
+//                    log.warn("没有可用worker");
                 } else {
                     log.info("有可用worker");
                     UploadDetail poll = queue.poll();
@@ -87,7 +87,7 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                log.info("队列为空");
+//                log.info("队列为空");
             }
         }
     }
