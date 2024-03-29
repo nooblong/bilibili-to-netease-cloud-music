@@ -128,11 +128,14 @@ public class SubscribeController {
         LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
                 .in(SubscribeReg::getSubscribeId, list.getRecords().stream().map(Subscribe::getId).collect(Collectors.toList()));
         List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);
+        List<SysUser> users = Db.list(SysUser.class);
+        Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
         list.getRecords().forEach(subscribe -> subscribeRegs.forEach(subscribeReg -> {
             if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
                 subscribe.getSubscribeRegs().add(subscribeReg);
             }
             subscribe.setTypeDesc(subscribe.getType().getDesc());
+            subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
         }));
         response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
         return Result.ok("ok", list);

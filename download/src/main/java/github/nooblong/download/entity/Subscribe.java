@@ -49,5 +49,7 @@ public class Subscribe implements Serializable {
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();
     @TableField(exist = false)
     private String typeDesc;
+    @TableField(exist = false)
+    private String userName;
 
 }

@@ -13,6 +13,7 @@ import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
+import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
@@ -490,6 +491,7 @@ public class BilibiliClient {
             cookieNode.put("buvid3", buvid3);
             user.setBiliCookies(cookieNode.toString());
             userService.updateById(user);
+            JobUtil.powerJobClient.runJob(JobUtil.checkBilibiliCookieJobId);
         }
 
         return response;
