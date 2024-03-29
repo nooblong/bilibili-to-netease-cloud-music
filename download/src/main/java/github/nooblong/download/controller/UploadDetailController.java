@@ -119,7 +119,7 @@ public class UploadDetailController {
         return Result.ok("没做完");
     }
 
-    @GetMapping("/recent")
+    @GetMapping()
     public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
                                               @RequestParam(name = "pageSize") int pageSize,
                                               @RequestParam(required = false, name = "title") String title,
