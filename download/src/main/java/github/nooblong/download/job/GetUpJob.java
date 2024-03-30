@@ -1,5 +1,7 @@
 package github.nooblong.download.job;
 
+import com.baomidou.mybatisplus.extension.toolkit.Db;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.service.SubscribeService;
@@ -58,6 +60,10 @@ public class GetUpJob implements BroadcastProcessor {
             subscribeService.checkAndSave(omsLogger);
             List<UploadDetail> toProcess = uploadDetailService.listAllWait();
             toProcess.forEach(musicQueue::enQueue);
+            toProcess.forEach(uploadDetail -> {
+                uploadDetail.setStatus(StatusTypeEnum.QUEUED);
+            });
+            Db.updateBatchById(toProcess);
         } catch (Exception e) {
             return new ProcessResult(false, e.getMessage());
         }
