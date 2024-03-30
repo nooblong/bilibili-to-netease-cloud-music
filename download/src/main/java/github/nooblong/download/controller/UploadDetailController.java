@@ -94,6 +94,7 @@ public class UploadDetailController {
         uploadDetail.setUploadName(req.getCustomUploadName());
         uploadDetail.setTitle(simpleVideoInfo.getTitle());
         uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
+        uploadDetail.setPriority(10L);
         uploadDetail.setUserId(userId);
 
         if (req.isCrack()) {
