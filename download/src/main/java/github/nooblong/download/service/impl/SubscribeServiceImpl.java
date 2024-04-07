@@ -67,6 +67,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 };
 
                 boolean isProcess = false;
+                int processNum = 0;
                 while (iterator.hasNext()) {
                     SimpleVideoInfo next = iterator.next();
                     if (next.getCreateTime() != null &&
@@ -107,10 +108,11 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
                     Db.save(uploadDetail);
                     isProcess = true;
+                    processNum++;
                 }
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
-                    log.info("更新订阅处理时间: {}", DateUtil.formatDateTime(new Date()));
+                    log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
                     if (subscribe.getType() == SubscribeTypeEnum.PART) {
                         subscribe.setEnable(0);
                     }

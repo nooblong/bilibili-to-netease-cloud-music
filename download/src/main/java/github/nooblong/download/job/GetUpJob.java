@@ -62,12 +62,13 @@ public class GetUpJob implements BroadcastProcessor, ApplicationListener<Context
         omsLogger.info("开始获取up主,param:{}", param);
         try {
             subscribeService.checkAndSave(omsLogger);
+            Thread.sleep(1000);
             List<UploadDetail> toProcess = uploadDetailService.listAllWait();
-            toProcess.forEach(musicQueue::enQueue);
-            toProcess.forEach(uploadDetail -> {
-                uploadDetail.setStatus(StatusTypeEnum.QUEUED);
-            });
-            Db.updateBatchById(toProcess);
+            if (!toProcess.isEmpty()) {
+                toProcess.forEach(musicQueue::enQueue);
+                toProcess.forEach(uploadDetail -> uploadDetail.setStatus(StatusTypeEnum.QUEUED));
+                Db.updateBatchById(toProcess);
+            }
         } catch (Exception e) {
             omsLogger.info("获取失败: {}", e.getMessage());
             return new ProcessResult(false, e.getMessage());
