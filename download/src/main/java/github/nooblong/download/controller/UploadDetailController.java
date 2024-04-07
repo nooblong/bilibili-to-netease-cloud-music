@@ -193,8 +193,8 @@ public class UploadDetailController {
         return Result.ok("ok", stringPage);
     }
 
-    @GetMapping("/restartJob")
-    public Result<String> restartJob(@RequestParam(name = "id") Long id) {
+    @GetMapping("/restartJob/{id}")
+    public Result<String> restartJob(@PathVariable(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
         UploadDetail byId = uploadDetailService.getById(id);
         Assert.notNull(byId, "空id");

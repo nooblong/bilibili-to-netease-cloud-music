@@ -19,6 +19,7 @@ import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
+import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/subscribe")
 public class SubscribeController {
 
     final BilibiliClient bilibiliClient;
@@ -44,7 +46,7 @@ public class SubscribeController {
         this.uploadDetailService = uploadDetailService;
     }
 
-    @PutMapping("/subscribe/{id}")
+    @PutMapping("/{id}")
     public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         if (!uploadDetailService.hasUploaded(user.getId())) {
@@ -82,7 +84,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
-    @PostMapping("/subscribe")
+    @PostMapping
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
         subscribe.setUserId(user.getId());
@@ -110,7 +112,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
-    @DeleteMapping("/subscribe/{id}")
+    @DeleteMapping("/{id}")
     public Result<Subscribe> delete(@PathVariable(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(id, Subscribe.class);
@@ -120,7 +122,7 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @GetMapping("/subscribe")
+    @GetMapping
     public Result<IPage<Subscribe>> subscribeList(@RequestParam(name = "pageNo") int pageNo,
                                                   @RequestParam(name = "pageSize") int pageSize,
                                                   HttpServletResponse response) {
@@ -141,7 +143,7 @@ public class SubscribeController {
         return Result.ok("ok", list);
     }
 
-    @GetMapping("/subscribe/detail")
+    @GetMapping("/detail")
     public Result<Subscribe> subscribeList(@RequestParam(name = "id") Long id) {
         Subscribe byId = Db.getById(id, Subscribe.class);
         LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
@@ -151,7 +153,7 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @GetMapping("/subscribe/subscribeVoiceList")
+    @GetMapping("/subscribeVoiceList")
     public Result<ArrayNode> subscribeVoiceList() {
         List<Subscribe> list = Db.list(Subscribe.class);
         if (list.isEmpty()) {
@@ -169,5 +171,11 @@ public class SubscribeController {
         return Result.ok("ok", resultArray);
     }
 
+    @GetMapping("/checkUpJob")
+    public Result<String> checkUpJob() {
+        Assert.isTrue(JwtUtil.verifierFromContext().getId().equals(1L), "非管理员");
+        JobUtil.powerJobClient.runJob(JobUtil.getUpJobId);
+        return Result.ok("ok");
+    }
 
 }
