@@ -102,6 +102,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             .setCrack(subscribe.getCrack().longValue())
                             .setUseVideoCover(subscribe.getUseVideoCover().longValue())
                             .setVoiceListId(subscribe.getVoiceListId())
+                            .setPriority(subscribe.getPriority().longValue())
                             .setUserId(subscribe.getUserId());
                     log.info("保存: {}, bvid: {}, date: {}",
                             uploadDetail.getTitle(), uploadDetail.getBvid(),
@@ -113,6 +114,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
                     log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
+                    subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
+                            + "个新视频" + "\n");
                     if (subscribe.getType() == SubscribeTypeEnum.PART) {
                         subscribe.setEnable(0);
                     }
