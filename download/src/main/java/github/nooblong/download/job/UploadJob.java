@@ -300,6 +300,7 @@ public class UploadJob implements BasicProcessor {
             log.info("需要进行正则匹配");
             Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
             String regName = subscribe.getRegName();
+            // 对于多p视频要处理part name
             String toRegTitle = bilibiliFullVideo.getHasMultiPart()
                     ? bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle()
                     : bilibiliFullVideo.getTitle();

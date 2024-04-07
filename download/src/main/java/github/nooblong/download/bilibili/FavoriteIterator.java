@@ -10,16 +10,18 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
 
     private final String favoriteId;
     private final BilibiliBatchIteratorFactory factory;
-    private final int limitSec;
+    private int limitSec;
     private int index;
     private SimpleVideoInfo[] videos;
     private int page = 1;
     private int hasNextPage;
+    private final boolean checkPart;
 
-    public FavoriteIterator(String favoriteId, BilibiliBatchIteratorFactory factory, int limitSec) {
+    public FavoriteIterator(String favoriteId, BilibiliBatchIteratorFactory factory, int limitSec, boolean checkPart) {
         this.favoriteId = favoriteId;
         this.factory = factory;
         this.limitSec = limitSec;
+        this.checkPart = checkPart;
     }
 
     public void lazyInit() {
@@ -52,7 +54,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
         if (hasNext()) {
             result = videos[index];
             index++;
-            if (result.getDuration() > limitSec) {
+            if (result.getDuration() > limitSec && !checkPart) {
                 log.info("歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
                 return next();
             }

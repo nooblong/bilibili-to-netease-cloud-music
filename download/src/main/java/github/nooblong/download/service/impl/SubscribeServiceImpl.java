@@ -53,14 +53,14 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                         subscribe.getType(), subscribe.getTargetId());
                 Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
                     case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
-                            subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE);
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1, VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE);
                     case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
                             subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
                             CollectionVideoOrder.CHANGE);
                     case FAVORITE -> factory.createFavoriteIterator(subscribe.getTargetId(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            subscribe.getLimitSec());
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1);
                     case PART -> factory.createPartIterator(subscribe.getTargetId(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
                             subscribe.getLimitSec());

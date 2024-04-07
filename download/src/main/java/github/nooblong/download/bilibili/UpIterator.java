@@ -15,8 +15,8 @@ public class UpIterator extends SimplePageIterator {
 
 
     public UpIterator(BilibiliBatchIteratorFactory factory, String upId, String keyWord, int limitSec,
-                      VideoOrder videoOrder, UserVideoOrder userVideoOrder) {
-        super(factory, limitSec, videoOrder);
+                      VideoOrder videoOrder, UserVideoOrder userVideoOrder, boolean checkPart) {
+        super(factory, limitSec, videoOrder, checkPart);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;

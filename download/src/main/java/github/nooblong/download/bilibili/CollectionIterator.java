@@ -13,7 +13,7 @@ public class CollectionIterator extends SimplePageIterator {
 
     public CollectionIterator(BilibiliBatchIteratorFactory factory, int limitSec,
                               VideoOrder videoOrder, String collectionId, CollectionVideoOrder collectionVideoOrder) {
-        super(factory, limitSec, videoOrder);
+        super(factory, limitSec, videoOrder, false);
         this.collectionId = collectionId;
         this.collectionVideoOrder = collectionVideoOrder;
     }

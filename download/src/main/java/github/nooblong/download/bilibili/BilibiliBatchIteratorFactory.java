@@ -23,9 +23,9 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     @Override
-    public Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec,
+    public Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec, boolean checkPart,
                                                       VideoOrder videoOrder, UserVideoOrder userVideoOrder) {
-        return new UpIterator(this, upId, keyWord, limitSec, videoOrder, userVideoOrder);
+        return new UpIterator(this, upId, keyWord, limitSec, videoOrder, userVideoOrder, checkPart);
     }
 
     @Override
@@ -34,14 +34,20 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     @Override
-    public Iterator<SimpleVideoInfo> createFavoriteIterator(String favoriteId, VideoOrder videoOrder, int limitSec) {
-        return new FavoriteIterator(favoriteId, this, limitSec);
+    public Iterator<SimpleVideoInfo> createFavoriteIterator(String favoriteId, VideoOrder videoOrder, int limitSec, boolean checkPart) {
+        return new FavoriteIterator(favoriteId, this, limitSec, checkPart);
     }
 
     @Override
     public Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec,
                                                               VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder) {
         return new CollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder);
+    }
+
+    @Override
+    public BilibiliFullVideo getFullVideo(String bvid) {
+        SimpleVideoInfo byUrl = bilibiliClient.createByUrl(bvid);
+        return bilibiliClient.init(byUrl, bilibiliClient.getCurrentCred());
     }
 
     public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord) {

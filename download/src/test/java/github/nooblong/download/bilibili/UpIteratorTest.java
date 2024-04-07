@@ -15,7 +15,7 @@ class UpIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("8356881", "小可", 300,
+        Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("8356881", "小可", 300, false,
                 VideoOrder.PUB_NEW_FIRST_THEN_OLD, UserVideoOrder.PUBDATE);
         int times = 0;
         while (upIterator.hasNext()) {
