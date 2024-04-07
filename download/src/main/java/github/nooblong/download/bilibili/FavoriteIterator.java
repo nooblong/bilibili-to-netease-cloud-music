@@ -1,9 +1,12 @@
 package github.nooblong.download.bilibili;
 
+import github.nooblong.download.bilibili.enums.VideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 @Slf4j
 public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
@@ -16,6 +19,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
     private int page = 1;
     private int hasNextPage;
     private final boolean checkPart;
+    List<SimpleVideoInfo> insidePartList = new ArrayList<>();
 
     public FavoriteIterator(String favoriteId, BilibiliBatchIteratorFactory factory, int limitSec, boolean checkPart) {
         this.favoriteId = favoriteId;
@@ -52,11 +56,38 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
         log.info("favorite当前位置: {}", index);
         SimpleVideoInfo result;
         if (hasNext()) {
+            if (!insidePartList.isEmpty()) {
+                SimpleVideoInfo remove = insidePartList.remove(0);
+                log.info("simple当前位置:多part内部: {}, cid: {}", remove.getTitle(), remove.getCid());
+                return remove;
+            }
             result = videos[index];
             index++;
             if (result.getDuration() > limitSec && !checkPart) {
                 log.info("favorite歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
                 return next();
+            }
+            if (checkPart) {
+                BilibiliFullVideo fullVideo = factory.getFullVideo(result.getBvid());
+                if (fullVideo.getHasMultiPart()) {
+                    log.info("simple检测到多p视频: {}", fullVideo.getTitle());
+                    // 多p视频不要直接返回，从p1开始返回
+                    // 对part内做时间限制
+                    try {
+
+                        Iterator<SimpleVideoInfo> partIterator =
+                                factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD, limitSec);
+                        while (partIterator.hasNext()) {
+                            SimpleVideoInfo next = partIterator.next();
+                            insidePartList.add(next);
+                        }
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // ignore
+                    }
+                    SimpleVideoInfo remove = insidePartList.remove(0);
+                    log.info("simple多p视频第一次返回: {}", remove.getPartName());
+                    return remove;
+                }
             }
             return result;
         }

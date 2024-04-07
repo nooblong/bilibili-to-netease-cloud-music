@@ -14,8 +14,8 @@ class FavoriteIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<SimpleVideoInfo> upIterator = factory.createFavoriteIterator("2698957987",
-                VideoOrder.PUB_NEW_FIRST_THEN_OLD, 9999, false);
+        Iterator<SimpleVideoInfo> upIterator = factory.createFavoriteIterator("68629352",
+                VideoOrder.PUB_NEW_FIRST_THEN_OLD, 9999, true);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
