@@ -119,14 +119,27 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     updateById(subscribe);
                 } else {
                     log.info(DateUtil.now() + " 未检测到新视频");
-                    subscribe.setLog(DateUtil.now() + " 未检测到新视频:");
+                    subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
                     updateById(subscribe);
                 }
             } catch (Exception e) {
                 log.error("订阅: {} 处理失败: {}", subscribe.getId(), e);
-                subscribe.setLog(DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage());
+                subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
                 updateById(subscribe);
             }
+        }
+    }
+
+    public static String processString(String input) {
+        String[] lines = input.split("\\r?\\n");
+        if (lines.length <= 100) {
+            return input; // 不超过100行，返回全部字符串
+        } else {
+            StringBuilder result = new StringBuilder();
+            for (int i = lines.length - 99; i < lines.length; i++) {
+                result.append(lines[i]).append("\n");
+            }
+            return result.toString();
         }
     }
 
