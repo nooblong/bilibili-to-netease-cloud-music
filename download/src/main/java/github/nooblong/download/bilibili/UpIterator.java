@@ -38,7 +38,7 @@ public class UpIterator extends SimplePageIterator {
 
     public void lazyInit() {
         if (this.videos == null) {
-            log.info("初始化集合:");
+            log.info("up初始化集合:");
             // 第一次初始化
             // 先查总数
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
@@ -52,7 +52,7 @@ public class UpIterator extends SimplePageIterator {
                     IteratorCollectionTotalList<SimpleVideoInfo> toGetCount = factory.getUpVideoListFromBilibili(upId, pageSize,
                             1,
                             userVideoOrder, keyWord);
-                    log.info("先获取一遍总数: {}", toGetCount.getTotalNum());
+                    log.info("up先获取一遍总数: {}", toGetCount.getTotalNum());
                     upVideosTotalNum = toGetCount.getTotalNum();
                 }
                 IteratorCollectionTotalList<SimpleVideoInfo> upVideoListFromBilibili = factory.getUpVideoListFromBilibili(upId, pageSize,

@@ -47,7 +47,7 @@ public class CollectionIterator extends SimplePageIterator {
                 if (upVideosTotalNum == 0) {
                     IteratorCollectionTotalList<SimpleVideoInfo> collectionVideoListFromBilibili =
                             factory.getCollectionVideoListFromBilibili(collectionId, pageSize, 1, collectionVideoOrder);
-                    log.info("先获取一遍总数: {}", collectionVideoListFromBilibili.getTotalNum());
+                    log.info("collection先获取一遍总数: {}", collectionVideoListFromBilibili.getTotalNum());
                     upVideosTotalNum = collectionVideoListFromBilibili.getTotalNum();
                 }
                 IteratorCollectionTotalList<SimpleVideoInfo> collectionVideoListFromBilibili =

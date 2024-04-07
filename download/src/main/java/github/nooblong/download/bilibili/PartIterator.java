@@ -32,7 +32,6 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
 
     @Override
     public SimpleVideoInfo next() {
-        log.info("当前位置: {}, 总数:{}", index, upVideosTotalNum);
         SimpleVideoInfo result;
         if (hasNext()) {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
@@ -43,9 +42,10 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
             }
             index++;
             if (result.getDuration() > limitSec) {
-                log.info("歌曲:{} 时长:{} 超过了限制:{}", result.getPartName(), result.getDuration(), limitSec);
+                log.info("part超限: 歌曲:{} 时长:{} 超过了限制:{}", result.getPartName(), result.getDuration(), limitSec);
                 return next();
             }
+            log.info("part: {}, 位置: {}, 总数:{}", result.getPartName(), index, upVideosTotalNum);
             return result;
         }
         throw new ArrayIndexOutOfBoundsException();

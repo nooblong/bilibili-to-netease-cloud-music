@@ -15,13 +15,13 @@ class UpIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("8356881", "小可", 300, false,
-                VideoOrder.PUB_NEW_FIRST_THEN_OLD, UserVideoOrder.PUBDATE);
+        Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("349032426", "", 300, true,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
-            System.out.println(next.getTitle());
-            if (++times >= 70) {
+            System.out.println(">>>>>" + next.getTitle() + "---->" + next.getPartName());
+            if (++times >= 100) {
                 break;
             }
         }

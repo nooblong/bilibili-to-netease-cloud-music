@@ -26,7 +26,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
 
     public void lazyInit() {
         if (videos == null) {
-            log.info("初始化集合:");
+            log.info("favorite初始化集合:");
             IteratorCollectionTotalList<SimpleVideoInfo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, page);
             videos = favoriteVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             hasNextPage = favoriteVideoListFromBilibili.getTotalNum();
@@ -37,7 +37,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
     public boolean hasNext() {
         lazyInit();
         if (index == videos.length && hasNextPage != 0) {
-            log.info("收藏夹还有下一页");
+            log.info("favorite收藏夹还有下一页");
             IteratorCollectionTotalList<SimpleVideoInfo> favoriteVideoListFromBilibili = factory.getFavoriteVideoListFromBilibili(favoriteId, ++page);
             videos = favoriteVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             hasNextPage = favoriteVideoListFromBilibili.getTotalNum();
@@ -49,13 +49,13 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
 
     @Override
     public SimpleVideoInfo next() {
-        log.info("当前位置: {}", index);
+        log.info("favorite当前位置: {}", index);
         SimpleVideoInfo result;
         if (hasNext()) {
             result = videos[index];
             index++;
             if (result.getDuration() > limitSec && !checkPart) {
-                log.info("歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
+                log.info("favorite歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
                 return next();
             }
             return result;

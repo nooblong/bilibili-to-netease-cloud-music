@@ -47,13 +47,13 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
                 // 当前页数
                 currentPn = (int) NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP);
-                log.info("当前第{}页已遍历完，查找下一页:{}", currentPn, currentPn + 1);
+                log.info("simple当前第{}页已遍历完，查找下一页:{}", currentPn, currentPn + 1);
                 // 检查下一页
                 videos = getNextPage(currentPn, pageSize);
             } else {
                 currentPn = ((int) NumberUtil.div(upVideosTotalNum, pageSize, 0, RoundingMode.UP) -
                         (int) (NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP))) + 1;
-                log.info("当前第{}页已遍历完，查找上一页:{}", currentPn, currentPn - 1);
+                log.info("simple当前第{}页已遍历完，查找上一页:{}", currentPn, currentPn - 1);
                 // 检查上一页
                 videos = getPreviousPage(currentPn, pageSize);
             }
@@ -71,14 +71,14 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     public SimpleVideoInfo next() {
         if (!insidePartList.isEmpty()) {
             SimpleVideoInfo remove = insidePartList.remove(0);
-            log.info("当前位置:多part内部: {}, cid: {}", remove.getTitle(), remove.getCid());
+            log.info("simple当前位置:多part内部: {}, cid: {}", remove.getTitle(), remove.getCid());
             return remove;
         }
         int currentRealPageNo = videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ?
                 (int) NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP)
                 : ((int) NumberUtil.div(upVideosTotalNum, pageSize, 0, RoundingMode.UP) -
                 (int) (NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP))) + 1;
-        log.info("当前位置: {}, 第{}页, 总数:{}, 总位置:{}", index, currentRealPageNo, upVideosTotalNum, totalIndex);
+        log.info("simple当前位置: {}, 第{}页, 总数:{}, 总位置:{}", index, currentRealPageNo, upVideosTotalNum, totalIndex);
         SimpleVideoInfo result;
         if (hasNext()) {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
@@ -90,17 +90,29 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
             index++;
             totalIndex++;
             if (result.getDuration() > limitSec && !checkPart) {
-                log.info("歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
+                log.info("simple歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
                 return next();
             }
             if (checkPart) {
                 BilibiliFullVideo fullVideo = factory.getFullVideo(result.getBvid());
                 if (fullVideo.getHasMultiPart()) {
+                    log.info("simple检测到多p视频: {}", fullVideo.getTitle());
                     // 多p视频不要直接返回，从p1开始返回
                     // 对part内做时间限制
-                    Iterator<SimpleVideoInfo> partIterator =
-                            factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD, limitSec);
-                    
+                    try {
+
+                        Iterator<SimpleVideoInfo> partIterator =
+                                factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD, limitSec);
+                        while (partIterator.hasNext()) {
+                            SimpleVideoInfo next = partIterator.next();
+                            insidePartList.add(next);
+                        }
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // ignore
+                    }
+                    SimpleVideoInfo remove = insidePartList.remove(0);
+                    log.info("simple多p视频第一次返回: {}", remove.getPartName());
+                    return remove;
                 }
             }
             // 不是多p
