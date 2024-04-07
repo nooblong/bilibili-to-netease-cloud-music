@@ -69,6 +69,7 @@ public class GetUpJob implements BroadcastProcessor, ApplicationListener<Context
             });
             Db.updateBatchById(toProcess);
         } catch (Exception e) {
+            omsLogger.info("获取失败: {}", e.getMessage());
             return new ProcessResult(false, e.getMessage());
         }
         omsLogger.info("获取up主任务成功");
@@ -78,10 +79,12 @@ public class GetUpJob implements BroadcastProcessor, ApplicationListener<Context
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         // set all queued to wait
-        LambdaUpdateWrapper<UploadDetail> updateWrapper = Wrappers.lambdaUpdate(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.QUEUED.name())
-                .set(UploadDetail::getStatus, StatusTypeEnum.WAIT.name());
-        Db.update(updateWrapper);
-        log.info("更新所有入队的成功");
+        if (main) {
+            LambdaUpdateWrapper<UploadDetail> updateWrapper = Wrappers.lambdaUpdate(UploadDetail.class)
+                    .eq(UploadDetail::getStatus, StatusTypeEnum.QUEUED.name())
+                    .set(UploadDetail::getStatus, StatusTypeEnum.WAIT.name());
+            Db.update(updateWrapper);
+            log.info("更新所有入队的成功");
+        }
     }
 }

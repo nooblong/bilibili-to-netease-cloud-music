@@ -3,7 +3,6 @@ package github.nooblong.download.mq;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
@@ -76,38 +75,35 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
 
     @Override
     public void run() {
-        while (true) {
-            UploadDetail peek = queue.peek();
-            if (peek != null) {
-                List<String> list = JobUtil.listWorkersAddrAvailable();
-                if (list.isEmpty()) {
+        try {
+            while (true) {
+                UploadDetail peek = queue.peek();
+                if (peek != null) {
+                    List<String> list = JobUtil.listWorkersAddrAvailable();
+                    if (list.isEmpty()) {
 //                    log.warn("没有可用worker");
-                } else {
-                    log.info("有可用worker");
-                    UploadDetail poll = queue.poll();
-                    if (poll != null) {
-                        upload(poll, list.get(0));
-                        try {
-                            Thread.sleep(reportInterval * 1000L + 1);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                    } else {
+                        if (!bilibiliClient.isLogin3(bilibiliClient.getCurrentCred())) {
+                            log.info("no cookie sleep");
+                            Thread.sleep(60000);
+                            continue;
                         }
-                        continue;
+                        log.info("有可用worker");
+                        UploadDetail poll = queue.poll();
+                        if (poll != null) {
+                            upload(poll, list.get(0));
+                            Thread.sleep(reportInterval * 1000L + 1);
+                            continue;
+                        }
                     }
-                }
-                try {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            } else {
-                try {
+                } else {
                     Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
 //                log.info("队列为空");
+                }
             }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
