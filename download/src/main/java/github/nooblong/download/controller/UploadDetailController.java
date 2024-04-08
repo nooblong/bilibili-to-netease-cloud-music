@@ -52,15 +52,6 @@ public class UploadDetailController {
         this.musicQueue = musicQueue;
     }
 
-//    @GetMapping("/test")
-//    public Result<String> test() throws Exception {
-//        UploadDetail a1 = uploadDetailService.getById(12727L);
-//        UploadDetail a2 = uploadDetailService.getById(12728L);
-//        musicQueue.enQueue(a1);
-//        musicQueue.enQueue(a2);
-//        return Result.ok("1");
-//    }
-
     @GetMapping("/{id}")
     public Result<UploadDetail> get(@PathVariable(name = "id") Long id) {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
@@ -90,6 +81,9 @@ public class UploadDetailController {
         uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);
         uploadDetail.setBeginSec(req.getVoiceBeginSec());
         uploadDetail.setEndSec(req.getVoiceEndSec());
+        if (req.getVoiceBeginSec() != 0 && req.getVoiceEndSec() == 0) {
+            uploadDetail.setEndSec(99999999D);
+        }
         uploadDetail.setOffset(req.getVoiceOffset());
         uploadDetail.setUploadName(req.getCustomUploadName());
         uploadDetail.setTitle(simpleVideoInfo.getTitle());

@@ -117,30 +117,6 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
         JobUtil.powerJobClient.saveJob(req);
         JobUtil.powerJobClient.runJob(JobUtil.uploadJobId,
                 JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)), 0);
-//        SaveJobInfoRequest req = new SaveJobInfoRequest();
-//        SysUser user = userService.getById(uploadDetail.getUserId());
-//        req.setJobName(user.getId() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getCid());
-//        req.setDispatchStrategy(DispatchStrategy.SPECIFY);
-//        req.setDesignatedWorkers(address);
-//        req.setJobDescription(user.getUsername() + "-" + uploadDetail.getBvid() + "-" + uploadDetail.getVoiceListId());
-//        req.setJobParams(JSONUtil.toJsonStr(uploadDetail, JSONConfig.create().setIgnoreNullValue(false)));
-//        req.setTimeExpressionType(TimeExpressionType.API);
-//        req.setExecuteType(ExecuteType.STANDALONE);
-//        req.setProcessorType(ProcessorType.BUILT_IN);
-//        req.setProcessorInfo("github.nooblong.download.job.UploadJob");
-//        req.setMaxInstanceNum(1);
-//        req.setConcurrency(1);
-//        req.setInstanceRetryNum(0);
-//        req.setTaskRetryNum(0);
-//        req.setEnable(false);
-//        req.setLogConfig(new LogConfig().setLevel(LogLevel.INFO.getV()).setType(LogType.LOCAL_AND_ONLINE.getV()));
-//        req.setInstanceTimeLimit(900000L);
-//        req.setDispatchStrategy(DispatchStrategy.HEALTH_FIRST);
-//        ResultDTO<Long> saveJob = powerJobClient.saveJob(req);
-//        if (!saveJob.isSuccess()) {
-//            log.error("请求powerJobClient失败");
-//        }
-//        powerJobClient.runJob(saveJob.getData());
     }
 
     @Override
