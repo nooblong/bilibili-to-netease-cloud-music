@@ -104,9 +104,14 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                             .setVoiceListId(subscribe.getVoiceListId())
                             .setPriority(subscribe.getPriority().longValue())
                             .setUserId(subscribe.getUserId());
-                    log.info("保存: {}, bvid: {}, date: {}",
-                            uploadDetail.getTitle(), uploadDetail.getBvid(),
-                            DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
+                    if (next.getCreateTime() != null) {
+                        log.info("保存: {}, bvid: {}, date: {}",
+                                uploadDetail.getTitle(), uploadDetail.getBvid(),
+                                DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
+                    } else {
+                        log.info("保存(无视频创建时间，应该为多p视频): {}, bvid: {}",
+                                uploadDetail.getTitle(), uploadDetail.getBvid());
+                    }
                     Db.save(uploadDetail);
                     isProcess = true;
                     processNum++;
