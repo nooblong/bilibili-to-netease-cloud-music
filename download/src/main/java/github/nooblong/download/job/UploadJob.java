@@ -20,6 +20,7 @@ import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -278,12 +280,13 @@ public class UploadJob implements BasicProcessor {
     }
 
     private void delete(OmsLogger log) {
-        try (Stream<Path> walk = Files.walk(musicPath.getParent())) {
+        Path path = Paths.get(Constant.TMP_FOLDER);
+        try (Stream<Path> walk = Files.walk(path)) {
             walk.sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .peek(System.out::println)
                     .forEach(file -> {
-                        if (!file.equals(musicPath.getParent().toFile())) {
+                        if (!file.equals(path.toFile())) {
                             boolean delete = file.delete();
                         }
                     });
