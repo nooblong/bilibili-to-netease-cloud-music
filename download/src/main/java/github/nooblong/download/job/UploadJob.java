@@ -108,6 +108,8 @@ public class UploadJob implements BasicProcessor {
             uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
             Db.updateById(uploadDetail);
             logger.error("声音上传失败: {}", e.getMessage());
+            delete(logger);
+            logger.error("垃圾文件清理成功: {}", e.getMessage());
             return new ProcessResult(false, "单曲上传失败: " + e.getMessage());
         }
     }
@@ -272,6 +274,10 @@ public class UploadJob implements BasicProcessor {
         Db.updateById(uploadDetail);
         log.info("数据库数据已更新");
         // 清理数据
+        delete(log);
+    }
+
+    private void delete(OmsLogger log) {
         try (Stream<Path> walk = Files.walk(musicPath.getParent())) {
             walk.sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
