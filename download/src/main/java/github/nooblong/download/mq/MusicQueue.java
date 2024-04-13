@@ -71,7 +71,6 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                 break;
             }
         }
-        Collections.reverse(result);
         return result;
     }
 
