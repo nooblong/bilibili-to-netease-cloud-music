@@ -29,7 +29,7 @@ import java.util.PriorityQueue;
 @Component
 public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshedEvent> {
 
-    final PriorityQueue<UploadDetail> queue;
+    private final PriorityQueue<UploadDetail> queue;
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final IUserService userService;
@@ -53,8 +53,10 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     }
 
     public void enQueue(UploadDetail uploadDetail) {
-        log.info("入队: {}", uploadDetail.getTitle());
-        queue.offer(uploadDetail);
+        synchronized (this) {
+            log.info("入队: {}", uploadDetail.getTitle());
+            queue.offer(uploadDetail);
+        }
     }
 
     public List<UploadDetail> listAllQueue() {
@@ -77,29 +79,31 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     public void run() {
         try {
             while (true) {
-                UploadDetail peek = queue.peek();
-                if (peek != null) {
-                    List<String> list = JobUtil.listWorkersAddrAvailable();
-                    if (list.isEmpty()) {
+                synchronized (this) {
+                    UploadDetail peek = queue.peek();
+                    if (peek != null) {
+                        List<String> list = JobUtil.listWorkersAddrAvailable();
+                        if (list.isEmpty()) {
 //                    log.warn("没有可用worker");
+                        } else {
+                            if (!bilibiliClient.isLogin3(bilibiliClient.getCurrentCred())) {
+                                log.info("no cookie sleep");
+                                Thread.sleep(60000);
+                                continue;
+                            }
+                            log.info("有可用worker");
+                            UploadDetail poll = queue.poll();
+                            if (poll != null) {
+                                upload(poll, list.get(0));
+                                Thread.sleep(reportInterval * 1000L + 1);
+                                continue;
+                            }
+                        }
+                        Thread.sleep(1000);
                     } else {
-                        if (!bilibiliClient.isLogin3(bilibiliClient.getCurrentCred())) {
-                            log.info("no cookie sleep");
-                            Thread.sleep(60000);
-                            continue;
-                        }
-                        log.info("有可用worker");
-                        UploadDetail poll = queue.poll();
-                        if (poll != null) {
-                            upload(poll, list.get(0));
-                            Thread.sleep(reportInterval * 1000L + 1);
-                            continue;
-                        }
-                    }
-                    Thread.sleep(1000);
-                } else {
-                    Thread.sleep(1000);
+                        Thread.sleep(1000);
 //                log.info("队列为空");
+                    }
                 }
             }
         } catch (InterruptedException e) {
