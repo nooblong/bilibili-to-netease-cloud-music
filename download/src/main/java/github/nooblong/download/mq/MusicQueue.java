@@ -79,13 +79,13 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     public void run() {
         try {
             while (true) {
-                synchronized (this) {
-                    UploadDetail peek = queue.peek();
-                    if (peek != null) {
-                        List<String> list = JobUtil.listWorkersAddrAvailable();
-                        if (list.isEmpty()) {
+                UploadDetail peek = queue.peek();
+                if (peek != null) {
+                    List<String> list = JobUtil.listWorkersAddrAvailable();
+                    if (list.isEmpty()) {
 //                    log.warn("没有可用worker");
-                        } else {
+                    } else {
+                        synchronized (this) {
                             if (!bilibiliClient.isLogin3(bilibiliClient.getCurrentCred())) {
                                 log.info("no cookie sleep");
                                 Thread.sleep(60000);
@@ -99,11 +99,11 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                                 continue;
                             }
                         }
-                        Thread.sleep(1000);
-                    } else {
-                        Thread.sleep(1000);
-//                log.info("队列为空");
                     }
+                    Thread.sleep(1000);
+                } else {
+                    Thread.sleep(1000);
+//                log.info("队列为空");
                 }
             }
         } catch (InterruptedException e) {
