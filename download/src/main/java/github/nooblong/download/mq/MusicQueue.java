@@ -95,6 +95,8 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
                             UploadDetail poll = queue.poll();
                             if (poll != null) {
                                 upload(poll, list.get(0));
+//                                log.info("队列长度: {}", queue.size());
+                                log.info("------>从队列取出: {}:{}", poll.getTitle(), poll.getUploadName());
                                 Thread.sleep(reportInterval * 1000L + 1);
                                 continue;
                             }

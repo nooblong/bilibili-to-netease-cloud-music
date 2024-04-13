@@ -62,6 +62,6 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
 
     @Override
     public int compareTo(@NotNull UploadDetail o) {
-        return this.getPriority().compareTo(o.getPriority());
+        return o.getPriority().compareTo(this.getPriority());
     }
 }
