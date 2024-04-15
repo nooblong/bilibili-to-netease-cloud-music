@@ -3,6 +3,7 @@ package github.nooblong.download.service.impl;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
@@ -141,6 +142,9 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     public static String processString(String input) {
+        if (StrUtil.isBlank(input)) {
+            return "nullInput";
+        }
         String[] lines = input.split("\\r?\\n");
         if (lines.length <= 100) {
             return input; // 不超过100行，返回全部字符串
