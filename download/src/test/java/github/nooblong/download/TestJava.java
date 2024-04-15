@@ -123,4 +123,67 @@ public class TestJava {
         System.out.println(substring);
     }
 
+    @Test
+    void leetCodeTest1() {
+        int[] nums1 = {1, 3, 4, 9};
+        int[] nums2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+        int[] nums3 = {1, 2};
+        int[] nums4 = {3, 4};
+        int[] nums5 = {};
+        int[] nums6 = {2, 3};
+        int[] nums7 = {2};
+        int[] nums8 = {1, 3, 4};
+        int[] nums9 = {1};
+        int[] nums10 = {2, 3, 4, 5, 6};
+        int[] nums11 = {1, 4};
+        int[] nums12 = {2, 3, 5, 6};
+        System.out.println(findMedianSortedArrays(nums1, nums2));
+        System.out.println(findMedianSortedArrays(nums3, nums4));
+        System.out.println(findMedianSortedArrays(nums5, nums6));
+        System.out.println(findMedianSortedArrays(nums7, nums8));
+        System.out.println(findMedianSortedArrays(nums9, nums10));
+        System.out.println(findMedianSortedArrays(nums11, nums12));
+    }
+
+    public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+        int len1 = nums1.length;
+        int len2 = nums2.length;
+        if ((len1 + len2) % 2 != 0) {
+            int k = (len1 + len2) / 2 + 1;
+            return findK(k, nums1, nums2);
+        } else {
+            int k = (len1 + len2) / 2;
+            return (findK(k, nums1, nums2) + findK(k + 1, nums1, nums2)) / 2d;
+        }
+    }
+
+    public double findK(int k, int[] nums1, int[] nums2) {
+        int index1 = 0, index2 = 0;
+        for (; ; ) {
+            if (nums1.length - index1 == 0 || nums2.length - index2 == 0) {
+                return nums1.length - index1 == 0 ? nums2[k + index2 - 1] : nums1[k + index1 - 1];
+            }
+            if (k == 1) {
+                return Math.min(nums1[index1], nums2[index2]);
+            }
+            int index = (k / 2) - 1;
+            int specialReduce = 0;
+            if (nums1.length - index1 <= index) {
+                index = nums1.length - 1;
+                specialReduce = nums1.length - index1;
+            }
+            if (nums2.length - index2 <= index) {
+                index = nums2.length - 1;
+                specialReduce = nums2.length - index2;
+            }
+            if (nums1[index1 + index] <= nums2[index2 + index]) {
+                index1 += index + 1;
+                k = specialReduce == 0 ? k - k / 2 : k - specialReduce;
+            } else {
+                index2 += index + 1;
+                k = specialReduce == 0 ? k - k / 2 : k - specialReduce;
+            }
+        }
+    }
+
 }
