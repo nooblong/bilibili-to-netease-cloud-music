@@ -133,7 +133,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     updateById(subscribe);
                 }
             } catch (Exception e) {
-                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e);
+                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
                 subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
                 updateById(subscribe);
             }
