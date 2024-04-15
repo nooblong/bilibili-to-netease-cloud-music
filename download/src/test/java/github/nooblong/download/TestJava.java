@@ -124,7 +124,7 @@ public class TestJava {
     }
 
     @Test
-    void leetCodeTest1() {
+    void leetcode1() {
         int[] nums1 = {1, 3, 4, 9};
         int[] nums2 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
         int[] nums3 = {1, 2};
@@ -184,6 +184,58 @@ public class TestJava {
                 k = specialReduce == 0 ? k - k / 2 : k - specialReduce;
             }
         }
+    }
+
+    @Test
+    void leetcode2() {
+        System.out.println(longestPalindrome("babad"));
+        System.out.println(longestPalindrome("a"));
+        System.out.println(longestPalindrome("ac"));
+        System.out.println(longestPalindrome("bb"));
+        System.out.println(longestPalindrome("ccc"));
+    }
+
+    public String longestPalindrome(String s) {
+        if (s.length() <= 1) {
+            return s;
+        }
+        String max1 = "";
+        if (s.length() == 2) {
+            if (s.charAt(0) == s.charAt(1)) {
+                return s;
+            }
+        }
+        for (int i = 0; i < s.length(); i++) {
+            // i=0为从字符0后面分割
+            String max2 = "";
+//            if (i < s.length() - 1 && s.charAt(i) == s.charAt(i + 1)) {
+//                max2 = s.substring(i, i + 1 + 1);
+//            }
+            for (int j = 0; j < Math.min(i, s.length() - i - 1); j++) {
+                if (s.charAt(i - j) == s.charAt(i + 1 + j)) {
+                    String substring = s.substring(i - j, i + 1 + j + 1);
+                    if (substring.length() > max2.length()) {
+                        max2 = substring;
+                    }
+                }
+                if (s.charAt(i - 1 - j) == s.charAt(i + 1 + j)) {
+
+                    // -1 、 +1
+                    String substring = s.substring(i - j - 1, i + 1 + j + 1);
+
+                    if (substring.length() > max2.length()) {
+                        max2 = substring;
+                    }
+                }
+            }
+            if (max1.length() < max2.length()) {
+                max1 = max2;
+            }
+        }
+        if (max1.isEmpty()) {
+            return String.valueOf(s.charAt(0));
+        }
+        return max1;
     }
 
 }
