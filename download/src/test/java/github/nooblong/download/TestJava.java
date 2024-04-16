@@ -193,6 +193,9 @@ public class TestJava {
         System.out.println(longestPalindrome("ac"));
         System.out.println(longestPalindrome("bb"));
         System.out.println(longestPalindrome("ccc"));
+        System.out.println(longestPalindrome("ccd"));
+        System.out.println(longestPalindrome("aaaa"));
+        System.out.println(longestPalindrome("aacabdkacaa"));
     }
 
     public String longestPalindrome(String s) {
@@ -208,24 +211,31 @@ public class TestJava {
         for (int i = 0; i < s.length(); i++) {
             // i=0为从字符0后面分割
             String max2 = "";
-//            if (i < s.length() - 1 && s.charAt(i) == s.charAt(i + 1)) {
-//                max2 = s.substring(i, i + 1 + 1);
-//            }
             for (int j = 0; j < Math.min(i, s.length() - i - 1); j++) {
+                if (s.charAt(i - 1 - j) == s.charAt(i + 1 + j)) {
+                    // -1 、 +1
+                    String substring = s.substring(i - j - 1, i + 1 + j + 1);
+                    if (substring.length() > max2.length()) {
+                        max2 = substring;
+                    }
+                } else {
+                    break;
+                }
+            }
+            if (i < s.length() - 1 && s.charAt(i) == s.charAt(i + 1)) {
+                String substring = s.substring(i, i + 1 + 1);
+                if (substring.length() > max2.length()) {
+                    max2 = substring;
+                }
+            }
+            for (int j = 0; j < Math.min(i + 1, s.length() - i - 1); j++) {
                 if (s.charAt(i - j) == s.charAt(i + 1 + j)) {
                     String substring = s.substring(i - j, i + 1 + j + 1);
                     if (substring.length() > max2.length()) {
                         max2 = substring;
                     }
-                }
-                if (s.charAt(i - 1 - j) == s.charAt(i + 1 + j)) {
-
-                    // -1 、 +1
-                    String substring = s.substring(i - j - 1, i + 1 + j + 1);
-
-                    if (substring.length() > max2.length()) {
-                        max2 = substring;
-                    }
+                } else {
+                    break;
                 }
             }
             if (max1.length() < max2.length()) {
