@@ -248,4 +248,69 @@ public class TestJava {
         return max1;
     }
 
+    @Test
+    void leetcode3() {
+//        System.out.println(convert("PAYPALISHIRING", 4));
+//        System.out.println(convert("ABCDE", 4));
+        System.out.println(convert("PAYPALISHIRING", 5));
+    }
+
+    public String convert(String s, int numRows) {
+        char[] ca = s.toCharArray();
+        char[] result = new char[s.length()];
+        if (numRows == 1 || numRows >= s.length()) {
+            return s;
+        }
+        int groupSize = numRows + numRows - 2;
+        int groupNum = s.length() / groupSize;
+        int lastGroupSize = s.length() % groupSize;
+        int index = 0;
+        for (int row = 0; row < numRows; row++) {
+            int lastLineCharNum = 0;
+            if (lastGroupSize <= numRows) {
+                if (row + 1 <= lastGroupSize) {
+                    lastLineCharNum++;
+                }
+            } else {
+                lastLineCharNum++;
+                if (row != numRows - 1) {
+                    if (numRows - (row + 1) <= lastGroupSize - numRows) {
+                        lastLineCharNum++;
+                    }
+                }
+
+            }
+
+            if (row == 0 || row == numRows - 1) {
+                for (int j = 0; j < groupNum + (lastLineCharNum != 0 ? 1 : 0); j++) {
+                    int charAt = row + j * groupSize;
+                    result[index] = ca[charAt];
+                    index++;
+                }
+            } else {
+                for (int j = 0; j < groupNum + (lastLineCharNum != 0 ? 1 : 0); j++) {
+                    if (lastLineCharNum > 0 && j == groupNum + lastLineCharNum - 1) {
+                        int charAt1 = row + j * groupSize;
+                        result[index] = ca[charAt1];
+                        index++;
+                        if (lastLineCharNum > 1) {
+                            int numBetween = (numRows - (row + 1)) * 2 - 1;
+                            int charAt2 = row + j * groupSize + numBetween + 1;
+                            result[index] = ca[charAt2];
+                        }
+                        break;
+                    }
+                    int charAt1 = row + j * groupSize;
+                    result[index] = ca[charAt1];
+                    index++;
+                    int numBetween = (numRows - (row + 1)) * 2 - 1;
+                    int charAt2 = row + j * groupSize + numBetween + 1;
+                    result[index] = ca[charAt2];
+                    index++;
+                }
+            }
+        }
+        return new String(result);
+    }
+
 }
