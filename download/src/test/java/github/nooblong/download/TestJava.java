@@ -336,10 +336,15 @@ public class TestJava {
             }
             c2[j++] = a;
         }
-        if (negative) {
-            return Integer.parseInt("-" + new String(c2).trim());
+        try {
+            if (negative) {
+                return Integer.parseInt("-" + new String(c2).trim());
+            }
+            return Integer.parseInt(new String(c2));
+        } catch (Exception e) {
+            return 0;
         }
-        return Integer.parseInt(new String(c2));
+
     }
 
 }
