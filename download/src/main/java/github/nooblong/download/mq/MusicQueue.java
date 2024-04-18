@@ -60,17 +60,23 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     }
 
     public List<UploadDetail> listAllQueue() {
-        PriorityQueue<UploadDetail> copy = new PriorityQueue<>(queue);
+//        PriorityQueue<UploadDetail> copy = new PriorityQueue<>(queue);
         List<UploadDetail> result = new ArrayList<>();
-        while (true) {
-            UploadDetail poll = copy.poll();
-            if (poll != null) {
-                poll.setMergeTitle(StrUtil.isNotBlank(poll.getUploadName()) ? poll.getUploadName() : poll.getTitle());
-                result.add(poll);
-            } else {
-                break;
-            }
+        UploadDetail[] array = queue.toArray(new UploadDetail[0]);
+        for (UploadDetail uploadDetail : array) {
+            uploadDetail.setMergeTitle(
+                    StrUtil.isNotBlank(uploadDetail.getUploadName()) ? uploadDetail.getUploadName() : uploadDetail.getTitle());
         }
+        Collections.addAll(result, array);
+//        while (true) {
+//            UploadDetail poll = copy.poll();
+//            if (poll != null) {
+//                poll.setMergeTitle(StrUtil.isNotBlank(poll.getUploadName()) ? poll.getUploadName() : poll.getTitle());
+//                result.add(poll);
+//            } else {
+//                break;
+//            }
+//        }
         return result;
     }
 
