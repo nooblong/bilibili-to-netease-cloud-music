@@ -315,36 +315,23 @@ public class TestJava {
 
     @Test
     void leetcode4() {
-        System.out.println(reverse(-321));
         System.out.println(reverse(1534236469));
+        System.out.println(reverse(1463847412));
+        System.out.println(reverse(1563847412));
+//        System.out.println(reverse(2147483651));
     }
 
     public int reverse(int x) {
-        String s = String.valueOf(x);
-        char[] c = s.toCharArray();
-        char[] c2 = new char[c.length];
-        int j = 0;
-        boolean negative = false;
-        for (int i = c.length - 1; i >= 0; i--) {
-            char a = c[i];
-            if ((int) a == 0) {
-                continue;
+        int rev = 0;
+        while (x != 0) {
+            if (rev < Integer.MIN_VALUE / 10 || rev > Integer.MAX_VALUE / 10) {
+                return 0;
             }
-            if (a == '-') {
-                negative = true;
-                continue;
-            }
-            c2[j++] = a;
+            int digit = x % 10;
+            x /= 10;
+            rev = rev * 10 + digit;
         }
-        try {
-            if (negative) {
-                return Integer.parseInt("-" + new String(c2).trim());
-            }
-            return Integer.parseInt(new String(c2));
-        } catch (Exception e) {
-            return 0;
-        }
-
+        return rev;
     }
 
 }
