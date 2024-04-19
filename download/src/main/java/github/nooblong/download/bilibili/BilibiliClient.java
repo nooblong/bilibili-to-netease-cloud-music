@@ -121,6 +121,9 @@ public class BilibiliClient {
             boolean login3 = isLogin3(userCredMap);
             if (login3) {
                 return sysUser;
+            } else {
+                sysUser.setBiliCookies("");
+                userService.updateById(sysUser);
             }
         }
         log.error("没有可用b站cookie");
@@ -478,7 +481,8 @@ public class BilibiliClient {
             String[] cookieList = url.split("\\?")[1].split("&");
             for (String cookie : cookieList) {
                 if (cookie.startsWith("SESSDATA")) {
-                    cookie = cookie.replaceAll(",", "%2F");
+                    cookie = cookie.replaceAll(",", "%2C");
+                    cookie = cookie.replaceAll("/", "%2F");
                     cookieNode.put("sessdata", cookie.substring(9));
                 }
                 if (cookie.startsWith("bili_jct")) {
