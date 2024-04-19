@@ -25,8 +25,8 @@ public class CheckBilibiliCookieJob implements BroadcastProcessor {
 
     @Override
     public ProcessResult process(TaskContext context) {
-        bilibiliClient.checkCurrentCredMap();
         OmsLogger omsLogger = context.getOmsLogger();
+        bilibiliClient.checkCurrentCredMap(omsLogger);
         omsLogger.info("检查b站Cookie任务成功");
         return new ProcessResult(true, "检查b站Cookie任务成功");
     }

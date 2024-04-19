@@ -28,6 +28,7 @@ import okio.Okio;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import tech.powerjob.worker.log.OmsLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class BilibiliClient {
         }
     }
 
-    public void checkCurrentCredMap() {
+    public void checkCurrentCredMap(OmsLogger omsLogger) {
 //        boolean login3 = isLogin3(currentCred);
 //        if (!login3) {
 //            this.currentCred = new HashMap<>();
@@ -99,10 +100,12 @@ public class BilibiliClient {
             this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
             this.currentUser = sysUser;
             log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
+            omsLogger.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
         } else {
             this.currentUser = null;
             this.currentCred = new HashMap<>();
             log.info("无可用cookie");
+            omsLogger.info("无可用cookie");
         }
 //        }
     }
@@ -118,9 +121,6 @@ public class BilibiliClient {
             boolean login3 = isLogin3(userCredMap);
             if (login3) {
                 return sysUser;
-            } else {
-                sysUser.setBiliCookies("");
-                userService.updateById(sysUser);
             }
         }
         log.error("没有可用b站cookie");
