@@ -121,10 +121,12 @@ public class BilibiliClient {
             boolean login3 = isLogin3(userCredMap);
             if (login3) {
                 return sysUser;
-            } else {
-                sysUser.setBiliCookies("");
-                userService.updateById(sysUser);
             }
+            // todo: ???
+//            else {
+//                sysUser.setBiliCookies("");
+//                userService.updateById(sysUser);
+//            }
         }
         log.error("没有可用b站cookie");
         return null;
