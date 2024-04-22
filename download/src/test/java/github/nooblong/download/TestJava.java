@@ -420,7 +420,8 @@ public class TestJava {
 
     @Test
     public void leetcode7() {
-        int[][] ints = generateMatrix(5);
+//        int[][] ints = generateMatrix(5);
+        int[][] ints = generateMatrix2(5);
         for (int[] anInt : ints) {
             for (int i : anInt) {
                 System.out.print(i + " ");
@@ -458,6 +459,34 @@ public class TestJava {
                 y--;
                 continue;
             }
+        }
+        return s;
+    }
+
+    public int[][] generateMatrix2(int n) {
+        int t = 0;
+        int b = n - 1;
+        int l = 0;
+        int r = n - 1;
+        int[][] s = new int[n][n];
+        int k = 1;
+        while (k <= n * n) {
+            for (int i = l; i <= r; ++i, ++k) {
+                s[t][i] = k;
+            }
+            ++t;
+            for (int i = t; i <= b; ++i, ++k) {
+                s[i][r] = k;
+            }
+            --r;
+            for (int i = r; i >= l; --i, ++k) {
+                s[b][i] = k;
+            }
+            --b;
+            for (int i = b; i >= t; --i, ++k) {
+                s[i][l] = k;
+            }
+            ++l;
         }
         return s;
     }
