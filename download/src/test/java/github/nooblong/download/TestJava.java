@@ -334,4 +334,132 @@ public class TestJava {
         return rev;
     }
 
+    @Test
+    public void leetcode5() {
+        int[] ints = {2, 3, 3};
+        int i = removeElement(ints, 3);
+        for (int j = 0; j < i; j++) {
+            System.out.print(ints[j] + " ");
+        }
+    }
+
+    public int removeElement(int[] nums, int val) {
+        int index = nums.length - 1;
+        if (index == 0) {
+            if (nums[0] == val) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+        for (int i = 0; i < nums.length; i++) {
+            if (i == index && nums[i] == val) {
+                return index;
+            }
+            if (i == index && nums[i] != val) {
+                return index + 1;
+            }
+            while (true) {
+                if (index < 0) {
+                    break;
+                }
+                if (index == i) {
+                    if (nums[i] == val) {
+                        return index;
+                    } else {
+                        return index + 1;
+                    }
+                }
+                if (nums[i] == val) {
+                    nums[i] = nums[index--];
+                } else {
+                    break;
+                }
+            }
+            if (i == index) {
+                return index + 1;
+            }
+        }
+        return 0;
+    }
+
+    @Test
+    public void leetcode6() {
+//        System.out.println(minSubArrayLen(7, new int[]{2, 3, 1, 2, 4, 3}));
+        System.out.println(minSubArrayLen(15, new int[]{1, 2, 3, 4, 5}));
+    }
+
+    public int minSubArrayLen(int target, int[] nums) {
+        int result = 9999999;
+        int l = 0, r = 0;
+        int sum = 0;
+        while (r < nums.length) {
+            sum += nums[r];
+            if (sum >= target) {
+                if (r - l < result) {
+                    result = r - l + 1;
+                }
+                while (l < r) {
+                    sum -= nums[l++];
+                    if (sum >= target) {
+                        if (r - l < result) {
+                            result = r - l + 1;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+            r++;
+        }
+        if (l == 0 && r == nums.length && result == 9999999) {
+            return 0;
+        }
+        return result;
+    }
+
+    @Test
+    public void leetcode7() {
+        int[][] ints = generateMatrix(5);
+        for (int[] anInt : ints) {
+            for (int i : anInt) {
+                System.out.print(i + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public int[][] generateMatrix(int n) {
+        int[][] s = new int[n][n];
+        int x = 0, y = 0;
+        s[0][0] = 1;
+        for (int i = 1; i < n * n; i++) {
+            // right no top
+            if (x + 1 < n && s[y][x + 1] == 0 && (y == 0 || (s[y - 1][x + 1] != 0))) {
+                s[y][x + 1] = i + 1;
+                x++;
+                continue;
+            }
+            // down no right
+            if (y + 1 < n && s[y + 1][x] == 0 && (x == n - 1 || (s[y + 1][x + 1] != 0))) {
+                s[y + 1][x] = i + 1;
+                y++;
+                continue;
+            }
+            // left no down
+            if (x > 0 && s[y][x - 1] == 0 && (y == n - 1 || (s[y + 1][x - 1] != 0))) {
+                s[y][x - 1] = i + 1;
+                x--;
+                continue;
+            }
+            // top no left
+            if (y > 0 && s[y - 1][x] == 0 && (x == 0 || (s[y - 1][x - 1] != 0))) {
+                s[y - 1][x] = i + 1;
+                y--;
+                continue;
+            }
+        }
+        return s;
+    }
+
 }
