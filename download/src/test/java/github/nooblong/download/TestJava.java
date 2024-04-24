@@ -674,18 +674,39 @@ class MyLinkedList {
         if (head == null || head.next == null) {
             return head;
         }
-        ListNode tmp = null;
-        ListNode copy = head;
-        while (copy.next != null) {
-            if (tmp == null) {
-                tmp = copy;
-                copy = copy.next;
+        ListNode a = new ListNode();
+        ListNode b = new ListNode();
+        ListNode result = new ListNode();
+        int num = 0;
+        boolean isA = true;
+        ListNode tmpA = a;
+        ListNode tmpB = b;
+        while (head.next != null) {
+            if (isA) {
+                tmpA.next = head;
+                isA = false;
+                tmpA = tmpA.next;
             } else {
-                tmp.next = copy.next;
-                copy.next = tmp;
+                tmpB.next = head;
+                isA = true;
+                tmpB = tmpB.next;
             }
+            head = head.next;
+            num++;
         }
-        return head;
+        ListNode tmpResult = result;
+        for (int i = 1; i < num + 1; i++) {
+            if (i % 2 != 0) {
+                tmpResult.next = a.next;
+                a = a.next;
+            } else {
+                tmpResult.next = b.next;
+                b = b.next;
+            }
+            tmpResult = tmpResult.next;
+        }
+        tmpResult.next = null;
+        return result;
     }
 }
 
