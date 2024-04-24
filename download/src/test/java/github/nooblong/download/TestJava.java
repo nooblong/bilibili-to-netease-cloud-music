@@ -491,4 +491,172 @@ public class TestJava {
         return s;
     }
 
+    @Test
+    public void designLinkedList() {
+        MyLinkedList obj = new MyLinkedList();
+        obj.addAtHead(2);
+        obj.deleteAtIndex(1);
+        obj.addAtHead(2);
+        obj.addAtHead(7);
+        obj.addAtHead(3);
+        obj.addAtHead(2);
+        obj.addAtHead(5);
+        obj.addAtTail(5);
+        System.out.println(obj.get(5));
+        for (int i = 0; i < obj.size; i++) {
+            System.out.print(obj.get(i) + "->");
+        }
+        System.out.println();
+        obj.addAtIndex(2, 99);
+        for (int i = 0; i < obj.size; i++) {
+            System.out.print(obj.get(i) + "->");
+        }
+        System.out.println();
+        obj.addAtIndex(7, 100);
+        for (int i = 0; i < obj.size; i++) {
+            System.out.print(obj.get(i) + "->");
+        }
+        System.out.println();
+        obj.deleteAtIndex(3);
+        for (int i = 0; i < obj.size; i++) {
+            System.out.print(obj.get(i) + "->");
+        }
+        System.out.println();
+
+        System.out.println(obj.get(0));
+        System.out.println(obj.get(1));
+        System.out.println(obj.get(2));
+        System.out.println(obj.get(3));
+        System.out.println(obj.get(4));
+        System.out.println(obj.get(5));
+        System.out.println(obj.get(6));
+        System.out.println(obj.get(7));
+//        obj.addAtIndex(1, 1);
+//        obj.deleteAtIndex(1);
+
+    }
+
+}
+
+class MyLinkedList {
+    // 1->2->3->4->5
+    Node head = new Node(-1, null, null);
+    Node tail = new Node(-1, null, head);
+    int size;
+
+    public MyLinkedList() {
+
+    }
+
+    public int get(int index) {
+        if (index < 0 || index >= size) {
+            return -1;
+        }
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            return tmp.val;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            return tmp.val;
+        }
+    }
+
+    public void addAtHead(int val) {
+        if (size == 0) {
+            Node node = new Node(val, tail, head);
+            head.next = node;
+            tail.prev = node;
+        } else {
+            Node node = new Node(val, head.next, head);
+            head.next.prev = node;
+            head.next = node;
+        }
+        size++;
+    }
+
+    public void addAtTail(int val) {
+        if (size == 0) {
+            Node node = new Node(val, tail, head);
+            head.next = node;
+            tail.prev = node;
+        } else {
+            Node node = new Node(val, tail, tail.prev);
+            tail.prev.next = node;
+            tail.prev = node;
+        }
+        size++;
+    }
+
+    public void addAtIndex(int index, int val) {
+        if (index > size) {
+            return;
+        }
+        if (index == size) {
+            Node node = new Node(val, tail, tail.prev);
+            tail.prev.next = node;
+            tail.prev = node;
+            size++;
+            return;
+        }
+        // 1->2->  new->  3(tmp)->4->5
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            Node node = new Node(val, tmp, tmp.prev);
+            tmp.prev.next = node;
+            tmp.prev = node;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            Node node = new Node(val, tmp, tmp.prev);
+            tmp.prev.next = node;
+            tmp.prev = node;
+        }
+        size++;
+    }
+
+    public void deleteAtIndex(int index) {
+        if (index > size - 1) {
+            return;
+        }
+        // 1->2->3(tmp)->4->5
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            tmp.prev.next = tmp.next;
+            tmp.next.prev = tmp.prev;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            tmp.prev.next = tmp.next;
+            tmp.next.prev = tmp.prev;
+        }
+        size--;
+    }
+
+    static class Node {
+        int val;
+        Node next;
+        Node prev;
+
+        public Node(int val, Node next, Node prev) {
+            this.val = val;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
 }
