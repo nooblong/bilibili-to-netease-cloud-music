@@ -22,9 +22,11 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class TestJava {
+class TestJava {
 
     @Test
     public void testCharacters() {
@@ -536,6 +538,46 @@ public class TestJava {
 
     }
 
+    @Test
+    public void removeNthNodeFromEndOfList() {
+        ListNode listNode = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+        ListNode listNode1 = removeNthFromEnd(listNode, 2);
+        ListNode listNode2 = removeNthFromEnd(new ListNode(1), 1);
+        printListNode(listNode1);
+    }
+
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        if (head == null) {
+            return null;
+        }
+        ListNode node = head;
+        Map<Integer, ListNode> map = new HashMap<>();
+        int index = 0;
+        while (node != null) {
+            map.put(++index, node);
+            node = node.next;
+        }
+        int find = index - n + 1;
+        if (find == 1) {
+            return head.next;
+        }
+        if (find == index) {
+            map.get(find - 1).next = null;
+            return head;
+        }
+        map.get(find - 1).next = map.get(find + 1);
+        return head;
+    }
+
+
+    public void printListNode(ListNode head) {
+        while (head != null) {
+            System.out.print(head.val + " ");
+            head = head.next;
+        }
+        System.out.println();
+    }
+
 }
 
 class MyLinkedList {
@@ -681,7 +723,7 @@ class MyLinkedList {
         boolean isA = true;
         ListNode tmpA = a;
         ListNode tmpB = b;
-        while (head.next != null) {
+        while (head != null) {
             if (isA) {
                 tmpA.next = head;
                 isA = false;
@@ -694,23 +736,40 @@ class MyLinkedList {
             head = head.next;
             num++;
         }
+        tmpA.next = null;
+        tmpB.next = null;
+        a = a.next;
+        b = b.next;
         ListNode tmpResult = result;
         for (int i = 1; i < num + 1; i++) {
-            if (i % 2 != 0) {
-                tmpResult.next = a.next;
-                a = a.next;
+            if (i % 2 == 0) {
+                if (a == null) {
+                    tmpResult.next = b;
+                    tmpResult = tmpResult.next;
+                    break;
+                } else {
+                    tmpResult.next = a;
+                    a = a.next;
+                }
             } else {
-                tmpResult.next = b.next;
-                b = b.next;
+                if (b == null) {
+                    tmpResult.next = a;
+                    tmpResult = tmpResult.next;
+                    break;
+                } else {
+                    tmpResult.next = b;
+                    b = b.next;
+                }
             }
+
             tmpResult = tmpResult.next;
         }
         tmpResult.next = null;
-        return result;
+        return result.next;
     }
 }
 
-class ListNode {
+public class ListNode {
     int val;
     ListNode next;
 
