@@ -578,6 +578,44 @@ class TestJava {
         System.out.println();
     }
 
+    @Test
+    void recorderList() {
+        ListNode listNode = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+        ListNode listNode2 = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4))));
+        reorderList(listNode2);
+        printListNode(listNode2);
+    }
+
+    public void reorderList(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+        ListNode mid = slow;
+        ListNode slow2 = slow;
+        ListNode prev = null;
+        ListNode tail = null;
+        while (slow2 != null) {
+            ListNode temp = slow2.next;
+            slow2.next = prev;
+            prev = slow2;
+            slow2 = temp;
+            tail = prev;
+        }
+        printListNode(tail);
+        printListNode(head);
+        ListNode copy = head;
+        while (tail != null && tail != mid) {
+            ListNode tmp = tail.next;
+            tail.next = copy.next;
+            copy.next = tail;
+            tail = tmp;
+            copy = copy.next.next;
+        }
+    }
+
 }
 
 class MyLinkedList {
