@@ -90,6 +90,7 @@ public class UploadDetailController {
         uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
         uploadDetail.setPriority(10L);
         uploadDetail.setUserId(userId);
+        uploadDetail.setStatus(StatusTypeEnum.QUEUED);
 
         if (req.isCrack()) {
             if (!userId.equals(1L)) {
