@@ -21,10 +21,7 @@ import ws.schild.jave.encode.EncodingAttributes;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 class TestJava {
 
@@ -614,6 +611,48 @@ class TestJava {
             tail = tmp;
             copy = copy.next.next;
         }
+    }
+
+    @Test
+    public void findCommonCharacters() {
+        List<String> strings = commonChars(new String[]{"bella", "label", "roller"});
+        List<String> strings2 = commonChars(new String[]{"acabcddd", "bcbdbcbd", "baddbadb", "cbdddcac",
+                "aacbcccd", "ccccddda", "cababaab", "addcaccd"});
+        System.out.println(strings);
+        System.out.println(strings2);
+    }
+
+    public List<String> commonChars(String[] words) {
+        int[] map = new int[26];
+        char[] as = words[0].toCharArray();
+        for (char a : as) {
+            map[a - 'a'] += 1;
+        }
+        for (int i = 1; i < words.length; i++) {
+            char[] bs = words[i].toCharArray();
+            int[] map2 = new int[26];
+            for (char b : bs) {
+                if (map[b - 'a'] > 0) {
+                    map2[b - 'a'] += 1;
+                }
+            }
+            for (int j = 0; j < map2.length; j++) {
+                if (map2[j] == 0 && map[j] > 0) {
+                    map[j] = 0;
+                    continue;
+                }
+                map[j] = Math.min(map[j], map2[j]);
+            }
+        }
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < map.length; i++) {
+            if (map[i] > 0) {
+                for (int k = 0; k < map[i]; k++) {
+                    result.add((char) (i + 'a') + "");
+                }
+            }
+        }
+        return result;
     }
 
 }
