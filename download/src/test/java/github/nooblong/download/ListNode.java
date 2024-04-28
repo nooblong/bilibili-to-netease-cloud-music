@@ -655,6 +655,60 @@ class TestJava {
         return result;
     }
 
+    @Test
+    public void threeSum1() {
+//        List<List<Integer>> lists = threeSum(new int[]{-1, 0, 1, 2, -1, -4});
+//        List<List<Integer>> lists = threeSum(new int[]{0, 0, 0, 0});
+//        List<List<Integer>> lists = threeSum(new int[]{-2, 0, 1, 1, 2});
+        List<List<Integer>> lists = threeSum(new int[]{1, 2, -2, -1});
+        for (List<Integer> list : lists) {
+            for (Integer i : list) {
+                System.out.print(i + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public List<List<Integer>> threeSum(int[] nums) {
+        Map<Integer, List<Integer>> map = new HashMap<>();
+        int b = nums.length / 3 * 2;
+        for (int i = 0; i < b; i++) {
+            for (int j = i + 1; j < nums.length; j++) {
+                if (j == b) {
+                    continue;
+                }
+                int sum = nums[i] + nums[j];
+                List<Integer> orDefault = map.getOrDefault(sum, new ArrayList<>());
+                orDefault.addAll(Arrays.asList(i, j));
+                map.put(sum, orDefault);
+            }
+        }
+        List<List<Integer>> result = new ArrayList<>();
+        List<List<Integer>> added = new ArrayList<>();
+        for (int k = b; k < nums.length; k++) {
+            int need = -nums[k];
+            if (map.containsKey(need)) {
+                List<Integer> tmp = map.get(need);
+                for (int i = 0; i < tmp.size() / 2; i++) {
+                    ArrayList<Integer> toAdd = new ArrayList<>(Arrays.asList(
+                            nums[tmp.get(i * 2)], nums[tmp.get(i * 2 + 1)], nums[k]));
+                    boolean isAdded = false;
+                    for (List<Integer> tmp2 : added) {
+                        if (tmp2.containsAll(toAdd)) {
+                            isAdded = true;
+                            break;
+                        }
+                    }
+                    added.add(toAdd);
+                    if (!isAdded) {
+                        result.add(toAdd);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
 }
 
 class MyLinkedList {
