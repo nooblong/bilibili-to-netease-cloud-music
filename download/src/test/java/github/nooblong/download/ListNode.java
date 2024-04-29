@@ -575,6 +575,15 @@ class TestJava {
         System.out.println();
     }
 
+    public <T> void printListList(List<List<T>> lists) {
+        for (List<T> list : lists) {
+            for (T i : list) {
+                System.out.print(i + " ");
+            }
+            System.out.println();
+        }
+    }
+
     @Test
     void recorderList() {
         ListNode listNode = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
@@ -702,6 +711,67 @@ class TestJava {
                     added.add(toAdd);
                     if (!isAdded) {
                         result.add(toAdd);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    @Test
+    void fourSum() {
+        int[] nums = {-2, -1, 0, 0, 1, 2};
+        List<List<Integer>> lists = fourSum(nums, 0);
+        printListList(lists);
+    }
+
+    public List<List<Integer>> fourSum(int[] nums, int target) {
+        Arrays.sort(nums);
+        List<List<Integer>> result = new ArrayList<>();
+        int n = nums.length;
+        for (int a = 0; a < nums.length - 3; a++) {
+            if (a > 0 && nums[a] == nums[a - 1]) {
+                continue;
+            }
+            long tmp1 = nums[a] + nums[n - 1] + nums[n - 2] + nums[n - 3];
+            long tmp2 = nums[a] + nums[a + 1] + nums[a + 2] + nums[a + 3];
+            if (tmp1 < target) {
+                continue;
+            }
+            if (tmp2 > target) {
+                break;
+            }
+            for (int b = a + 1; b < nums.length - 2; b++) {
+                if (b > 0 && nums[b] == nums[b - 1]) {
+                    continue;
+                }
+                long tmp3 = nums[a] + nums[b] + nums[n - 1] + nums[n - 2];// a固定
+                long tmp4 = nums[a] + nums[b] + nums[b + 1] + nums[b + 2];// a固定
+                if (tmp3 < target) {
+                    continue;
+                }
+                if (tmp4 > target) {
+                    break;
+                }
+                int c = b + 1, d = n - 1;
+                while (c < d) {
+                    long s = nums[a] + nums[b] + nums[c] + nums[d];
+                    if (s == target) {
+                        result.add(new ArrayList<>(Arrays.asList(nums[a], nums[b], nums[c], nums[d])));
+                        do {
+                            c++;
+                        } while (nums[c] == nums[c - 1] && c < d);
+                        do {
+                            d--;
+                        } while (nums[d] == nums[d + 1] && c < d);
+                    } else if (s < target) {
+                        do {
+                            c++;
+                        } while (nums[c] == nums[c - 1] && c < d);
+                    } else {
+                        do {
+                            d--;
+                        } while (nums[d] == nums[d + 1] && c < d);
                     }
                 }
             }
