@@ -720,8 +720,12 @@ class TestJava {
 
     @Test
     void fourSum() {
-        int[] nums = {-2, -1, 0, 0, 1, 2};
-        List<List<Integer>> lists = fourSum(nums, 0);
+//        int[] nums = {-2, -1, 0, 0, 1, 2};
+//        int[] nums = {2, 2, 2, 2};
+        int[] nums = {0, 0, 0, 1000000000, 1000000000, 1000000000, 1000000000};
+//        List<List<Integer>> lists = fourSum(nums, 0);
+//        List<List<Integer>> lists = fourSum(nums, 8);
+        List<List<Integer>> lists = fourSum(nums, 1000000000);
         printListList(lists);
     }
 
@@ -729,24 +733,25 @@ class TestJava {
         Arrays.sort(nums);
         List<List<Integer>> result = new ArrayList<>();
         int n = nums.length;
-        for (int a = 0; a < nums.length - 3; a++) {
+        for (int a = 0; a < n - 3; a++) {
             if (a > 0 && nums[a] == nums[a - 1]) {
                 continue;
             }
-            long tmp1 = nums[a] + nums[n - 1] + nums[n - 2] + nums[n - 3];
-            long tmp2 = nums[a] + nums[a + 1] + nums[a + 2] + nums[a + 3];
+            long tmp1 = (long) nums[a] + (long) nums[n - 1] + (long) nums[n - 2] + (long) nums[n - 3];
+            long tmp2 = (long) nums[a] + (long) nums[a + 1] + (long) nums[a + 2] + (long) nums[a + 3];
             if (tmp1 < target) {
                 continue;
             }
             if (tmp2 > target) {
                 break;
             }
-            for (int b = a + 1; b < nums.length - 2; b++) {
-                if (b > 0 && nums[b] == nums[b - 1]) {
+            for (int b = a + 1; b < n - 2; b++) {
+                // b>a+1而不是b>0处理2,2,2,2;8
+                if (b > a + 1 && nums[b] == nums[b - 1]) {
                     continue;
                 }
-                long tmp3 = nums[a] + nums[b] + nums[n - 1] + nums[n - 2];// a固定
-                long tmp4 = nums[a] + nums[b] + nums[b + 1] + nums[b + 2];// a固定
+                long tmp3 = (long) nums[a] + (long) nums[b] + (long) nums[n - 1] + (long) nums[n - 2];// a固定
+                long tmp4 = (long) nums[a] + (long) nums[b] + (long) nums[b + 1] + (long) nums[b + 2];// a固定
                 if (tmp3 < target) {
                     continue;
                 }
@@ -755,7 +760,7 @@ class TestJava {
                 }
                 int c = b + 1, d = n - 1;
                 while (c < d) {
-                    long s = nums[a] + nums[b] + nums[c] + nums[d];
+                    long s = (long) nums[a] + (long) nums[b] + (long) nums[c] + (long) nums[d];
                     if (s == target) {
                         result.add(new ArrayList<>(Arrays.asList(nums[a], nums[b], nums[c], nums[d])));
                         do {
@@ -766,11 +771,11 @@ class TestJava {
                         } while (nums[d] == nums[d + 1] && c < d);
                     } else if (s < target) {
                         do {
-                            c++;
+                        c++;
                         } while (nums[c] == nums[c - 1] && c < d);
                     } else {
                         do {
-                            d--;
+                        d--;
                         } while (nums[d] == nums[d + 1] && c < d);
                     }
                 }
