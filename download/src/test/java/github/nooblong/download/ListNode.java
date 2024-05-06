@@ -23,6 +23,213 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+class MyLinkedList {
+    // 1->2->3->4->5
+    Node head = new Node(-1, null, null);
+    Node tail = new Node(-1, null, head);
+    int size;
+
+    public MyLinkedList() {
+
+    }
+
+    public int get(int index) {
+        if (index < 0 || index >= size) {
+            return -1;
+        }
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            return tmp.val;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            return tmp.val;
+        }
+    }
+
+    public void addAtHead(int val) {
+        if (size == 0) {
+            Node node = new Node(val, tail, head);
+            head.next = node;
+            tail.prev = node;
+        } else {
+            Node node = new Node(val, head.next, head);
+            head.next.prev = node;
+            head.next = node;
+        }
+        size++;
+    }
+
+    public void addAtTail(int val) {
+        if (size == 0) {
+            Node node = new Node(val, tail, head);
+            head.next = node;
+            tail.prev = node;
+        } else {
+            Node node = new Node(val, tail, tail.prev);
+            tail.prev.next = node;
+            tail.prev = node;
+        }
+        size++;
+    }
+
+    public void addAtIndex(int index, int val) {
+        if (index > size) {
+            return;
+        }
+        if (index == size) {
+            Node node = new Node(val, tail, tail.prev);
+            tail.prev.next = node;
+            tail.prev = node;
+            size++;
+            return;
+        }
+        // 1->2->  new->  3(tmp)->4->5
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            Node node = new Node(val, tmp, tmp.prev);
+            tmp.prev.next = node;
+            tmp.prev = node;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            Node node = new Node(val, tmp, tmp.prev);
+            tmp.prev.next = node;
+            tmp.prev = node;
+        }
+        size++;
+    }
+
+    public void deleteAtIndex(int index) {
+        if (index > size - 1) {
+            return;
+        }
+        // 1->2->3(tmp)->4->5
+        if (index < size / 2) {
+            Node tmp = head.next;
+            for (int i = 0; i < index; i++) {
+                tmp = tmp.next;
+            }
+            tmp.prev.next = tmp.next;
+            tmp.next.prev = tmp.prev;
+        } else {
+            Node tmp = tail.prev;
+            for (int i = 0; i < size - index - 1; i++) {
+                tmp = tmp.prev;
+            }
+            tmp.prev.next = tmp.next;
+            tmp.next.prev = tmp.prev;
+        }
+        size--;
+    }
+
+    static class Node {
+        int val;
+        Node next;
+        Node prev;
+
+        public Node(int val, Node next, Node prev) {
+            this.val = val;
+            this.next = next;
+            this.prev = prev;
+        }
+    }
+
+    @Test
+    void swapNodesInPairs() {
+        ListNode head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
+        ListNode listNode = swapPairs(head);
+        while (listNode != null) {
+            System.out.println(listNode.val);
+            listNode = listNode.next;
+        }
+    }
+
+    public ListNode swapPairs(ListNode head) {
+        if (head == null || head.next == null) {
+            return head;
+        }
+        ListNode a = new ListNode();
+        ListNode b = new ListNode();
+        ListNode result = new ListNode();
+        int num = 0;
+        boolean isA = true;
+        ListNode tmpA = a;
+        ListNode tmpB = b;
+        while (head != null) {
+            if (isA) {
+                tmpA.next = head;
+                isA = false;
+                tmpA = tmpA.next;
+            } else {
+                tmpB.next = head;
+                isA = true;
+                tmpB = tmpB.next;
+            }
+            head = head.next;
+            num++;
+        }
+        tmpA.next = null;
+        tmpB.next = null;
+        a = a.next;
+        b = b.next;
+        ListNode tmpResult = result;
+        for (int i = 1; i < num + 1; i++) {
+            if (i % 2 == 0) {
+                if (a == null) {
+                    tmpResult.next = b;
+                    tmpResult = tmpResult.next;
+                    break;
+                } else {
+                    tmpResult.next = a;
+                    a = a.next;
+                }
+            } else {
+                if (b == null) {
+                    tmpResult.next = a;
+                    tmpResult = tmpResult.next;
+                    break;
+                } else {
+                    tmpResult.next = b;
+                    b = b.next;
+                }
+            }
+
+            tmpResult = tmpResult.next;
+        }
+        tmpResult.next = null;
+        return result.next;
+    }
+}
+
+public class ListNode {
+    int val;
+    ListNode next;
+
+    ListNode() {
+    }
+
+    ListNode(int val) {
+        this.val = val;
+    }
+
+    ListNode(int val, ListNode next) {
+        this.val = val;
+        this.next = next;
+    }
+}
+
+
 class TestJava {
 
     @Test
@@ -786,208 +993,3 @@ class TestJava {
 
 }
 
-class MyLinkedList {
-    // 1->2->3->4->5
-    Node head = new Node(-1, null, null);
-    Node tail = new Node(-1, null, head);
-    int size;
-
-    public MyLinkedList() {
-
-    }
-
-    public int get(int index) {
-        if (index < 0 || index >= size) {
-            return -1;
-        }
-        if (index < size / 2) {
-            Node tmp = head.next;
-            for (int i = 0; i < index; i++) {
-                tmp = tmp.next;
-            }
-            return tmp.val;
-        } else {
-            Node tmp = tail.prev;
-            for (int i = 0; i < size - index - 1; i++) {
-                tmp = tmp.prev;
-            }
-            return tmp.val;
-        }
-    }
-
-    public void addAtHead(int val) {
-        if (size == 0) {
-            Node node = new Node(val, tail, head);
-            head.next = node;
-            tail.prev = node;
-        } else {
-            Node node = new Node(val, head.next, head);
-            head.next.prev = node;
-            head.next = node;
-        }
-        size++;
-    }
-
-    public void addAtTail(int val) {
-        if (size == 0) {
-            Node node = new Node(val, tail, head);
-            head.next = node;
-            tail.prev = node;
-        } else {
-            Node node = new Node(val, tail, tail.prev);
-            tail.prev.next = node;
-            tail.prev = node;
-        }
-        size++;
-    }
-
-    public void addAtIndex(int index, int val) {
-        if (index > size) {
-            return;
-        }
-        if (index == size) {
-            Node node = new Node(val, tail, tail.prev);
-            tail.prev.next = node;
-            tail.prev = node;
-            size++;
-            return;
-        }
-        // 1->2->  new->  3(tmp)->4->5
-        if (index < size / 2) {
-            Node tmp = head.next;
-            for (int i = 0; i < index; i++) {
-                tmp = tmp.next;
-            }
-            Node node = new Node(val, tmp, tmp.prev);
-            tmp.prev.next = node;
-            tmp.prev = node;
-        } else {
-            Node tmp = tail.prev;
-            for (int i = 0; i < size - index - 1; i++) {
-                tmp = tmp.prev;
-            }
-            Node node = new Node(val, tmp, tmp.prev);
-            tmp.prev.next = node;
-            tmp.prev = node;
-        }
-        size++;
-    }
-
-    public void deleteAtIndex(int index) {
-        if (index > size - 1) {
-            return;
-        }
-        // 1->2->3(tmp)->4->5
-        if (index < size / 2) {
-            Node tmp = head.next;
-            for (int i = 0; i < index; i++) {
-                tmp = tmp.next;
-            }
-            tmp.prev.next = tmp.next;
-            tmp.next.prev = tmp.prev;
-        } else {
-            Node tmp = tail.prev;
-            for (int i = 0; i < size - index - 1; i++) {
-                tmp = tmp.prev;
-            }
-            tmp.prev.next = tmp.next;
-            tmp.next.prev = tmp.prev;
-        }
-        size--;
-    }
-
-    static class Node {
-        int val;
-        Node next;
-        Node prev;
-
-        public Node(int val, Node next, Node prev) {
-            this.val = val;
-            this.next = next;
-            this.prev = prev;
-        }
-    }
-
-    @Test
-    void swapNodesInPairs() {
-        ListNode head = new ListNode(1, new ListNode(2, new ListNode(3, new ListNode(4, new ListNode(5)))));
-        ListNode listNode = swapPairs(head);
-        while (listNode != null) {
-            System.out.println(listNode.val);
-            listNode = listNode.next;
-        }
-    }
-
-    public ListNode swapPairs(ListNode head) {
-        if (head == null || head.next == null) {
-            return head;
-        }
-        ListNode a = new ListNode();
-        ListNode b = new ListNode();
-        ListNode result = new ListNode();
-        int num = 0;
-        boolean isA = true;
-        ListNode tmpA = a;
-        ListNode tmpB = b;
-        while (head != null) {
-            if (isA) {
-                tmpA.next = head;
-                isA = false;
-                tmpA = tmpA.next;
-            } else {
-                tmpB.next = head;
-                isA = true;
-                tmpB = tmpB.next;
-            }
-            head = head.next;
-            num++;
-        }
-        tmpA.next = null;
-        tmpB.next = null;
-        a = a.next;
-        b = b.next;
-        ListNode tmpResult = result;
-        for (int i = 1; i < num + 1; i++) {
-            if (i % 2 == 0) {
-                if (a == null) {
-                    tmpResult.next = b;
-                    tmpResult = tmpResult.next;
-                    break;
-                } else {
-                    tmpResult.next = a;
-                    a = a.next;
-                }
-            } else {
-                if (b == null) {
-                    tmpResult.next = a;
-                    tmpResult = tmpResult.next;
-                    break;
-                } else {
-                    tmpResult.next = b;
-                    b = b.next;
-                }
-            }
-
-            tmpResult = tmpResult.next;
-        }
-        tmpResult.next = null;
-        return result.next;
-    }
-}
-
-public class ListNode {
-    int val;
-    ListNode next;
-
-    ListNode() {
-    }
-
-    ListNode(int val) {
-        this.val = val;
-    }
-
-    ListNode(int val, ListNode next) {
-        this.val = val;
-        this.next = next;
-    }
-}
