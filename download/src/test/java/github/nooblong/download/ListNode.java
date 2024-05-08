@@ -978,17 +978,52 @@ class TestJava {
                         } while (nums[d] == nums[d + 1] && c < d);
                     } else if (s < target) {
                         do {
-                        c++;
+                            c++;
                         } while (nums[c] == nums[c - 1] && c < d);
                     } else {
                         do {
-                        d--;
+                            d--;
                         } while (nums[d] == nums[d + 1] && c < d);
                     }
                 }
             }
         }
         return result;
+    }
+
+    @Test
+    void findTheIndexOfTheFirstOccurrenceInAString() {
+        System.out.println(strStr("sahdbutsad", "sad"));
+        System.out.println(strStr("aabaabaafa", "aabaaf"));
+    }
+
+    public int strStr(String haystack, String needle) {
+        int[] next = new int[needle.length()];
+        int j = 0;
+        next[0] = 0;
+        for (int i = 1; i < needle.length(); i++) {
+            while (j > 0 && needle.charAt(j) != needle.charAt(i)) {
+                j = next[j - 1];
+            }
+            if (needle.charAt(i) == needle.charAt(j)) {
+                j++;
+            }
+            next[i] = j;
+        }
+//        System.out.println(Arrays.toString(next));
+        int k = 0;
+        for (int i = 0; i < haystack.length(); i++) {
+            while (k > 0 && haystack.charAt(i) != needle.charAt(k)) {
+                k = next[k - 1];
+            }
+            if (haystack.charAt(i) == needle.charAt(k)) {
+                k++;
+            }
+            if (k == needle.length()) {
+                return i - needle.length() + 1;
+            }
+        }
+        return 0;
     }
 
 }
