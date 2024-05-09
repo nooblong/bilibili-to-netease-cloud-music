@@ -1026,5 +1026,58 @@ class TestJava {
         return 0;
     }
 
+    @Test
+    void repeatedSubstringPattern() {
+//        System.out.println(repeatedSubstringPattern("abab"));
+//        System.out.println(repeatedSubstringPattern("aba"));
+//        System.out.println(repeatedSubstringPattern("abcabcabcabc"));
+//        System.out.println(repeatedSubstringPattern("aabaabassss"));
+//        System.out.println(repeatedSubstringPattern("abaababaab"));
+        System.out.println(repeatedSubstringPattern("ab"));
+    }
+
+    public boolean repeatedSubstringPattern(String s) {
+        char[] c = s.toCharArray();
+        char[] cycle = new char[0];
+        if (s.length() == 1) {
+            return false;
+        }
+        for (int i = 1; i < c.length; i++) {
+            if (i > c.length / 2) {
+                return false;
+            }
+            if (c[0] == c[i]) {
+                cycle = Arrays.copyOfRange(c, 0, i);
+                break;
+            }
+        }
+        if (cycle.length == 0) {
+            return false;
+        }
+        int index = 0;
+        int start = cycle.length;
+        for (int i = start; i < c.length; i++) {
+            if (cycle[index] == c[i]) {
+                index++;
+                if (index == cycle.length) {
+                    index = 0;
+                }
+            } else {
+                for (int j = cycle.length + 1; j < c.length; j++) {
+                    if (c[j] == c[0]) {
+                        cycle = Arrays.copyOfRange(c, 0, j);
+                        i = -1;
+                        index = 0;
+                        break;
+                    }
+                    if (j > c.length / 2 + 1) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return index == 0;
+    }
+
 }
 
