@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.utils.OkUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,6 +18,7 @@ import ws.schild.jave.EncoderException;
 import ws.schild.jave.MultimediaObject;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
+import ws.schild.jave.info.MultimediaInfo;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -301,6 +303,39 @@ class TestJava {
 
         Encoder encoder = new Encoder();
         encoder.encode(new MultimediaObject(source), target, encodingAttributes);
+    }
+
+    @Test
+    void testFfmpeg3() throws EncoderException {
+        File source = new File("/Users/lyl/Downloads/test.m4a");
+        System.out.println(source.exists());
+        File target = new File("/Users/lyl/Downloads/target.mp3");
+
+        AudioAttributes audioAttributes = new AudioAttributes();
+        audioAttributes.setCodec("libmp3lame");
+        audioAttributes.setBitRate(320000);
+
+        EncodingAttributes encodingAttributes = new EncodingAttributes();
+        encodingAttributes.setAudioAttributes(audioAttributes);
+        encodingAttributes.setOutputFormat("mp3");
+
+        Encoder encoder = new Encoder();
+        encoder.encode(new MultimediaObject(source), target, encodingAttributes);
+    }
+
+    @Test
+    void testFfmpeg4() throws EncoderException {
+        CommonUtil.debug();
+        File source = new File("/Users/lyl/Downloads/test.m4a");
+        MultimediaObject multimediaObject = new MultimediaObject(source);
+        try {
+            MultimediaInfo info = multimediaObject.getInfo();
+            System.out.println(info.getAudio().getBitRate());
+            System.out.println(info.getFormat());
+        } catch (EncoderException e) {
+            System.out.println("查看音频信息错误: " + e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

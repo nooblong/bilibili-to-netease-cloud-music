@@ -51,6 +51,8 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
         // 设置编码过程的音量值。如果为 null 或未指定，则将选择默认值。如果是 256，则不会执行任何音量更改。
         // 音量是“振幅比”或“声压级”比率 2560 是音量=20dB 公式是 dBnumber=20*lg(振幅比) 128 表示减小 50% 512 表示音量加倍
         audioAttributes.setVolume(voiceOffset == 0 ? null : voiceOffset);
+        audioAttributes.setCodec("libmp3lame");
+        audioAttributes.setBitRate(320000);
         EncodingAttributes encodingAttributes = new EncodingAttributes();
         encodingAttributes.setAudioAttributes(audioAttributes);
         encodingAttributes.setOutputFormat(ext);
