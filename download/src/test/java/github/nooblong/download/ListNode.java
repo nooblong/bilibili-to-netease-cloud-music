@@ -1032,8 +1032,8 @@ class TestJava {
 //        System.out.println(repeatedSubstringPattern("aba"));
 //        System.out.println(repeatedSubstringPattern("abcabcabcabc"));
 //        System.out.println(repeatedSubstringPattern("aabaabassss"));
-//        System.out.println(repeatedSubstringPattern("abaababaab"));
-        System.out.println(repeatedSubstringPattern("ab"));
+        System.out.println(repeatedSubstringPattern("abaababaab"));
+//        System.out.println(repeatedSubstringPattern("ab"));
     }
 
     public boolean repeatedSubstringPattern(String s) {
@@ -1064,9 +1064,9 @@ class TestJava {
                 }
             } else {
                 for (int j = cycle.length + 1; j < c.length; j++) {
-                    if (c[j] == c[0]) {
+                    if (c[j] == c[0] && c[j - 1] == c[c.length - 1]) {
                         cycle = Arrays.copyOfRange(c, 0, j);
-                        i = -1;
+                        i = cycle.length - 1;
                         index = 0;
                         break;
                     }
