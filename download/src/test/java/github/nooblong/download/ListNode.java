@@ -1114,5 +1114,25 @@ class TestJava {
         return index == 0;
     }
 
+    @Test
+    void evaluateReversePolishNotation() {
+        assert evalRPN(new String[]{"2","1","+","3","*"}) == 9;
+        // ((2 + 1) * 3) = 9
+        assert evalRPN(new String[]{"4","13","5","/","+"}) == 6;
+        // (4 + (13 / 5)) = 6
+        assert evalRPN(new String[]{"10","6","9","3","+","-11","*","/","*","17","+","5","+"}) == 22;
+        //  ((10 * (6 / ((9 + 3) * -11))) + 17) + 5
+        //= ((10 * (6 / (12 * -11))) + 17) + 5
+        //= ((10 * (6 / -132)) + 17) + 5
+        //= ((10 * 0) + 17) + 5
+        //= (0 + 17) + 5
+        //= 17 + 5
+        //= 22
+    }
+
+    public int evalRPN(String[] tokens) {
+
+    }
+
 }
 
