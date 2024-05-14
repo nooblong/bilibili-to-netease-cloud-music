@@ -1116,11 +1116,11 @@ class TestJava {
 
     @Test
     void evaluateReversePolishNotation() {
-        assert evalRPN(new String[]{"2","1","+","3","*"}) == 9;
+        assert evalRPN(new String[]{"2", "1", "+", "3", "*"}) == 9;
         // ((2 + 1) * 3) = 9
-        assert evalRPN(new String[]{"4","13","5","/","+"}) == 6;
+        assert evalRPN(new String[]{"4", "13", "5", "/", "+"}) == 6;
         // (4 + (13 / 5)) = 6
-        assert evalRPN(new String[]{"10","6","9","3","+","-11","*","/","*","17","+","5","+"}) == 22;
+        assert evalRPN(new String[]{"10", "6", "9", "3", "+", "-11", "*", "/", "*", "17", "+", "5", "+"}) == 22;
         //  ((10 * (6 / ((9 + 3) * -11))) + 17) + 5
         //= ((10 * (6 / (12 * -11))) + 17) + 5
         //= ((10 * (6 / -132)) + 17) + 5
@@ -1131,7 +1131,55 @@ class TestJava {
     }
 
     public int evalRPN(String[] tokens) {
+        Stack<String> stack = new Stack<>();
+        for (String token : tokens) {
+            if (token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/")) {
+                int a = Integer.parseInt(stack.pop());
+                int b = Integer.parseInt(stack.pop());
+                switch (token) {
+                    case "+":
+                        stack.push(String.valueOf(a + b));
+                        break;
+                    case "-":
+                        stack.push(String.valueOf(b - a));
+                        break;
+                    case "*":
+                        stack.push(String.valueOf(a * b));
+                        break;
+                    case "/":
+                        stack.push(String.valueOf(b / a));
+                        break;
+                }
+            } else {
+                stack.push(token);
+            }
+        }
+        return Integer.parseInt(stack.pop());
+    }
 
+    @Test
+    void slidingWindowMaximum() {
+        assert Arrays.equals(maxSlidingWindow(new int[]{1, 3, -1, -3, 5, 3, 6, 7}, 3), new int[]{3, 3, 5, 5, 6, 7});
+        assert Arrays.equals(maxSlidingWindow(new int[]{7, 2, 4}, 2), new int[]{7, 4});
+    }
+
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        Deque<Integer> queue = new LinkedList<>();
+        int[] result = new int[nums.length - k + 1];
+        int index = 0;
+        for (int i = 0; i < nums.length; i++) {
+            while (!queue.isEmpty() && nums[i] > nums[queue.getFirst()]) {
+                queue.removeFirst();
+            }
+            queue.addFirst(i);
+            if (i - queue.getLast() == k) {
+                queue.removeLast();
+            }
+            if (i >= k - 1) {
+                result[index++] = nums[queue.getLast()];
+            }
+        }
+        return result;
     }
 
 }
