@@ -231,6 +231,55 @@ public class ListNode {
     }
 }
 
+class TreeNode {
+    int val;
+    TreeNode left;
+    TreeNode right;
+
+    TreeNode() {
+    }
+
+    TreeNode(int val) {
+        this.val = val;
+    }
+
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
+
+    public static TreeNode arrayToTree(Integer[] arr) {
+        if (arr == null || arr.length == 0) {
+            return null;
+        }
+
+        TreeNode root = new TreeNode(arr[0]);
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+
+        int i = 1;
+        while (i < arr.length) {
+            TreeNode current = queue.poll();
+            if (current != null) {
+                if (i < arr.length && arr[i] != null) {
+                    current.left = new TreeNode(arr[i]);
+                    queue.offer(current.left);
+                }
+                i++;
+
+                if (i < arr.length && arr[i] != null) {
+                    current.right = new TreeNode(arr[i]);
+                    queue.offer(current.right);
+                }
+                i++;
+            }
+        }
+
+        return root;
+    }
+}
+
 
 class TestJava {
 
@@ -1177,6 +1226,145 @@ class TestJava {
             }
             if (i >= k - 1) {
                 result[index++] = nums[queue.getLast()];
+            }
+        }
+        return result;
+    }
+
+    @Test
+    void binaryTreeLevelOrderTraversal() {
+        Integer[] rootArray = {3, 9, 20, null, null, 15, 7};
+        TreeNode root = TreeNode.arrayToTree(rootArray);
+        printNestedList(levelOrder(root));
+    }
+
+    public static void printNestedList(List<List<Integer>> nestedList) {
+        for (List<Integer> sublist : nestedList) {
+            System.out.print("[");
+            for (int i = 0; i < sublist.size(); i++) {
+                System.out.print(sublist.get(i));
+                if (i < sublist.size() - 1) {
+                    System.out.print(", ");
+                }
+            }
+            System.out.println("]");
+        }
+    }
+
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        Deque<TreeNode> queue = new LinkedList<>();
+        List<List<Integer>> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            List<Integer> list = new ArrayList<>();
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                list.add(poll.val);
+                if (poll.left != null) {
+                    queue.offer(poll.left);
+                }
+                if (poll.right != null) {
+                    queue.offer(poll.right);
+                }
+            }
+            result.add(list);
+        }
+        return result;
+    }
+
+    @Test
+    void binaryTreeLevelOrderTraversalIi() {
+        Integer[] rootArray = {3, 9, 20, null, null, 15, 7};
+        TreeNode root = TreeNode.arrayToTree(rootArray);
+        printNestedList(levelOrderBottom(root));
+    }
+
+    public List<List<Integer>> levelOrderBottom(TreeNode root) {
+        Deque<TreeNode> queue = new LinkedList<>();
+        List<List<Integer>> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            List<Integer> list = new ArrayList<>();
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                list.add(poll.val);
+                if (poll.left != null) {
+                    queue.offer(poll.left);
+                }
+                if (poll.right != null) {
+                    queue.offer(poll.right);
+                }
+            }
+            result.add(list);
+        }
+        Collections.reverse(result);
+        return result;
+    }
+
+    @Test
+    void findLargestValueInEachTreeRow() {
+        Integer[] rootArray = {1, 3, 2, 5, 3, null, 9};
+        TreeNode root = TreeNode.arrayToTree(rootArray);
+        System.out.println(largestValues(root));
+    }
+
+    public List<Integer> largestValues(TreeNode root) {
+        Deque<TreeNode> queue = new LinkedList<>();
+        List<Integer> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int max = Integer.MIN_VALUE;
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                if (poll.val > max) {
+                    max = poll.val;
+                }
+                if (poll.left != null) {
+                    queue.offer(poll.left);
+                }
+                if (poll.right != null) {
+                    queue.offer(poll.right);
+                }
+            }
+            result.add(max);
+        }
+        return result;
+    }
+
+    public List<Integer> preorderTraversal(TreeNode root) {
+        Deque<TreeNode> stack = new LinkedList<>();
+        List<Integer> result = new ArrayList<>();
+        if (root == null) {
+            return result;
+        }
+        stack.push(root);
+        while (!stack.isEmpty()) {
+            if (stack.peek() != null) {
+                TreeNode p = stack.pop();
+                if (p.right != null) {
+                    stack.push(p.right);
+                }
+                if (p.left != null) {
+                    stack.push(p.left);
+                }
+                stack.push(p);
+                stack.push(null);
+            } else {
+                stack.pop();
+                TreeNode ed = stack.pop();
+                result.add(ed.val);
             }
         }
         return result;
