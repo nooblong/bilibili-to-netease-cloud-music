@@ -1370,5 +1370,42 @@ class TestJava {
         return result;
     }
 
+    @Test
+    void binaryTreePaths() {
+        System.out.println(binaryTreePaths(TreeNode.arrayToTree(new Integer[]{1,2,3,null,5})));
+    }
+
+    public List<String> binaryTreePaths(TreeNode root) {
+        List<String> result = new ArrayList<>();
+        Stack<String> tmp = new Stack<>();
+        if (root == null){
+            return new ArrayList<>();
+        }
+        tmp.push(String.valueOf(root.val));
+        preorder(root, tmp, result);
+        return result;
+    }
+    void preorder(TreeNode root, Stack<String> tmp, List<String> result) {
+        if (root == null) {
+            return;
+        }
+        tmp.push(String.valueOf(root.val));
+        if (root.left == null && root.right == null) {
+            result.add(stackToString(tmp));
+        }
+        preorder(root.left, tmp, result);
+        preorder(root.right, tmp, result);
+    }
+    String stackToString(Stack<String> stack) {
+        StringBuilder sb = new StringBuilder();
+        while (!stack.isEmpty()) {
+            sb.append(stack.pop());
+            if (!stack.isEmpty()) {
+                sb.append("->");
+            }
+        }
+        return sb.toString();
+    }
+
 }
 
