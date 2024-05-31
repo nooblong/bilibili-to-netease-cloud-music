@@ -1372,39 +1372,79 @@ class TestJava {
 
     @Test
     void binaryTreePaths() {
-        System.out.println(binaryTreePaths(TreeNode.arrayToTree(new Integer[]{1,2,3,null,5})));
+        System.out.println(binaryTreePaths(TreeNode.arrayToTree(new Integer[]{1, 2, 3, null, 5})));
     }
 
     public List<String> binaryTreePaths(TreeNode root) {
         List<String> result = new ArrayList<>();
-        Stack<String> tmp = new Stack<>();
-        if (root == null){
+        List<String> tmp = new ArrayList<>();
+        if (root == null) {
             return new ArrayList<>();
         }
-        tmp.push(String.valueOf(root.val));
         preorder(root, tmp, result);
         return result;
     }
-    void preorder(TreeNode root, Stack<String> tmp, List<String> result) {
+
+    void preorder(TreeNode root, List<String> tmp, List<String> result) {
         if (root == null) {
             return;
         }
-        tmp.push(String.valueOf(root.val));
+        tmp.add(String.valueOf(root.val));
         if (root.left == null && root.right == null) {
-            result.add(stackToString(tmp));
+            result.add(listToString(tmp));
         }
         preorder(root.left, tmp, result);
         preorder(root.right, tmp, result);
-    }
-    String stackToString(Stack<String> stack) {
-        StringBuilder sb = new StringBuilder();
-        while (!stack.isEmpty()) {
-            sb.append(stack.pop());
-            if (!stack.isEmpty()) {
-                sb.append("->");
-            }
+        if (!tmp.isEmpty()) {
+            tmp.remove(tmp.size() - 1);
         }
+    }
+
+    String listToString(List<String> strings) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : strings) {
+            sb.append(s);
+            sb.append("->");
+        }
+        sb.delete(sb.length() - 2, sb.length());
         return sb.toString();
+    }
+
+    @Test
+    void sumOfLeftLeaves() {
+        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{3, 9, 20, null, null, 15, 7})));
+        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{1, null, 2})));
+        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{3,4,5,-7,-6,null,null,-7,null,-5,null,null,null,-4})));
+        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{1, 2, 3})));
+    }
+
+    public int sumOfLeftLeaves(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        if (root.right == null && root.left == null) {
+            return 0;
+        }
+        if (root.right != null && root.right.left == null && root.right.right == null) {
+            return a(root, root.left);
+        }
+        return a(root, root);
+    }
+
+    int a(TreeNode node, TreeNode copy) {
+        if (node == null) {
+            return 0;
+        }
+        int l = a(node.left, copy);
+        int r = a(node.right, copy);
+        if (node == copy) {
+            return l + r;
+        }
+        if (node.left == null && node.right == null) {
+            return l + node.val;
+        } else {
+            return l;
+        }
     }
 
 }
