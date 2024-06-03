@@ -6,6 +6,7 @@ import github.nooblong.download.bilibili.enums.VideoOrder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
 class UpIteratorTest extends BaseTest {
@@ -16,7 +17,7 @@ class UpIteratorTest extends BaseTest {
     @Test
     void next() {
         Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("349032426", "", 300, true,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE);
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, new HashMap<>());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

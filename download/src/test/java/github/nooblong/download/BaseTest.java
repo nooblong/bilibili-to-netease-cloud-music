@@ -6,7 +6,6 @@ import cn.hutool.core.util.ReUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
-import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.OkUtil;
@@ -40,8 +39,6 @@ public class BaseTest {
     public UploadDetailService uploadDetailService;
     @Autowired
     public IUserService userService;
-    @Autowired
-    public MusicQueue musicQueue;
 
     @Test
     void time() throws InterruptedException {

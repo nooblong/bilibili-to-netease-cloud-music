@@ -20,6 +20,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -33,7 +34,7 @@ public class BilibiliController {
 
     @GetMapping("/bilibili/checkLogin")
     public Result<Boolean> checkLogin() {
-        return Result.ok("执行成功", !bilibiliClient.getCurrentCred().isEmpty());
+        return Result.ok("执行成功", bilibiliClient.getAvailableBilibiliCookie() != null);
     }
 
     @GetMapping("/download/getVideoInfo")
@@ -41,8 +42,9 @@ public class BilibiliController {
                                                   @RequestParam(required = false, name = "cid") String cid) {
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
         simpleVideoInfo.setCid(cid);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, bilibiliClient.getCurrentCred());
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
         StringBuilder sb = new StringBuilder();
         videoStreamUrl.forEach(audio -> {
             // todo: 1
@@ -77,20 +79,20 @@ public class BilibiliController {
 
     @GetMapping("/download/getSeriesInfo")
     public Result<JsonNode> getFavoriteInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getCurrentCred());
+        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
     @GetMapping("/download/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
-        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getCurrentCred());
+        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getAvailableBilibiliCookie());
         return Result.ok("查询成功", favoriteList);
     }
 
     @GetMapping("/download/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
         SimpleVideoInfo video = bilibiliClient.createByUrl(url);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getCurrentCred());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getAvailableBilibiliCookie());
         if (!bilibiliFullVideo.getHasSeries()) {
             return Result.fail("视频没有合集");
         }
@@ -99,8 +101,7 @@ public class BilibiliController {
 
     @PostMapping("/setBiliCookies")
     public Result<String> setBiliCookies(@RequestBody JsonNode jsonNode, HttpServletRequest request) {
-        String token = request.getHeader("Access-Token");
-        SysUser user = JwtUtil.verifierToken(token);
+        SysUser user = JwtUtil.verifierFromContext();
         Assert.isTrue(user.getId().intValue() == 1, "你为什么要这么做?");
         Assert.isTrue(jsonNode.has("sessdata"), "?");
         Assert.isTrue(jsonNode.has("bili_jct"), "?");
@@ -113,8 +114,7 @@ public class BilibiliController {
 
     @GetMapping("/getBiliCookies")
     public Result<String> getBiliCookies(HttpServletRequest request) {
-        String token = request.getHeader("Access-Token");
-        SysUser user = JwtUtil.verifierToken(token);
+        SysUser user = JwtUtil.verifierFromContext();
         Assert.isTrue(user.getId().intValue() == 1, "你为什么要这么做?");
         return Result.ok(user.getBiliCookies());
     }

@@ -1,48 +1,61 @@
 package github.nooblong.download.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.SysInfo;
-import github.nooblong.download.job.JobUtil;
-import github.nooblong.download.mq.MusicQueue;
+import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.netmusic.NetMusicClient;
+import github.nooblong.download.service.UploadDetailService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 public class SystemController {
 
     final BilibiliClient bilibiliClient;
-    final MusicQueue musicQueue;
+    final NetMusicClient netMusicClient;
+    final UploadDetailService uploadDetailService;
 
     public SystemController(BilibiliClient bilibiliClient,
-                            MusicQueue musicQueue) {
+                            NetMusicClient netMusicClient,
+                            UploadDetailService uploadDetailService) {
         this.bilibiliClient = bilibiliClient;
-        this.musicQueue = musicQueue;
+        this.netMusicClient = netMusicClient;
+        this.uploadDetailService = uploadDetailService;
     }
 
     @GetMapping("/sysInfo")
     public Result<SysInfo> sysInfo() {
-        List<WorkerStatus> workerStatusList = JobUtil.workerStatusList();
         SysInfo sysInfo = new SysInfo();
-        sysInfo.setWorkerStatusList(workerStatusList);
-        sysInfo.setActiveBilibiliUserName(bilibiliClient.getCurrentUser() != null
-                ? bilibiliClient.getCurrentUser().getUsername()
-                : null);
+        try {
+            sysInfo.setBilibiliCookieStatus(bilibiliClient.getAvailableBilibiliCookie() != null);
+        } catch (RuntimeException e) {
+            sysInfo.setBilibiliCookieStatus(false);
+        }
+        try {
+            SysUser sysUser = JwtUtil.verifierFromContext();
+            boolean b = netMusicClient.checkLogin(sysUser.getId());
+            sysInfo.setNetCookieStatus(b);
+        } catch (Exception e) {
+            sysInfo.setNetCookieStatus(false);
+        }
         return Result.ok("ok", sysInfo);
     }
 
     @GetMapping("/queueInfo")
-    public Result<JsonNode> queueInfo() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode objectNode = objectMapper.createObjectNode();
-        objectNode.put("id", 1);
-        objectNode.set("data", objectMapper.valueToTree(musicQueue.listAllQueue()));
-        return Result.ok("ok", objectNode);
+    public Result<IPage<UploadDetail>> queueInfo(@RequestParam(name = "pageNo") int pageNo,
+                                                 @RequestParam(name = "pageSize") int pageSize) {
+        LambdaQueryWrapper<UploadDetail> queryWrapper = Wrappers.lambdaQuery(UploadDetail.class)
+                .orderByDesc(UploadDetail::getPriority);
+        IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);
+        return Result.ok("ok", page);
     }
 
 }

@@ -4,6 +4,8 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -20,6 +22,7 @@ import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import ws.schild.jave.info.MultimediaInfo;
@@ -36,6 +39,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Component
+@Slf4j
 public class UploadJob {
 
     final BilibiliClient bilibiliClient;
@@ -57,6 +61,28 @@ public class UploadJob {
         this.subscribeRegService = subscribeRegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
+    }
+
+    public void uploadOne() {
+        LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .orderByDesc(UploadDetail::getPriority)
+                .last("limit 1");
+        List<UploadDetail> uploadDetailList = uploadDetailService.list(wrapper);
+        if (uploadDetailList.isEmpty()) {
+            log.info("全部上传完毕");
+            return;
+        }
+        log.info("处理: {}", uploadDetailList.get(0).getTitle());
+        Map<String, String> availableBilibiliCookie;
+        try {
+            availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        } catch (RuntimeException e) {
+            log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
+            return;
+        }
+        log.info("开始下载:{}...", uploadDetailList.get(0).getTitle());
+        this.process(uploadDetailList.get(0).getId(), availableBilibiliCookie);
     }
 
     private static class Context {

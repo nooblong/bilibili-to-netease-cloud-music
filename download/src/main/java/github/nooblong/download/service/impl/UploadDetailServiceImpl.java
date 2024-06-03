@@ -33,14 +33,11 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
 
     final NetMusicClient netMusicClient;
     final BilibiliClient bilibiliClient;
-    final UploadJob uploadJob;
 
     public UploadDetailServiceImpl(NetMusicClient netMusicClient,
-                                   BilibiliClient bilibiliClient,
-                                   UploadJob uploadJob) {
+                                   BilibiliClient bilibiliClient) {
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
-        this.uploadJob = uploadJob;
     }
 
     @Override
@@ -107,27 +104,6 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
                 DateUtil.now() + " " + content + "\n");
         updateById(uploadDetail);
-    }
-
-    @Override
-    public void uploadOne() {
-        LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
-                .orderByDesc(UploadDetail::getPriority)
-                .last("limit 1");
-        List<UploadDetail> uploadDetailList = list(wrapper);
-        if (uploadDetailList.isEmpty()) {
-            log.info("全部上传完毕");
-            return;
-        }
-        log.info("处理: {}", uploadDetailList.get(0).getTitle());
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
-        if (availableBilibiliCookie == null) {
-            log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
-            return;
-        }
-        log.info("开始下载:{}...", uploadDetailList.get(0).getTitle());
-        uploadJob.process(uploadDetailList.get(0).getId(), availableBilibiliCookie);
     }
 
     private String getAuditStatus(String voiceId, Long userId) {

@@ -54,11 +54,10 @@ public class BilibiliClient {
                 .build();
     }
 
-    public Map<String, String> getAvailableBilibiliCookie() {
+    public Map<String, String> getAvailableBilibiliCookie() throws RuntimeException {
         List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
-            log.error("没有b站cookie");
-            return null;
+            throw new RuntimeException("没有可用b站cookie");
         }
         for (SysUser sysUser : list) {
             Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
@@ -67,8 +66,7 @@ public class BilibiliClient {
                 return userCredMap;
             }
         }
-        log.error("没有可用b站cookie");
-        return null;
+        throw new RuntimeException("没有可用b站cookie");
     }
 
     public boolean needRefreshCookie(Map<String, String> cred) {

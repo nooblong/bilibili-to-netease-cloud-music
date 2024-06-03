@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
@@ -23,12 +24,15 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     int pageSize = Constant.SEARCH_PAGE_SIZE;
     private final boolean checkPart;
     List<SimpleVideoInfo> insidePartList = new ArrayList<>();
+    Map<String, String> bilibiliCookie;
 
-    public SimplePageIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder, boolean checkPart) {
+    public SimplePageIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder
+            , boolean checkPart, Map<String, String> bilibiliCookie) {
         this.factory = factory;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
         this.checkPart = checkPart;
+        this.bilibiliCookie = bilibiliCookie;
     }
 
     @Override
@@ -94,7 +98,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 return next();
             }
             if (checkPart) {
-                BilibiliFullVideo fullVideo = factory.getFullVideo(result.getBvid());
+                BilibiliFullVideo fullVideo = factory.getFullVideo(result.getBvid(), bilibiliCookie);
                 if (fullVideo.getHasMultiPart()) {
                     log.info("simple检测到多p视频: {}", fullVideo.getTitle());
                     // 多p视频不要直接返回，从p1开始返回
@@ -102,7 +106,8 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                     try {
 
                         Iterator<SimpleVideoInfo> partIterator =
-                                factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD, limitSec);
+                                factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD,
+                                        limitSec, bilibiliCookie);
                         while (partIterator.hasNext()) {
                             SimpleVideoInfo next = partIterator.next();
                             insidePartList.add(next);

@@ -5,7 +5,6 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,16 +50,14 @@ public class UserController {
     }
 
     @PostMapping("/refreshToken")
-    public Result<String> refreshToken(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String token = request.getHeader("Access-Token");
-        SysUser user;
+    public Result<String> refreshToken(HttpServletResponse response) {
         try {
-            user = JwtUtil.verifierToken(token);
+            SysUser user = JwtUtil.verifierFromContext();
+            String result = JwtUtil.generateTokenByRS256(user);
+            response.setHeader("Access-Token", result);
         } catch (Exception e) {
             return Result.fail("刷新失败");
         }
-        String result = JwtUtil.generateTokenByRS256(user);
-        response.setHeader("Access-Token", result);
         return Result.ok("刷新成功");
     }
 

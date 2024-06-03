@@ -3,11 +3,11 @@ package github.nooblong.download.service.impl;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
@@ -19,12 +19,13 @@ import github.nooblong.download.mapper.SubscribeMapper;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import tech.powerjob.worker.log.OmsLogger;
 
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author lyl
@@ -38,16 +39,21 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
     private final BilibiliBatchIteratorFactory factory;
     final UploadDetailService uploadDetailService;
+    final BilibiliClient bilibiliClient;
 
 
     public SubscribeServiceImpl(BilibiliBatchIteratorFactory factory,
-                                UploadDetailService uploadDetailService) {
+                                UploadDetailService uploadDetailService,
+                                BilibiliClient bilibiliClient) {
         this.factory = factory;
         this.uploadDetailService = uploadDetailService;
+        this.bilibiliClient = bilibiliClient;
     }
 
+    @Async
     @Override
     public void checkAndSave() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
@@ -55,17 +61,18 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                         subscribe.getType(), subscribe.getTargetId());
                 Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
                     case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1, VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE);
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                            VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE, availableBilibiliCookie);
                     case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
                             subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.CHANGE);
+                            CollectionVideoOrder.CHANGE, availableBilibiliCookie);
                     case FAVORITE -> factory.createFavoriteIterator(subscribe.getTargetId(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1);
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1, availableBilibiliCookie);
                     case PART -> factory.createPartIterator(subscribe.getTargetId(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            subscribe.getLimitSec());
+                            subscribe.getLimitSec(), availableBilibiliCookie);
                 };
 
                 boolean isProcess = false;

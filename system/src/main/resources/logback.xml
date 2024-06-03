@@ -6,14 +6,7 @@
         <appender-ref ref="CONSOLE"/>
     </root>
     <logger name="org.springframework.web" level="DEBUG"/>
-    <logger name="tech.powerjob.worker" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
     <logger name="com.zaxxer.hikari" level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-
-    <logger name="tech.powerjob" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
 </configuration>

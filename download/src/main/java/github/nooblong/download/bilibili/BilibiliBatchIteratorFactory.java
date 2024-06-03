@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -24,34 +25,39 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
 
     @Override
     public Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec, boolean checkPart,
-                                                      VideoOrder videoOrder, UserVideoOrder userVideoOrder) {
-        return new UpIterator(this, upId, keyWord, limitSec, videoOrder, userVideoOrder, checkPart);
+                                                      VideoOrder videoOrder, UserVideoOrder userVideoOrder,
+                                                      Map<String, String> bilibiliCookie) {
+        return new UpIterator(this, upId, keyWord, limitSec, videoOrder, userVideoOrder, checkPart, bilibiliCookie);
     }
 
     @Override
-    public Iterator<SimpleVideoInfo> createPartIterator(String bvid, VideoOrder videoOrder, int limitSec) {
-        return new PartIterator(this, limitSec, videoOrder, bvid);
+    public Iterator<SimpleVideoInfo> createPartIterator(String bvid, VideoOrder videoOrder, int limitSec, Map<String, String> bilibiliCookie) {
+        return new PartIterator(this, limitSec, videoOrder, bvid, bilibiliCookie);
     }
 
     @Override
-    public Iterator<SimpleVideoInfo> createFavoriteIterator(String favoriteId, VideoOrder videoOrder, int limitSec, boolean checkPart) {
-        return new FavoriteIterator(favoriteId, this, limitSec, checkPart);
+    public Iterator<SimpleVideoInfo> createFavoriteIterator(String favoriteId, VideoOrder videoOrder, int limitSec,
+                                                            boolean checkPart, Map<String, String> bilibiliCookie) {
+        return new FavoriteIterator(favoriteId, this, limitSec, checkPart, bilibiliCookie);
     }
 
     @Override
     public Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec,
-                                                              VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder) {
-        return new CollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder);
+                                                              VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
+                                                              Map<String, String> bilibiliCookie) {
+        return new CollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder, bilibiliCookie);
     }
 
     @Override
-    public BilibiliFullVideo getFullVideo(String bvid) {
+    public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
         SimpleVideoInfo byUrl = bilibiliClient.createByUrl(bvid);
-        return bilibiliClient.init(byUrl, bilibiliClient.getCurrentCred());
+        return bilibiliClient.init(byUrl, bilibiliCookie);
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord) {
-        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliClient.getCurrentCred());
+    public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn,
+                                                                                   UserVideoOrder userVideoOrder, String keyWord,
+                                                                                   Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         collectionTotal.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
@@ -66,9 +72,10 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
         return result;
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid) {
+    public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid,
+                                                                                  Map<String, String> bilibiliCookie) {
         SimpleVideoInfo video = bilibiliClient.createByUrl(bvid);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getCurrentCred());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         bilibiliFullVideo.getPartVideos().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
@@ -85,10 +92,11 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
-                                                                                           CollectionVideoOrder collectionVideoOrder) {
+                                                                                           CollectionVideoOrder collectionVideoOrder,
+                                                                                           Map<String, String> bilibiliCookie) {
         IteratorCollectionTotal collectionVideos = null;
         try {
-            collectionVideos = bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliClient.getCurrentCred());
+            collectionVideos = bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
         } catch (Throwable e) {
             log.error("获取合集失败: {}", e.getMessage());
             throw new RuntimeException(e);
@@ -107,8 +115,8 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
         return result;
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page) {
-        IteratorCollectionTotal favoriteVideos = bilibiliClient.getFavoriteVideos(favoriteId, page, bilibiliClient.getCurrentCred());
+    public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page, Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal favoriteVideos = bilibiliClient.getFavoriteVideos(favoriteId, page,bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         favoriteVideos.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()

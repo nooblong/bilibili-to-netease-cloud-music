@@ -19,16 +19,12 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
-import github.nooblong.download.job.JobUtil;
-import github.nooblong.download.mq.MusicQueue;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import tech.powerjob.common.response.InstanceInfoDTO;
-import tech.powerjob.common.response.ResultDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -40,16 +36,13 @@ public class UploadDetailController {
     final UploadDetailService uploadDetailService;
     final NetMusicClient netMusicClient;
     final BilibiliClient bilibiliClient;
-    final MusicQueue musicQueue;
 
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
-                                  BilibiliClient bilibiliClient,
-                                  MusicQueue musicQueue) {
+                                  BilibiliClient bilibiliClient) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
-        this.musicQueue = musicQueue;
     }
 
     @GetMapping("/{id}")
@@ -90,7 +83,6 @@ public class UploadDetailController {
         uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
         uploadDetail.setPriority(10L);
         uploadDetail.setUserId(userId);
-        uploadDetail.setStatus(StatusTypeEnum.QUEUED);
 
         if (req.isCrack()) {
             if (!userId.equals(1L)) {
@@ -101,18 +93,30 @@ public class UploadDetailController {
         }
 
         Db.save(uploadDetail);
-
-        musicQueue.enQueue(uploadDetailService.getById(uploadDetail.getId()));
         return Result.ok("添加队列成功");
     }
 
     @PostMapping("/addToMyList")
     public Result<String> addToMyList(@RequestBody @Validated AddToMyRequest req, HttpServletRequest request) throws JsonProcessingException {
-        // todo: 没做完
-        String token = request.getHeader("Access-Token");
         UploadDetail uploadDetail = Db.getById(req.getVoiceDetailId(), UploadDetail.class);
-        SysUser user = JwtUtil.verifierToken(token);
-        return Result.ok("没做完");
+        SysUser user = JwtUtil.verifierFromContext();
+        if (uploadDetail == null) {
+            return Result.fail("不存在的id");
+        }
+        UploadDetail addToMy = new UploadDetail();
+        addToMy.setBvid(uploadDetail.getBvid());
+        addToMy.setCid(uploadDetail.getCid());
+        addToMy.setVoiceListId(Long.valueOf(req.getVoiceListId()));
+        addToMy.setPriority(9L);
+        addToMy.setTitle(uploadDetail.getTitle());
+        addToMy.setUserId(user.getId());
+        addToMy.setUploadName(uploadDetail.getUploadName());
+        addToMy.setBeginSec(uploadDetail.getBeginSec());
+        addToMy.setEndSec(uploadDetail.getEndSec());
+        addToMy.setUseVideoCover(uploadDetail.getUseVideoCover());
+        addToMy.setOffset(uploadDetail.getOffset());
+        uploadDetailService.save(addToMy);
+        return Result.ok("添加队列成功");
     }
 
     @GetMapping()
@@ -166,25 +170,11 @@ public class UploadDetailController {
         return Result.ok("ok", uploadDetailService.hasUploaded(JwtUtil.verifierFromContext().getId()));
     }
 
-    @GetMapping("/uploadAllOnlySelfSee")
-    public Result<String> uploadAllOnlySelfSee(@RequestParam(name = "voiceListId") Long voiceListId) {
-        Assert.isTrue(JwtUtil.verifierFromContext().getId().equals(1L), "???");
-        uploadDetailService.uploadAllOnlySelfSee(voiceListId);
-        return Result.ok("ok!");
-    }
-
-    @GetMapping("/instanceInfo")
-    public Result<InstanceInfoDTO> instanceInfo(@RequestParam(name = "instanceId") Long instanceId) {
-        ResultDTO<InstanceInfoDTO> instanceInfoDTOResultDTO = JobUtil.powerJobClient.fetchInstanceInfo(instanceId);
-        Assert.isTrue(instanceInfoDTOResultDTO.isSuccess(), "获取详细信息出错");
-        InstanceInfoDTO data = instanceInfoDTOResultDTO.getData();
-        return Result.ok("ok", data);
-    }
-
     @GetMapping("/instanceLog")
     public Result<StringPage> instanceLog(@RequestParam(name = "instanceId") Long instanceId,
                                           @RequestParam(name = "index") Long index) {
-        StringPage stringPage = JobUtil.logPage(instanceId, index);
+        UploadDetail uploadDetail = uploadDetailService.getById(instanceId);
+        StringPage stringPage = StringPage.simple(uploadDetail.getLog());
         return Result.ok("ok", stringPage);
     }
 
@@ -194,7 +184,8 @@ public class UploadDetailController {
         UploadDetail byId = uploadDetailService.getById(id);
         Assert.notNull(byId, "空id");
         Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "只能操作自己的");
-        musicQueue.enQueue(byId);
+        byId.setRetryTimes(0);
+        byId.setStatus(StatusTypeEnum.WAIT);
         return Result.ok("ok");
     }
 

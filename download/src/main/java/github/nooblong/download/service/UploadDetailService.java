@@ -20,6 +20,4 @@ public interface UploadDetailService extends IService<UploadDetail> {
     List<UploadDetail> listAllWait();
 
     void logNow(Long uploadDetailId, String content);
-
-    void uploadOne();
 }

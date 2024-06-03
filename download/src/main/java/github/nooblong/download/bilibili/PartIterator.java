@@ -5,6 +5,7 @@ import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Iterator;
+import java.util.Map;
 
 @Slf4j
 public class PartIterator implements Iterator<SimpleVideoInfo> {
@@ -16,12 +17,15 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
     int index;
     int upVideosTotalNum;
     String bvid;
+    Map<String, String> bilibiliCookie;
 
-    public PartIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder, String bvid) {
+    public PartIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder, String bvid,
+                        Map<String, String> bilibiliCookie) {
         this.factory = factory;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
         this.bvid = bvid;
+        this.bilibiliCookie = bilibiliCookie;
     }
 
     @Override
@@ -56,7 +60,7 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
             log.info("初始化集合:");
             // 第一次初始化
             // 先查总数
-            IteratorCollectionTotalList<SimpleVideoInfo> partVideosFromBilibili = factory.getPartVideosFromBilibili(bvid);
+            IteratorCollectionTotalList<SimpleVideoInfo> partVideosFromBilibili = factory.getPartVideosFromBilibili(bvid, bilibiliCookie);
             videos = partVideosFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             upVideosTotalNum = partVideosFromBilibili.getTotalNum();
         }

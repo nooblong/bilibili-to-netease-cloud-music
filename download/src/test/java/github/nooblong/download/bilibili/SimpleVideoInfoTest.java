@@ -6,6 +6,8 @@ import github.nooblong.download.entity.IteratorCollectionTotal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Map;
+
 class SimpleVideoInfoTest extends BaseTest {
 
     @Autowired
@@ -13,23 +15,27 @@ class SimpleVideoInfoTest extends BaseTest {
 
     @Test
     void getBestStreamUrl1() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        System.out.println(bilibiliClient.getBestStreamUrl(bilibiliFullVideo, bilibiliClient.getCurrentCred()).toPrettyString());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        System.out.println(bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie).toPrettyString());
         System.out.println(bilibiliFullVideo.getHasMultiPart());
         System.out.println(bilibiliFullVideo.getHasSeries());
     }
 
     @Test
     void getSeriesMeta1() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        System.out.println(bilibiliClient.getSeriesMeta(bilibiliFullVideo.getMySeriesId(), bilibiliClient.getCurrentCred()).toPrettyString());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        System.out.println(bilibiliClient.getSeriesMeta(bilibiliFullVideo.getMySeriesId(), availableBilibiliCookie).toPrettyString());
     }
 
     @Test
     void getUpVideos1() {
-        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos("8356881", 30, 1, UserVideoOrder.FAVORITE, "", bilibiliClient.getCurrentCred());
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos("8356881", 30, 1,
+                UserVideoOrder.FAVORITE, "", availableBilibiliCookie);
         System.out.println(collectionTotal.getData().toPrettyString());
     }
 }

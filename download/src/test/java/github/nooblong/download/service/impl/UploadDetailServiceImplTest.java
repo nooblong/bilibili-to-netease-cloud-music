@@ -10,13 +10,6 @@ import java.util.List;
 class UploadDetailServiceImplTest extends BaseTest {
 
     @Test
-    void uploadAllOnlySelfSee() {
-        uploadDetailService.uploadAllOnlySelfSee(996002302L);// 阿梓
-//        uploadDetailService.uploadAllOnlySelfSee(994819294L);// 测试
-//        uploadDetailService.uploadAllOnlySelfSee(996968337L);// 小z
-    }
-
-    @Test
     void setXiaoZSql() {
         List<UploadDetail> list = uploadDetailService.lambdaQuery().eq(UploadDetail::getVoiceListId, 996968337).list();
         for (UploadDetail uploadDetail : list) {

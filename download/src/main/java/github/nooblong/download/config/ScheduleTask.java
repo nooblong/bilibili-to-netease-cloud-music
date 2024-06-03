@@ -59,7 +59,7 @@ public class ScheduleTask {
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
                 JsonNode loginrefresh = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh", sysUser.getId());
-                log.info("用户 {} cookie刷新结果: {}", sysUser.getUsername(), loginrefresh.toString());
+                log.info("用户 {} 网易cookie刷新结果: {}", sysUser.getUsername(), loginrefresh.toString());
             }
         }
     }

@@ -19,8 +19,8 @@ import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
-import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
+import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.util.Assert;
@@ -37,13 +37,16 @@ public class SubscribeController {
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final UploadDetailService uploadDetailService;
+    final SubscribeService subscribeService;
 
     public SubscribeController(BilibiliClient bilibiliClient,
                                NetMusicClient netMusicClient,
-                               UploadDetailService uploadDetailService) {
+                               UploadDetailService uploadDetailService,
+                               SubscribeService subscribeService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
+        this.subscribeService = subscribeService;
     }
 
     @PutMapping("/{id}")
@@ -64,7 +67,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getAvailableBilibiliCookie());
             JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("data").get("bvid").asText());
         }
@@ -98,7 +101,7 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getAvailableBilibiliCookie());
             JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("bvid").asText());
         }
@@ -174,7 +177,7 @@ public class SubscribeController {
     @GetMapping("/checkUpJob")
     public Result<String> checkUpJob() {
         Assert.isTrue(JwtUtil.verifierFromContext().getId().equals(1L), "非管理员");
-        JobUtil.powerJobClient.runJob(JobUtil.getUpJobId);
+        subscribeService.checkAndSave();
         return Result.ok("ok");
     }
 
