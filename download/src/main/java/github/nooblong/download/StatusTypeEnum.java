@@ -20,7 +20,8 @@ public enum StatusTypeEnum {
     OVER_MAX_RETRY("超过重试次数"),
     INTERNAL_ERROR("内部错误"),
     SKIP("跳过"),
-    UNKNOWN("未知错误");
+    UNKNOWN("未知错误"),
+    NO_LOGIN("登录失效查询失败");
 
     private final String desc;
 

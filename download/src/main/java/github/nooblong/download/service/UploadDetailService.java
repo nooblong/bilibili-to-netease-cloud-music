@@ -17,9 +17,9 @@ public interface UploadDetailService extends IService<UploadDetail> {
 
     boolean hasUploaded(Long userId);
 
-    void uploadAllOnlySelfSee(Long voiceListId);
-
     List<UploadDetail> listAllWait();
 
     void logNow(Long uploadDetailId, String content);
+
+    void uploadOne();
 }

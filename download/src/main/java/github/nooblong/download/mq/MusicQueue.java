@@ -6,19 +6,14 @@ import cn.hutool.json.JSONUtil;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
-import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import tech.powerjob.common.request.http.SaveJobInfoRequest;
-import tech.powerjob.common.response.JobInfoDTO;
-import tech.powerjob.common.response.ResultDTO;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,12 +28,6 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final IUserService userService;
-
-    @Value("${powerjob.worker.health-report-interval}")
-    private int reportInterval;
-
-    @Value("${main}")
-    private Boolean main;
 
     final OkHttpClient okHttpClient;
 
@@ -84,34 +73,7 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
     public void run() {
         try {
             while (true) {
-                UploadDetail peek = queue.peek();
-                if (peek != null) {
-                    List<String> list = JobUtil.listWorkersAddrAvailable();
-                    if (list.isEmpty()) {
-//                    log.warn("没有可用worker");
-                    } else {
-                        synchronized (this) {
-                            if (!bilibiliClient.isLogin(bilibiliClient.getCurrentCred())) {
-                                log.info("no cookie sleep");
-                                Thread.sleep(60000);
-                                continue;
-                            }
-                            log.info("有可用worker");
-                            UploadDetail poll = queue.poll();
-                            if (poll != null) {
-                                upload(poll, list.get(0));
-//                                log.info("队列长度: {}", queue.size());
-                                log.info("------>从队列取出: {}:{}", poll.getTitle(), poll.getUploadName());
-                                Thread.sleep(reportInterval * 1000L + 1);
-                                continue;
-                            }
-                        }
-                    }
-                    Thread.sleep(1000);
-                } else {
-                    Thread.sleep(1000);
-//                log.info("队列为空");
-                }
+
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.job.GetUpJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
@@ -27,16 +28,19 @@ public class ScheduleTask {
     final SubscribeService subscribeService;
     final BilibiliClient bilibiliClient;
     final IUserService userService;
+    final GetUpJob getUpJob;
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
                         SubscribeService service, BilibiliClient bilibiliClient,
-                        IUserService userService) {
+                        IUserService userService,
+                        GetUpJob getUpJob) {
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
         this.bilibiliClient = bilibiliClient;
         this.userService = userService;
+        this.getUpJob = getUpJob;
     }
 
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
@@ -46,7 +50,7 @@ public class ScheduleTask {
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getUpJob() {
-        subscribeService.checkAndSave();
+        getUpJob.process();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")

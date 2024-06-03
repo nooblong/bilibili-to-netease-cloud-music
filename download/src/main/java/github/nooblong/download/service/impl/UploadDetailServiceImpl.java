@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.mapper.UploadDetailMapper;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
@@ -30,9 +32,15 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         implements UploadDetailService {
 
     final NetMusicClient netMusicClient;
+    final BilibiliClient bilibiliClient;
+    final UploadJob uploadJob;
 
-    public UploadDetailServiceImpl(NetMusicClient netMusicClient) {
+    public UploadDetailServiceImpl(NetMusicClient netMusicClient,
+                                   BilibiliClient bilibiliClient,
+                                   UploadJob uploadJob) {
         this.netMusicClient = netMusicClient;
+        this.bilibiliClient = bilibiliClient;
+        this.uploadJob = uploadJob;
     }
 
     @Override
@@ -57,7 +65,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                     item.setStatus(StatusTypeEnum.UNKNOWN);
                 }
             } catch (Exception e) {
-                log.error("声音ID:{}获取状态失败:{}", item.getVoiceId(), e.getMessage());
+                log.error("声音:{}获取状态失败:{}", item.getTitle(), e.getMessage());
                 item.setRetryTimes(item.getRetryTimes() + 1);
             }
             item.setRetryTimes(item.getRetryTimes() + 1);
@@ -86,38 +94,6 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     }
 
     @Override
-    public void uploadAllOnlySelfSee(Long voiceListId) {
-        List<UploadDetail> onlySelfSee = lambdaQuery()
-                .eq(UploadDetail::getVoiceListId, voiceListId)
-                .and(i -> i.eq(UploadDetail::getStatus, StatusTypeEnum.ONLY_SELF_SEE.name()).or()
-                        .eq(UploadDetail::getStatus, StatusTypeEnum.ONLY_SELF_SEE.name()))
-                .list();
-        List<UploadDetail> toProcessList = new ArrayList<>();
-        List<String> duplicateBvid = new ArrayList<>();
-//        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(String.valueOf(voiceListId));
-//        System.out.println(voiceListDetail);
-        for (UploadDetail uploadDetail : onlySelfSee) {
-            if (duplicateBvid.contains(uploadDetail.getBvid()) && StrUtil.isBlank(uploadDetail.getCid())) {
-                log.info("跳过重复: {}", uploadDetail.getBvid());
-                continue;
-            } else {
-                duplicateBvid.add(uploadDetail.getBvid());
-            }
-            log.info("处理: {}, {}", uploadDetail.getUploadName(), uploadDetail.getStatus());
-            uploadDetail.setStatus(StatusTypeEnum.WAIT)
-                    .setCrack(1L)
-                    .setUseVideoCover(1L)
-                    .setRetryTimes(0)
-                    .setUploadName("");
-            toProcessList.add(uploadDetail);
-        }
-        updateBatchById(onlySelfSee, 100);
-        for (UploadDetail uploadDetail : toProcessList) {
-//            musicQueue.enQueue(uploadDetail);
-        }
-    }
-
-    @Override
     public List<UploadDetail> listAllWait() {
         return lambdaQuery().eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
                 .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
@@ -133,12 +109,33 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         updateById(uploadDetail);
     }
 
+    @Override
+    public void uploadOne() {
+        LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .orderByDesc(UploadDetail::getPriority)
+                .last("limit 1");
+        List<UploadDetail> uploadDetailList = list(wrapper);
+        if (uploadDetailList.isEmpty()) {
+            log.info("全部上传完毕");
+            return;
+        }
+        log.info("处理: {}", uploadDetailList.get(0).getTitle());
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        if (availableBilibiliCookie == null) {
+            log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
+            return;
+        }
+        log.info("开始下载:{}...", uploadDetailList.get(0).getTitle());
+        uploadJob.process(uploadDetailList.get(0).getId(), availableBilibiliCookie);
+    }
+
     private String getAuditStatus(String voiceId, Long userId) {
         Map<String, Object> param = new HashMap<>();
         param.put("id", voiceId);
         JsonNode voicedetail = netMusicClient.getMusicDataByUserId(param, "voicedetail", userId);
         if (voicedetail.get("code").asInt() == 301) {
-            return "用户的登录失效了";
+            return StatusTypeEnum.NO_LOGIN.getDesc();
         }
         String result;
         result = voicedetail.get("data").get("displayStatus").asText();

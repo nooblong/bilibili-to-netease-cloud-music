@@ -67,7 +67,7 @@ public class UploadJob {
         Long uploadDetailId;
     }
 
-    public void process(Long uploadDetailId) {
+    public void process(Long uploadDetailId, Map<String, String> availableBilibiliCookie) {
 
         UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
         Assert.notNull(uploadDetail, "uploadDetail为空");
@@ -82,7 +82,7 @@ public class UploadJob {
         try {
             // 收集错误信息
             getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
-                    uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
+                    uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId(), availableBilibiliCookie);
             codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
             // 上传之前先设置名字
             uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
@@ -100,14 +100,14 @@ public class UploadJob {
         }
     }
 
-    private void getData(Context context, String bvid, String cid, boolean useVideoCover, Long userId) {
+    private void getData(Context context, String bvid, String cid, boolean useVideoCover, Long userId,
+                         Map<String, String> availableBilibiliCookie) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             simpleVideoInfo.setCid(cid);
         }
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
         context.bilibiliFullVideo = bilibiliFullVideo;
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);

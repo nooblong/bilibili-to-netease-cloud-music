@@ -57,7 +57,7 @@ public class BilibiliClient {
     public Map<String, String> getAvailableBilibiliCookie() {
         List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
-            log.error("没有可用b站cookie");
+            log.error("没有b站cookie");
             return null;
         }
         for (SysUser sysUser : list) {
@@ -208,7 +208,7 @@ public class BilibiliClient {
         }
     }
 
-    public boolean isLogin(Map<String, String> credMap) {
+    private boolean isLogin(Map<String, String> credMap) {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
                     + "/user/get_self_info", credMap), okHttpClient);
