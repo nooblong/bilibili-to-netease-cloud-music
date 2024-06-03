@@ -55,6 +55,7 @@ public class BilibiliClient {
     }
 
     public Map<String, String> getAvailableBilibiliCookie() throws RuntimeException {
+        log.info("获取可用b站cookie...");
         List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
             throw new RuntimeException("没有可用b站cookie");

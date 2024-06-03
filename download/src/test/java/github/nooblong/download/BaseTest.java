@@ -6,6 +6,7 @@ import cn.hutool.core.util.ReUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
+import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.OkUtil;
@@ -39,6 +40,8 @@ public class BaseTest {
     public UploadDetailService uploadDetailService;
     @Autowired
     public IUserService userService;
+    @Autowired
+    public BilibiliClient bilibiliClient;
 
     @Test
     void time() throws InterruptedException {

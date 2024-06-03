@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 class UpIteratorTest extends BaseTest {
 
@@ -16,8 +17,9 @@ class UpIteratorTest extends BaseTest {
 
     @Test
     void next() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("349032426", "", 300, true,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, new HashMap<>());
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, availableBilibiliCookie);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
