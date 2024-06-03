@@ -20,4 +20,6 @@ public interface UploadDetailService extends IService<UploadDetail> {
     void uploadAllOnlySelfSee(Long voiceListId);
 
     List<UploadDetail> listAllWait();
+
+    void logNow(Long uploadDetailId, String content);
 }

@@ -13,7 +13,6 @@ import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
-import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
@@ -28,7 +27,6 @@ import okio.Okio;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import tech.powerjob.worker.log.OmsLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,70 +45,16 @@ import java.util.stream.Stream;
 public class BilibiliClient {
     private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
 
-    @Getter
-    private Map<String, String> currentCred = new HashMap<>();
-    @Getter
-    private SysUser currentUser;
     final OkHttpClient okHttpClient;
     final IUserService userService;
 
     public BilibiliClient(IUserService userService) {
         this.userService = userService;
         this.okHttpClient = new OkHttpClient.Builder()
-//                .cookieJar(new CookieJar() {
-//            @Override
-//            public void saveFromResponse(@NotNull HttpUrl httpUrl, @NotNull List<Cookie> list) {
-//                if (!list.isEmpty()) {
-//                    if (httpUrl.toString().contains("/login/login_with_key")) {
-//                        try {
-//                            SysUser user = JwtUtil.verifierFromContext();
-//                            userService.updateBilibiliCookieByOkhttpCookie(user.getId(), list);
-//                        } catch (ValidateException e) {
-//                            log.error("登录成功，但cookie不属于任何用户");
-//                        }
-//                    }
-//                }
-//            }
-//
-//            @NotNull
-//            @Override
-//            public List<Cookie> loadForRequest(@NotNull HttpUrl httpUrl) {
-//                return new ArrayList<>();
-//            }
-//        })
                 .build();
-        // 选出当前cred
-        SysUser sysUser = getAvailableBilibiliCookieUser();
-        if (sysUser == null) {
-            log.error("初始化BilibiliUtil失败，没有可用cookie");
-        } else {
-            log.info("使用用户{}的b站cookie", sysUser.getUsername());
-            this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
-            this.currentUser = sysUser;
-        }
     }
 
-    public void checkCurrentCredMap(OmsLogger omsLogger) {
-//        boolean login3 = isLogin3(currentCred);
-//        if (!login3) {
-//            this.currentCred = new HashMap<>();
-//            log.info("b站cookie失效，清除，选出新cookie");
-        SysUser sysUser = getAvailableBilibiliCookieUser();
-        if (sysUser != null) {
-            this.currentCred = userService.getBilibiliCookieMap(sysUser.getId());
-            this.currentUser = sysUser;
-            log.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
-            omsLogger.info("使用用户: {} 的cookie提供服务", sysUser.getUsername());
-        } else {
-            this.currentUser = null;
-            this.currentCred = new HashMap<>();
-            log.info("无可用cookie");
-            omsLogger.info("无可用cookie");
-        }
-//        }
-    }
-
-    private SysUser getAvailableBilibiliCookieUser() {
+    public Map<String, String> getAvailableBilibiliCookie() {
         List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
             log.error("没有可用b站cookie");
@@ -118,15 +62,10 @@ public class BilibiliClient {
         }
         for (SysUser sysUser : list) {
             Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
-            boolean login3 = isLogin3(userCredMap);
+            boolean login3 = isLogin(userCredMap);
             if (login3) {
-                return sysUser;
+                return userCredMap;
             }
-            // todo: ???
-//            else {
-//                sysUser.setBiliCookies("");
-//                userService.updateById(sysUser);
-//            }
         }
         log.error("没有可用b站cookie");
         return null;
@@ -269,7 +208,7 @@ public class BilibiliClient {
         }
     }
 
-    public boolean isLogin3(Map<String, String> credMap) {
+    public boolean isLogin(Map<String, String> credMap) {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
                     + "/user/get_self_info", credMap), okHttpClient);
@@ -500,7 +439,6 @@ public class BilibiliClient {
             cookieNode.put("buvid3", buvid3);
             user.setBiliCookies(cookieNode.toString());
             userService.updateById(user);
-            JobUtil.powerJobClient.runJob(JobUtil.checkBilibiliCookieJobId);
         }
 
         return response;

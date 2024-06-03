@@ -3,7 +3,6 @@ package github.nooblong.download.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import github.nooblong.download.entity.Subscribe;
-import tech.powerjob.worker.log.OmsLogger;
 
 /**
  * @author lyl
@@ -12,6 +11,6 @@ import tech.powerjob.worker.log.OmsLogger;
  */
 public interface SubscribeService extends IService<Subscribe> {
 
-    void checkAndSave(OmsLogger log);
+    void checkAndSave();
 
 }

@@ -91,7 +91,7 @@ public class MusicQueue implements Runnable, ApplicationListener<ContextRefreshe
 //                    log.warn("没有可用worker");
                     } else {
                         synchronized (this) {
-                            if (!bilibiliClient.isLogin3(bilibiliClient.getCurrentCred())) {
+                            if (!bilibiliClient.isLogin(bilibiliClient.getCurrentCred())) {
                                 log.info("no cookie sleep");
                                 Thread.sleep(60000);
                                 continue;

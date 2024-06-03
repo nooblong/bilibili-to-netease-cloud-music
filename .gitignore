@@ -8,6 +8,6 @@
 **/ffprobe
 **/ffprobe.exe
 **/result.mp3
-workingDir/download
 *.log
 **/*-local2.yml
+**/*-localBackup.yml

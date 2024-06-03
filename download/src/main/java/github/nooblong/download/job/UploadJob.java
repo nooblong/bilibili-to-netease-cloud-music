@@ -6,7 +6,6 @@ import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
@@ -21,14 +20,8 @@ import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import tech.powerjob.worker.core.processor.ProcessResult;
-import tech.powerjob.worker.core.processor.TaskContext;
-import tech.powerjob.worker.core.processor.sdk.BasicProcessor;
-import tech.powerjob.worker.log.OmsLogger;
 import ws.schild.jave.info.MultimediaInfo;
 
 import javax.imageio.ImageIO;
@@ -43,7 +36,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Component
-public class UploadJob implements BasicProcessor {
+public class UploadJob {
 
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
@@ -51,11 +44,6 @@ public class UploadJob implements BasicProcessor {
     final SubscribeRegService subscribeRegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
-
-    Path musicPath;
-    String desc = "";
-    String netImageId;
-    BilibiliFullVideo bilibiliFullVideo;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
@@ -71,71 +59,68 @@ public class UploadJob implements BasicProcessor {
         this.uploadDetailService = uploadDetailService;
     }
 
-    @Override
-    public ProcessResult process(TaskContext context) throws Exception {
+    private static class Context {
+        Path musicPath;
+        String desc = "";
+        String netImageId;
+        BilibiliFullVideo bilibiliFullVideo;
+        Long uploadDetailId;
+    }
 
-        OmsLogger logger = context.getOmsLogger();
+    public void process(Long uploadDetailId) {
 
-        String param;
-        //（允许动态[instanceParams]覆盖静态参数[jobParams]）
-        param = StringUtils.isBlank(context.getInstanceParams()) ? context.getJobParams() : context.getInstanceParams();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        UploadDetail uploadDetail = objectMapper.readValue(param, UploadDetail.class);
+        UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
+        Assert.notNull(uploadDetail, "uploadDetail为空");
 
         // 先更新了信息先，其他不管
-        Long instanceId = context.getInstanceId();
         uploadDetail.setRetryTimes(uploadDetail.getRetryTimes() + 1);
         uploadDetail.setStatus(StatusTypeEnum.PROCESSING);
-        uploadDetail.setInstanceId(instanceId);
         uploadDetailService.updateById(uploadDetail);
-        try {
-            netImageId = "";
-            desc = "";
-            musicPath = null;
-            bilibiliFullVideo = null;
-            // 收集错误信息
-            getData(logger, uploadDetail.getBvid(), uploadDetail.getCid(),
-                    uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
-            codecAudio(logger, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
-            // 上传之前先设置名字
-            uploadDetail.setUploadName(handleUploadName(uploadDetail, logger));
-            String voiceId = uploadNetease(logger, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
-                    uploadDetail.getUploadName(), uploadDetail.getPrivacy());
-            clear(logger, uploadDetail, Long.valueOf(voiceId));
 
-            logger.info("单曲上传成功, 声音id:[{}]", voiceId);
-            return new ProcessResult(true, "单曲上传成功, 声音id:[" + voiceId + "]");
+        Context context = new Context();
+        context.uploadDetailId = uploadDetailId;
+        try {
+            // 收集错误信息
+            getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
+                    uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId());
+            codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
+            // 上传之前先设置名字
+            uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
+            String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
+                    uploadDetail.getUploadName(), uploadDetail.getPrivacy());
+            clear(context, uploadDetail, Long.valueOf(voiceId));
+
+            uploadDetailService.logNow(context.uploadDetailId, "单曲上传成功, 声音id: " + voiceId);
         } catch (Exception e) {
             uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
             Db.updateById(uploadDetail);
-            logger.error("声音上传失败: {}", e.getMessage());
-            delete(logger);
-            logger.error("垃圾文件清理成功: {}", e.getMessage());
-            return new ProcessResult(false, "单曲上传失败: " + e.getMessage());
+            uploadDetailService.logNow(context.uploadDetailId, "声音上传失败: " + e.getMessage());
+            delete(context);
+            uploadDetailService.logNow(context.uploadDetailId, "垃圾文件清理成功: " + e.getMessage());
         }
     }
 
-    private void getData(OmsLogger log, String bvid, String cid, boolean useVideoCover, Long userId) {
+    private void getData(Context context, String bvid, String cid, boolean useVideoCover, Long userId) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             simpleVideoInfo.setCid(cid);
         }
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getCurrentCred());
-        this.bilibiliFullVideo = bilibiliFullVideo;
-        musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, bilibiliClient.getCurrentCred());
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        context.bilibiliFullVideo = bilibiliFullVideo;
+        context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
         if (useVideoCover) {
             Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
-            log.info("下载封面成功");
-            this.netImageId = transImage(log, imagePath, netMusicClient, userId);
+            uploadDetailService.logNow(context.uploadDetailId, "下载封面成功");
+            context.netImageId = transImage(context, imagePath, netMusicClient, userId);
         } else {
-            log.info("跳过下载封面");
+            uploadDetailService.logNow(context.uploadDetailId, "跳过下载封面");
         }
     }
 
-    private String transImage(OmsLogger log, Path path, NetMusicClient netMusicClient, Long userId) {
+    private String transImage(Context context, Path path, NetMusicClient netMusicClient, Long userId) {
         HashMap<String, Object> params = new HashMap<>();
         try {
             BufferedImage image = ImageIO.read(path.toFile());
@@ -151,7 +136,7 @@ public class UploadJob implements BasicProcessor {
             }
             params.put("size", String.valueOf(size));
         } catch (IOException e) {
-            log.error("下载的封面图片读取失败: {}", path);
+            uploadDetailService.logNow(context.uploadDetailId, "\n下载的封面图片读取失败: " + path);
             throw new RuntimeException("下载的封面图片读取失败: " + path);
         }
         params.put("imagePath", path.toString());
@@ -164,60 +149,60 @@ public class UploadJob implements BasicProcessor {
         params.put("token", token);
         netMusicClient.getMusicDataByUserId(params, "imageuploadfirst", userId);
         JsonNode imageuploadsecond = netMusicClient.getMusicDataByUserId(params, "imageuploadsecond", userId);
-        log.info("裁剪封面成功", imageuploadsecond.toString());
+        uploadDetailService.logNow(context.uploadDetailId, "裁剪封面成功" + imageuploadsecond.toString());
         return imageuploadsecond.get("id").asText();
 
     }
 
-    private void codecAudio(OmsLogger log, double beginSec, double endSec, double voiceOffset) {
-        MultimediaInfo multimediaInfo1 = ffmpegService.probeInfo(musicPath);
+    private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset) {
+        MultimediaInfo multimediaInfo1 = ffmpegService.probeInfo(context.musicPath);
         long bitRate1 = multimediaInfo1.getAudio().getBitRate();
         long samplingRate1 = multimediaInfo1.getAudio().getSamplingRate();
-        Path targetPath = ffmpegService.encodeMp3(musicPath, beginSec, endSec, voiceOffset);
+        Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset);
         MultimediaInfo multimediaInfo2 = ffmpegService.probeInfo(targetPath);
         long bitRate2 = multimediaInfo2.getAudio().getBitRate();
         long samplingRate2 = multimediaInfo2.getAudio().getSamplingRate();
-        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
-        this.musicPath = targetPath;
+        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
+        context.musicPath = targetPath;
         String s1 = "编码:" + ext;
         String s2 = "码率:" + bitRate1 / 1000 + "kbps" + "->" + bitRate2 / 1000 + "kbps";
         String s3 = "采样率:" + samplingRate1 + "hz" + "->" + samplingRate2 + "hz";
-        desc += s1;
-        desc += "\n";
-        desc += s2;
-        desc += "\n";
-        desc += s3;
-        log.info("添加介绍: {}", s1 + "\n" + s2 + "\n" + s3);
-        log.info("音频转码成功");
+        context.desc += s1;
+        context.desc += "\n";
+        context.desc += s2;
+        context.desc += "\n";
+        context.desc += s3;
+        uploadDetailService.logNow(context.uploadDetailId, "\n添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
+                + "音频转码成功");
     }
 
-    private String uploadNetease(OmsLogger log, String voiceListId, Long uploadUserId,
+    private String uploadNetease(Context context, String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
-        log.info("开始上传网易云");
+        uploadDetailService.logNow(context.uploadDetailId, "开始上传网易云");
         String toAddDesc = "";
-        toAddDesc += ("\n视频bvid: " + bilibiliFullVideo.getBvid());
-        toAddDesc += ("\nb站作者: " + bilibiliFullVideo.getAuthor());
+        toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
+        toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
         toAddDesc += ("\n一键上传工具: www.nooblong.tech");
         toAddDesc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
-        desc += toAddDesc;
-        log.info("添加介绍: {}", toAddDesc);
+        context.desc += toAddDesc;
+        uploadDetailService.logNow(context.uploadDetailId, "添加介绍: " + toAddDesc);
 
         Assert.notNull(uploadName, "上传名字为空");
         if (uploadName.length() > 40) {
             uploadName = uploadName.substring(0, 40);
         }
 
-        String ext = BilibiliClient.getFileExt(musicPath.getFileName().toString());
+        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
         JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
         String categoryId = voiceListDetail.get("categoryId").asText();
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
         String coverImgId = voiceListDetail.get("coverImgId").asText();
-        String netImageId = StrUtil.isNotBlank(this.netImageId) ? this.netImageId : coverImgId;
-        log.info("获取播客信息: {}", voiceListDetail);
-        log.info("voiceListId: {}, imageId: {}, uploadName: {}, uploadUserId: {}",
-                voiceListId, netImageId, uploadName, uploadUserId);
-        String voiceId = doUpload(netMusicClient, ext, uploadName, musicPath, voiceListId, netImageId,
-                categoryId, secondCategoryId, desc, uploadUserId,
+        String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
+        uploadDetailService.logNow(context.uploadDetailId, "获取播客信息: " + voiceListDetail +
+                "\nvoiceListId: " + voiceListId + " imageId: " + netImageId + ", uploadName: " + uploadName
+                + ", uploadUserId: " + uploadUserId);
+        String voiceId = doUpload(netMusicClient, ext, uploadName, context.musicPath, voiceListId, netImageId,
+                categoryId, secondCategoryId, context.desc, uploadUserId,
                 privacy == 1 ? "true" : "false");
         Assert.notNull(voiceId, "返回的声音id为空");
         return voiceId;
@@ -270,16 +255,16 @@ public class UploadJob implements BasicProcessor {
         return result.get(0).asText();
     }
 
-    private void clear(OmsLogger log, UploadDetail uploadDetail, Long voiceId) {
+    private void clear(Context context, UploadDetail uploadDetail, Long voiceId) {
         uploadDetail.setVoiceId(voiceId);
         uploadDetail.setStatus(StatusTypeEnum.AUDITING);
         Db.updateById(uploadDetail);
-        log.info("数据库数据已更新");
+        uploadDetailService.logNow(context.uploadDetailId, "数据库数据已更新");
         // 清理数据
-        delete(log);
+        delete(context);
     }
 
-    private void delete(OmsLogger log) {
+    private void delete(Context context) {
         Path path = Paths.get(Constant.TMP_FOLDER);
         try (Stream<Path> walk = Files.walk(path)) {
             walk.sorted(Comparator.reverseOrder())
@@ -290,13 +275,13 @@ public class UploadJob implements BasicProcessor {
                             boolean delete = file.delete();
                         }
                     });
-            log.info("删除下载文件成功");
+            uploadDetailService.logNow(context.uploadDetailId, "删除下载文件成功");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String handleUploadName(UploadDetail uploadDetail, OmsLogger log) {
+    private String handleUploadName(Context context, UploadDetail uploadDetail) {
         // 有自定义，一般为单曲上传
         if (StrUtil.isNotBlank(uploadDetail.getUploadName())) {
             return uploadDetail.getUploadName();
@@ -306,13 +291,13 @@ public class UploadJob implements BasicProcessor {
                 .lambdaQuery().eq(SubscribeReg::getSubscribeId, uploadDetail.getSubscribeId()).list();
         if (!subscribeRegs.isEmpty()) {
             // 有正则
-            log.info("需要进行正则匹配");
+            uploadDetailService.logNow(context.uploadDetailId, "需要进行正则匹配");
             Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
             String regName = subscribe.getRegName();
             // 对于多p视频要处理part name
-            String toRegTitle = bilibiliFullVideo.getHasMultiPart()
-                    ? bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle()
-                    : bilibiliFullVideo.getTitle();
+            String toRegTitle = context.bilibiliFullVideo.getHasMultiPart()
+                    ? context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle()
+                    : context.bilibiliFullVideo.getTitle();
             if (regName != null) {
                 Map<Integer, String> replaceMap = new HashMap<>();
                 for (SubscribeReg subscribeReg : subscribeRegs) {
@@ -323,7 +308,7 @@ public class UploadJob implements BasicProcessor {
                             replaceMap.put(subscribeReg.getPos(), s1);
                         }
                     } catch (Exception e) {
-                        log.error(e.getMessage());
+                        uploadDetailService.logNow(context.uploadDetailId, e.getMessage());
                     }
                 }
                 // 利用map替换subscribe的Name
@@ -331,7 +316,7 @@ public class UploadJob implements BasicProcessor {
                     String content = match.group(0);
                     content = content.substring(1, content.length() - 1);
                     if (content.equals("pubdate")) {
-                        Date videoCreateTime = bilibiliFullVideo.getVideoCreateTime();
+                        Date videoCreateTime = context.bilibiliFullVideo.getVideoCreateTime();
                         return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
                     } else if (NumberUtil.isNumber(content)) {
                         if (replaceMap.containsKey(Integer.valueOf(content))) {
@@ -342,21 +327,20 @@ public class UploadJob implements BasicProcessor {
                     }
                     return content;
                 });
-                log.info("正则匹配后的名字: {}", result);
+                uploadDetailService.logNow(context.uploadDetailId, "正则匹配后的名字: " + result);
                 return result;
             } else {
                 // 有正则，但是没填regName
-                return bilibiliFullVideo.getTitle();
+                return context.bilibiliFullVideo.getTitle();
             }
         } else {
-            log.info("不用进行正则匹配");
+            uploadDetailService.logNow(context.uploadDetailId, "不用进行正则匹配");
             // 无正则，uploadName就使用 视频名-分p名 或 视频名
-            if (bilibiliFullVideo.getHasMultiPart()) {
-                return bilibiliFullVideo.getPartName() + "-" + bilibiliFullVideo.getTitle();
+            if (context.bilibiliFullVideo.getHasMultiPart()) {
+                return context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle();
             } else {
-                return bilibiliFullVideo.getTitle();
+                return context.bilibiliFullVideo.getTitle();
             }
         }
     }
-
 }

@@ -9,7 +9,6 @@ public enum StatusTypeEnum {
 
     // control by app
     WAIT("等待"),
-    QUEUED("已排队"),
     PROCESSING("处理中"),
     AUDITING("审核中"),
     // control by 163

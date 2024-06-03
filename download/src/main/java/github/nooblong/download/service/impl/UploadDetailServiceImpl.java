@@ -1,10 +1,12 @@
 package github.nooblong.download.service.impl;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.UploadDetailMapper;
@@ -121,6 +123,14 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                 .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
                 .orderByDesc(UploadDetail::getPriority)
                 .list();
+    }
+
+    @Override
+    public void logNow(Long uploadDetailId, String content) {
+        UploadDetail uploadDetail = getById(uploadDetailId);
+        uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
+                DateUtil.now() + " " + content + "\n");
+        updateById(uploadDetail);
     }
 
     private String getAuditStatus(String voiceId, Long userId) {

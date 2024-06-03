@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.model.Result;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.SysInfo;
-import github.nooblong.download.entity.WorkerStatus;
 import github.nooblong.download.job.JobUtil;
 import github.nooblong.download.mq.MusicQueue;
 import org.springframework.web.bind.annotation.GetMapping;

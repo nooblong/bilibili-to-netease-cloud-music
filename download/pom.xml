@@ -39,16 +39,6 @@
             <artifactId>jave-all-deps</artifactId>
             <version>3.5.0</version>
         </dependency>
-        <dependency>
-            <groupId>tech.powerjob</groupId>
-            <artifactId>powerjob-worker-spring-boot-starter</artifactId>
-            <version>4.3.9</version>
-        </dependency>
-        <dependency>
-            <groupId>tech.powerjob</groupId>
-            <artifactId>powerjob-client</artifactId>
-            <version>4.3.9</version>
-        </dependency>
     </dependencies>
 
     <build>

@@ -6,6 +6,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
@@ -46,7 +47,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     @Override
-    public void checkAndSave(OmsLogger log) {
+    public void checkAndSave() {
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
@@ -120,7 +121,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 if (isProcess) {
                     subscribe.setProcessTime(new Date());
                     log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
-                    subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
+                    subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
                             + "个新视频" + "\n");
                     if (subscribe.getType() == SubscribeTypeEnum.PART) {
                         subscribe.setEnable(0);
@@ -129,31 +130,15 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
                     updateById(subscribe);
                 } else {
-                    log.info(DateUtil.now() + " 未检测到新视频");
-                    subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
+                    log.info("未检测到新视频: {}", DateUtil.now());
+                    subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
                     updateById(subscribe);
                 }
             } catch (Exception e) {
                 log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
-                subscribe.setLog(processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
+                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
                 updateById(subscribe);
             }
-        }
-    }
-
-    public static String processString(String input) {
-        if (StrUtil.isBlank(input)) {
-            return "nullInput";
-        }
-        String[] lines = input.split("\\r?\\n");
-        if (lines.length <= 100) {
-            return input; // 不超过100行，返回全部字符串
-        } else {
-            StringBuilder result = new StringBuilder();
-            for (int i = lines.length - 99; i < lines.length; i++) {
-                result.append(lines[i]).append("\n");
-            }
-            return result.toString();
         }
     }
 
