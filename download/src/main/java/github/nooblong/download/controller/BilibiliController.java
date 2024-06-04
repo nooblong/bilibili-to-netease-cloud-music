@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/bilibili")
 public class BilibiliController {
 
     final BilibiliClient bilibiliClient;
@@ -32,12 +33,12 @@ public class BilibiliController {
         this.bilibiliClient = bilibiliClient;
     }
 
-    @GetMapping("/bilibili/checkLogin")
+    @GetMapping("/checkLogin")
     public Result<Boolean> checkLogin() {
         return Result.ok("执行成功", bilibiliClient.getAvailableBilibiliCookie() != null);
     }
 
-    @GetMapping("/download/getVideoInfo")
+    @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
@@ -62,7 +63,7 @@ public class BilibiliController {
         return Result.ok("查询成功", videoInfoResponse);
     }
 
-    @GetMapping("/download/getUserInfo")
+    @GetMapping("/getUserInfo")
     public Result<JsonNode> getUserInfo(@RequestParam(name = "uid") String uid) {
         UUID uuid = UUID.randomUUID();
         String formattedUUID = String.format("%s-%s-%s-%s-%s",
@@ -77,19 +78,19 @@ public class BilibiliController {
         return Result.ok("查询成功", jsonResponse);
     }
 
-    @GetMapping("/download/getSeriesInfo")
+    @GetMapping("/getSeriesInfo")
     public Result<JsonNode> getFavoriteInfo(@RequestParam(name = "id") String id) {
         JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
-    @GetMapping("/download/getFavoriteList")
+    @GetMapping("/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
         JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getAvailableBilibiliCookie());
         return Result.ok("查询成功", favoriteList);
     }
 
-    @GetMapping("/download/getSeriesIdByBvid")
+    @GetMapping("/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
         SimpleVideoInfo video = bilibiliClient.createByUrl(url);
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getAvailableBilibiliCookie());
