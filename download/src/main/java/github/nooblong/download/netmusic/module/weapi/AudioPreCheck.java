@@ -27,6 +27,28 @@ public class AudioPreCheck extends SimpleWeApiModule {
         objectNode.put("autoPublishText", "");
         objectNode.put("description", queryMap.get("description") != null ? (String) queryMap.get("description") :
                 "upload by github.com/nooblong/bilibili-to-netease-cloud-music");
+
+        // "modules": "[{\"textList\":[{\"text\":\"123123\"}]}]"
+        // "modules": "[{\"textList\":[{\"text\":\"line1\"}]},{\"textList\":[{\"text\":\"line2\"}]},{\"textList\":[{\"text\":\"line3\"}]}]"
+//        Object description = queryMap.get("description");
+//        if (description != null) {
+//            String desc = (String) description;
+//            String[] split = desc.split("\n");
+//            if (split.length == 0) {
+//                objectNode.put("modules", "[{\"textList\":[{\"text\":\"upload by github.com/nooblong/bilibili-to-netease-cloud-music\"}]}]");
+//            } else {
+//                StringBuilder total = new StringBuilder("[");
+//                for (String s : split) {
+//                    total.append("{\"textList\":[{\"text\":\"").append(s).append("\"}]},");
+//                }
+//                total.deleteCharAt(total.length() - 1);
+//                total.append("]");
+//                objectNode.put("modules", total.toString());
+//            }
+//        } else {
+//            objectNode.put("modules", "[{\"textList\":[{\"text\":\"upload by github.com/nooblong/bilibili-to-netease-cloud-music\"}]}]");
+//        }
+
         objectNode.put("voiceListId", (String) queryMap.get("voiceListId"));
         objectNode.put("coverImgId", (String) queryMap.get("coverImgId"));
         objectNode.put("dfsId", (String) queryMap.get("docId"));

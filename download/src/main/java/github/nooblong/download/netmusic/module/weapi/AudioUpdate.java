@@ -11,23 +11,17 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@Scope("prototype")
-public class AudioSubmit extends SimpleWeApiModule {
-
-    String token;
+public class AudioUpdate extends SimpleWeApiModule {
 
     @Override
     public void genHeader(Map<String, String> headerMap) {
         headerMap.put("Host", "interface.music.163.com");
         headerMap.put("X-Real-IP:", "::1");
         headerMap.put("X-Forwarded-For:", "::1");
-        headerMap.put("x-nos-token", token);
     }
 
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
-        token = (String) queryMap.get("token");
-
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("name", queryMap.get("name") != null ? (String) queryMap.get("name") : "空白的名称");
@@ -35,28 +29,6 @@ public class AudioSubmit extends SimpleWeApiModule {
         objectNode.put("autoPublishText", "");
         objectNode.put("description", queryMap.get("description") != null ? (String) queryMap.get("description") :
                 "upload by github.com/nooblong/bilibili-to-netease-cloud-music");
-
-        // "modules": "[{\"textList\":[{\"text\":\"123123\"}]}]"
-        // "modules": "[{\"textList\":[{\"text\":\"line1\"}]},{\"textList\":[{\"text\":\"line2\"}]},{\"textList\":[{\"text\":\"line3\"}]}]"
-//        Object description = queryMap.get("description");
-//        if (description != null) {
-//            String desc = (String) description;
-//            String[] split = desc.split("\n");
-//            if (split.length == 0) {
-//                objectNode.put("modules", "[{\"textList\":[{\"text\":\"upload by github.com/nooblong/bilibili-to-netease-cloud-music\"}]}]");
-//            } else {
-//                StringBuilder total = new StringBuilder("[");
-//                for (String s : split) {
-//                    total.append("{\"textList\":[{\"text\":\"").append(s).append("\"}]},");
-//                }
-//                total.deleteCharAt(total.length() - 1);
-//                total.append("]");
-//                objectNode.put("modules", total.toString());
-//            }
-//        } else {
-//            objectNode.put("modules", "[{\"textList\":[{\"text\":\"upload by github.com/nooblong/bilibili-to-netease-cloud-music\"}]}]");
-//        }
-
         objectNode.put("voiceListId", (String) queryMap.get("voiceListId"));
         objectNode.put("coverImgId", (String) queryMap.get("coverImgId"));
         objectNode.put("dfsId", (String) queryMap.get("docId"));
@@ -78,15 +50,47 @@ public class AudioSubmit extends SimpleWeApiModule {
         node.put("voiceData", arrayNode.toString());
         node.put("dupkey", UUID.randomUUID().toString().replaceAll("\"\"", "\""));
 
-        // "[{"name":"zhunitiantiankuaile","autoPublish":false,"autoPublishText":"",
-        // "description":"123123123123213","voiceListId":994666636,"coverImgId":"109951168896496224",
-        // "dfsId":"509951163305218925","categoryId":3,"secondCategoryId":469050,"composedSongs":[],
-        // "privacy":true,"modules":"[{\"type\":3,\"title\":\"声音简介\",
-        // \"detail\":[{\"type\":1,\"content\":\"123123123123213\\n\"}]}]","publishTime":0,"orderNo":1}]"
+        /*
+        {
+    "voiceId": 2545655464,
+    "voiceName": "【阿梓歌】《心墙》（2023.11.27）",
+    "categoryId": 2001,
+    "categoryName": "创作翻唱",
+    "secondCategoryId": 6175,
+    "secondCategoryName": "歌曲翻唱",
+    "voiceListId": 994819294,
+    "voiceListName": "测试",
+    "description": "编码:flac\n码率:14kbps->320kbps\n采样率:48000hz->48000hz\n视频bvid: BV1WG411S7tx\nb站作者: YiPLusDa\ngithub: nooblong/bilibili-to-netease-cloud-music",
+    "composedSongs": "",
+    "musicStampInfoList": null,
+    "musicStampTaskId": 0,
+    "publishTime": 1717576493333,
+    "trackId": 2163634233,
+    "dfsId": 509951163321135170,
+    "privacy": false,
+    "coverUrl": "http://p1.music.126.net/Wd-dmhB6VGljLJC-PM_m9w==/109951169657797671.jpg",
+    "coverImgId": "109951169657797671",
+    "createTime": 0,
+    "displayStatus": "AUDIT_FAILED",
+    "modules": "[{\"textList\":[{\"text\":\"编码:flac\"}]},{\"textList\":[{\"text\":\"码率:14kbps->320kbps\"}]},{\"textList\":[{\"text\":\"采样率:48000hz->48000hz\"}]},{\"textList\":[{\"text\":\"视频bvid: BV1WG411S7tx\"}]},{\"textList\":[{\"text\":\"b站作者: YiPLusDa\"}]},{\"textList\":[{\"text\":\"github: nooblong/bilibili-to-netease-cloud-music\"}]}]",
+    "duration": 0,
+    "feeVoice": false,
+    "feeVoiceList": false,
+    "price": 0,
+    "startPoint": 0,
+    "endPoint": 0,
+    "rssEditorTips": false,
+    "id": 2545655464,
+    "name": "【阿梓歌】《心墙》（2023.11.27）",
+    "publishType": 0,
+    "relatedSongs": "[]",
+    "csrf_token": "397c0481d550af613dda0b2eeb26899a"
+    }
+         */
     }
 
     @Override
     public String getUrl() {
-        return "https://interface.music.163.com/weapi/voice/workbench/voice/batch/upload/v2";
+        return "https://interface.music.163.com/api/voice/workbench/voice/update";
     }
 }
