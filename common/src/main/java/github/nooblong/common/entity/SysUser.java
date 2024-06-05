@@ -25,6 +25,8 @@ public class SysUser implements Serializable {
 
     private String biliCookies;
 
+    private Integer visitTimes;
+
     private Date updateTime;
 
 }

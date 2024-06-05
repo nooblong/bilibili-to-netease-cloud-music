@@ -22,4 +22,6 @@ public interface IUserService extends IService<SysUser> {
     void updateBilibiliCookieByOkhttpCookie(Long id, List<Cookie> cookieList);
 
     ObjectNode cookieListToObjectNode(List<Cookie> cookieList);
+
+    Integer sumVisitTime();
 }

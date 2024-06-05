@@ -113,4 +113,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         }
         return objectNode;
     }
+
+    @Override
+    public Integer sumVisitTime() {
+        return baseMapper.sumVisitTime();
+    }
 }

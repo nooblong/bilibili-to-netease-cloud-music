@@ -207,7 +207,7 @@ public class BilibiliClient {
         }
     }
 
-    private boolean isLogin(Map<String, String> credMap) {
+    public boolean isLogin(Map<String, String> credMap) {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
                     + "/user/get_self_info", credMap), okHttpClient);
