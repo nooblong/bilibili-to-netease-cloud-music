@@ -7,6 +7,7 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.job.GetUpJob;
+import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
@@ -29,18 +30,21 @@ public class ScheduleTask {
     final BilibiliClient bilibiliClient;
     final IUserService userService;
     final GetUpJob getUpJob;
+    final UploadJob uploadJob;
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
                         SubscribeService service, BilibiliClient bilibiliClient,
                         IUserService userService,
-                        GetUpJob getUpJob) {
+                        GetUpJob getUpJob,
+                        UploadJob uploadJob) {
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
         this.bilibiliClient = bilibiliClient;
         this.userService = userService;
         this.getUpJob = getUpJob;
+        this.uploadJob = uploadJob;
     }
 
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
@@ -51,6 +55,11 @@ public class ScheduleTask {
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getUpJob() {
         getUpJob.process();
+    }
+
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void uploadJob() {
+        uploadJob.uploadOne();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")

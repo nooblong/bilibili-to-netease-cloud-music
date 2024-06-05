@@ -10,6 +10,7 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.UploadDetail;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -82,8 +84,15 @@ public class SystemController {
     public Result<IPage<UploadDetail>> queueInfo(@RequestParam(name = "pageNo") int pageNo,
                                                  @RequestParam(name = "pageSize") int pageSize) {
         LambdaQueryWrapper<UploadDetail> queryWrapper = Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .orderByDesc(UploadDetail::getPriority);
+        LambdaQueryWrapper<UploadDetail> queryWrapper2 = Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name())
                 .orderByDesc(UploadDetail::getPriority);
         IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);
+        List<UploadDetail> list2 = uploadDetailService.list(queryWrapper2);
+        list2.forEach(i -> i.setTitle("处理中: " + i.getTitle()));
+        page.getRecords().addAll(0, list2);
         return Result.ok("ok", page);
     }
 
