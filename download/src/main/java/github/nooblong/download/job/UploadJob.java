@@ -70,7 +70,7 @@ public class UploadJob {
                 .last("limit 1");
         List<UploadDetail> uploadDetailList = uploadDetailService.list(wrapper);
         if (uploadDetailList.isEmpty()) {
-            log.info("全部上传完毕");
+            log.debug("全部上传完毕");
             return;
         }
         log.info("处理: {}", uploadDetailList.get(0).getTitle());
@@ -200,6 +200,7 @@ public class UploadJob {
         context.desc += s3;
         uploadDetailService.logNow(context.uploadDetailId, "\n添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
                 + "音频转码成功");
+        log.info("介绍: {}", context.desc);
     }
 
     private String uploadNetease(Context context, String voiceListId, Long uploadUserId,
@@ -227,6 +228,7 @@ public class UploadJob {
         uploadDetailService.logNow(context.uploadDetailId, "获取播客信息: " + voiceListDetail +
                 "\nvoiceListId: " + voiceListId + " imageId: " + netImageId + ", uploadName: " + uploadName
                 + ", uploadUserId: " + uploadUserId);
+//        return "666";
         String voiceId = doUpload(netMusicClient, ext, uploadName, context.musicPath, voiceListId, netImageId,
                 categoryId, secondCategoryId, context.desc, uploadUserId,
                 privacy == 1 ? "true" : "false");

@@ -68,9 +68,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     public MultimediaInfo probeInfo(Path sourceUrl) {
         MultimediaObject multimediaObject = new MultimediaObject(sourceUrl.toFile());
         try {
-            MultimediaInfo info = multimediaObject.getInfo();
-            log.info("format: {}", info.getFormat());
-            return info;
+            return multimediaObject.getInfo();
         } catch (EncoderException e) {
             log.error("查看音频信息错误: ", e);
             throw new RuntimeException(e);
