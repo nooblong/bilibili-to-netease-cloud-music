@@ -14,7 +14,6 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
-import github.nooblong.download.api.StringPage;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
@@ -51,7 +50,7 @@ public class UploadDetailController {
     }
 
     @PutMapping("/{id}")
-    public Result<String> update(@PathVariable(name = "id") Long id, @RequestBody UploadDetail uploadDetail) {
+    public Result<UploadDetail> update(@PathVariable(name = "id") Long id, @RequestBody UploadDetail uploadDetail) {
         Long userId = JwtUtil.verifierFromContext().getId();
         UploadDetail byId = uploadDetailService.getById(id);
         if (!userId.equals(byId.getUserId())) {
@@ -59,7 +58,7 @@ public class UploadDetailController {
         }
         byId.setUploadName(uploadDetail.getUploadName());
         uploadDetailService.updateById(byId);
-        return Result.ok("ok");
+        return Result.ok("ok", byId);
     }
 
     @PostMapping("/addQueue")
@@ -168,14 +167,6 @@ public class UploadDetailController {
     @GetMapping("/checkHasUploaded")
     public Result<Boolean> checkHasUploaded() {
         return Result.ok("ok", uploadDetailService.hasUploaded(JwtUtil.verifierFromContext().getId()));
-    }
-
-    @GetMapping("/instanceLog")
-    public Result<StringPage> instanceLog(@RequestParam(name = "instanceId") Long instanceId,
-                                          @RequestParam(name = "index") Long index) {
-        UploadDetail uploadDetail = uploadDetailService.getById(instanceId);
-        StringPage stringPage = StringPage.simple(uploadDetail.getLog());
-        return Result.ok("ok", stringPage);
     }
 
     @GetMapping("/restartJob/{id}")

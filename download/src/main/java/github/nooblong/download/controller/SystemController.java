@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -91,8 +92,16 @@ public class SystemController {
                 .orderByDesc(UploadDetail::getPriority);
         IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);
         List<UploadDetail> list2 = uploadDetailService.list(queryWrapper2);
-        list2.forEach(i -> i.setTitle("处理中: " + i.getTitle()));
-        page.getRecords().addAll(0, list2);
+        if (!list2.isEmpty()) {
+            list2.forEach(i -> {
+                i.setUploadName(StrUtil.isNotBlank(i.getUploadName()) ? "处理中: " + i.getUploadName() : null);
+                i.setTitle(StrUtil.isNotBlank(i.getTitle()) ? "处理中: " + i.getTitle() : null);
+            });
+            ArrayList<UploadDetail> uploadDetails = new ArrayList<>(page.getRecords());
+            uploadDetails.addAll(0, list2);
+            page.setRecords(uploadDetails);
+        }
+        page.getRecords().forEach(record -> record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() : record.getTitle()));
         return Result.ok("ok", page);
     }
 
