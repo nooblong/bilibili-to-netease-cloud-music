@@ -232,14 +232,14 @@ public class UploadJob {
 //        return "666";
         String voiceId = doUpload(netMusicClient, ext, uploadName, context.musicPath, voiceListId, netImageId,
                 categoryId, secondCategoryId, context.desc, uploadUserId,
-                privacy == 1 ? "true" : "false");
+                privacy == 1 ? "true" : "false", context.uploadDetailId);
         Assert.notNull(voiceId, "返回的声音id为空");
         return voiceId;
     }
 
-    private static String doUpload(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
+    private String doUpload(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
                                    String voiceListId, String coverImgId, String categoryId,
-                                   String secondCategoryId, String description, Long userId, String privacy) {
+                                   String secondCategoryId, String description, Long userId, String privacy, Long uploadDetailId) {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
@@ -261,6 +261,8 @@ public class UploadJob {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+
+        queryMap.put("uploadDetailId", uploadDetailId);
 
         JsonNode audiouploadsecond = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadsecond", userId);
 

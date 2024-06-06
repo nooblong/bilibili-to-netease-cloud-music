@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.download.netmusic.module.base.SimpleWeApiModule;
+import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -29,6 +30,13 @@ public class AudioUploadSecond extends SimpleWeApiModule {
     private String uploadId;
     private String objectKey;
     private InputStream dataInputStream;
+    private Long uploadDetailId;
+
+    final UploadDetailService uploadDetailService;
+
+    public AudioUploadSecond(UploadDetailService uploadDetailService) {
+        this.uploadDetailService = uploadDetailService;
+    }
 
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
@@ -36,10 +44,12 @@ public class AudioUploadSecond extends SimpleWeApiModule {
         this.objectKey = ((String) queryMap.get("objectKey")).replace("/", "%2F");
         this.uploadId = (String) queryMap.get("uploadId");
         this.dataInputStream = (InputStream) queryMap.get("dataInputStream");
+        this.uploadDetailId = (Long) queryMap.get("uploadDetailId");
         Assert.notNull(queryMap.get("token"), "AudioUploadSecond缺少参数");
         Assert.notNull(queryMap.get("objectKey"), "AudioUploadSecond缺少参数");
         Assert.notNull(queryMap.get("uploadId"), "AudioUploadSecond缺少参数");
         Assert.notNull(queryMap.get("dataInputStream"), "AudioUploadSecond缺少参数");
+        Assert.notNull(queryMap.get("uploadDetailId"), "AudioUploadSecond缺少参数uploadDetailId");
     }
 
     @Override
@@ -52,6 +62,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
         byte[] buffer = new byte[5242880];
+        uploadDetailService.logNow(uploadDetailId, ">>> 开始上传");
         ArrayNode responseArray = objectMapper.createArrayNode();
         try (ReadableByteChannel sourceChannel = Channels.newChannel(dataInputStream)) {
             ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
@@ -67,10 +78,12 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                             headerMap, getMethod(), "audio/mpeg"), client);
                     partNum++;
                     responseArray.add(responseWithHeader);
+                    uploadDetailService.logNow(uploadDetailId, ">>> 已上传5Mb");
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             }
+            uploadDetailService.logNow(uploadDetailId, ">>> 上传结束");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
