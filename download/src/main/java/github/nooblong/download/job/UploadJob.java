@@ -115,7 +115,7 @@ public class UploadJob {
             uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
             String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
-            clear(context, uploadDetail, Long.valueOf(voiceId));
+            clear(context, Long.valueOf(voiceId));
 
             uploadDetailService.logNow(context.uploadDetailId, "单曲上传成功, 声音id: " + voiceId);
         } catch (Exception e) {
@@ -284,10 +284,11 @@ public class UploadJob {
         return result.get(0).asText();
     }
 
-    private void clear(Context context, UploadDetail uploadDetail, Long voiceId) {
-        uploadDetail.setVoiceId(voiceId);
-        uploadDetail.setStatus(StatusTypeEnum.AUDITING);
-        Db.updateById(uploadDetail);
+    private void clear(Context context, Long voiceId) {
+        UploadDetail newUploadDetail = uploadDetailService.getById(context.uploadDetailId);
+        newUploadDetail.setVoiceId(voiceId);
+        newUploadDetail.setStatus(StatusTypeEnum.AUDITING);
+        Db.updateById(newUploadDetail);
         uploadDetailService.logNow(context.uploadDetailId, "数据库数据已更新");
         // 清理数据
         delete(context);

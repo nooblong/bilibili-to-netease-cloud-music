@@ -15,7 +15,7 @@ public class CommonUtil {
 
     public static String processString(String input) {
         if (StrUtil.isBlank(input)) {
-            return "nullInput";
+            return "";
         }
         String[] lines = input.split("\\r?\\n");
         if (lines.length <= 100) {
