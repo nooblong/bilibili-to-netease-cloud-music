@@ -117,13 +117,13 @@ public class UploadJob {
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
             clear(context, Long.valueOf(voiceId));
 
-            uploadDetailService.logNow(context.uploadDetailId, "单曲上传成功, 声音id: " + voiceId);
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
         } catch (Exception e) {
             uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
             Db.updateById(uploadDetail);
-            uploadDetailService.logNow(context.uploadDetailId, "声音上传失败: " + e.getMessage());
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + e.getMessage());
             delete(context);
-            uploadDetailService.logNow(context.uploadDetailId, "垃圾文件清理成功: " + e.getMessage());
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 垃圾文件清理成功: " + e.getMessage());
         }
     }
 
@@ -140,10 +140,10 @@ public class UploadJob {
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
         if (useVideoCover) {
             Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
-            uploadDetailService.logNow(context.uploadDetailId, "下载封面成功");
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 下载封面成功");
             context.netImageId = transImage(context, imagePath, netMusicClient, userId);
         } else {
-            uploadDetailService.logNow(context.uploadDetailId, "跳过下载封面");
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 跳过下载封面");
         }
     }
 
@@ -163,7 +163,7 @@ public class UploadJob {
             }
             params.put("size", String.valueOf(size));
         } catch (IOException e) {
-            uploadDetailService.logNow(context.uploadDetailId, "\n下载的封面图片读取失败: " + path);
+            uploadDetailService.logNow(context.uploadDetailId, "\n>>> 下载的封面图片读取失败: " + path);
             throw new RuntimeException("下载的封面图片读取失败: " + path);
         }
         params.put("imagePath", path.toString());
@@ -176,7 +176,7 @@ public class UploadJob {
         params.put("token", token);
         netMusicClient.getMusicDataByUserId(params, "imageuploadfirst", userId);
         JsonNode imageuploadsecond = netMusicClient.getMusicDataByUserId(params, "imageuploadsecond", userId);
-        uploadDetailService.logNow(context.uploadDetailId, "裁剪封面成功" + imageuploadsecond.toString());
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 裁剪封面成功" + imageuploadsecond.toString());
         return imageuploadsecond.get("id").asText();
 
     }
@@ -199,21 +199,21 @@ public class UploadJob {
         context.desc += s2;
         context.desc += "\n";
         context.desc += s3;
-        uploadDetailService.logNow(context.uploadDetailId, "\n添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
+        uploadDetailService.logNow(context.uploadDetailId, "\n>>> 添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
                 + "音频转码成功");
         log.info("介绍: {}", context.desc);
     }
 
     private String uploadNetease(Context context, String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
-        uploadDetailService.logNow(context.uploadDetailId, "开始上传网易云");
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 开始上传网易云");
         String toAddDesc = "";
         toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
         toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
         toAddDesc += ("\n一键上传工具: www.nooblong.tech");
         toAddDesc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
         context.desc += toAddDesc;
-        uploadDetailService.logNow(context.uploadDetailId, "添加介绍: " + toAddDesc);
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 添加介绍: " + toAddDesc);
 
         Assert.notNull(uploadName, "上传名字为空");
         if (uploadName.length() > 40) {
@@ -226,7 +226,7 @@ public class UploadJob {
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
         String coverImgId = voiceListDetail.get("coverImgId").asText();
         String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
-        uploadDetailService.logNow(context.uploadDetailId, "获取播客信息: " + voiceListDetail +
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 获取播客信息: " + voiceListDetail +
                 "\nvoiceListId: " + voiceListId + " imageId: " + netImageId + ", uploadName: " + uploadName
                 + ", uploadUserId: " + uploadUserId);
 //        return "666";
@@ -291,7 +291,7 @@ public class UploadJob {
         newUploadDetail.setVoiceId(voiceId);
         newUploadDetail.setStatus(StatusTypeEnum.AUDITING);
         Db.updateById(newUploadDetail);
-        uploadDetailService.logNow(context.uploadDetailId, "数据库数据已更新");
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 数据库数据已更新");
         // 清理数据
         delete(context);
     }
@@ -307,7 +307,7 @@ public class UploadJob {
                             boolean delete = file.delete();
                         }
                     });
-            uploadDetailService.logNow(context.uploadDetailId, "删除下载文件成功");
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 删除下载文件成功");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -323,7 +323,7 @@ public class UploadJob {
                 .lambdaQuery().eq(SubscribeReg::getSubscribeId, uploadDetail.getSubscribeId()).list();
         if (!subscribeRegs.isEmpty()) {
             // 有正则
-            uploadDetailService.logNow(context.uploadDetailId, "需要进行正则匹配");
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 需要进行正则匹配");
             Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
             String regName = subscribe.getRegName();
             // 对于多p视频要处理part name
@@ -340,7 +340,7 @@ public class UploadJob {
                             replaceMap.put(subscribeReg.getPos(), s1);
                         }
                     } catch (Exception e) {
-                        uploadDetailService.logNow(context.uploadDetailId, e.getMessage());
+                        uploadDetailService.logNow(context.uploadDetailId, ">>> " + e.getMessage());
                     }
                 }
                 // 利用map替换subscribe的Name
@@ -359,14 +359,14 @@ public class UploadJob {
                     }
                     return content;
                 });
-                uploadDetailService.logNow(context.uploadDetailId, "正则匹配后的名字: " + result);
+                uploadDetailService.logNow(context.uploadDetailId, ">>> 正则匹配后的名字: " + result);
                 return result;
             } else {
                 // 有正则，但是没填regName
                 return context.bilibiliFullVideo.getTitle();
             }
         } else {
-            uploadDetailService.logNow(context.uploadDetailId, "不用进行正则匹配");
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 不用进行正则匹配");
             // 无正则，uploadName就使用 视频名-分p名 或 视频名
             if (context.bilibiliFullVideo.getHasMultiPart()) {
                 return context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle();
