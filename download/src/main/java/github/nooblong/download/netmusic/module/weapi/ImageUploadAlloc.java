@@ -16,12 +16,15 @@ public class ImageUploadAlloc extends SimpleWeApiModule {
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
         node.put("bucket", "yyimgs");
-        node.put("ext", "jpg");
-        node.put("filename", UUID.randomUUID() + ".jpg");
+        node.put("ext", "temp");
+//        node.put("ext", "jpg");
+        node.put("filename", "temp");
+//        node.put("filename", UUID.randomUUID() + ".jpg");
         node.put("local", false);
         node.put("nos_product", 0);
         node.put("return_body", "{\"code\":200,\"size\":\"$(ObjectSize)\"}");
-        node.put("type", "other");
+//        node.put("type", "other");
+        node.put("type", "image");
     }
 
     @Override
