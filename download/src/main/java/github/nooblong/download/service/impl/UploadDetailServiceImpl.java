@@ -48,7 +48,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                                 StatusTypeEnum.ONLY_SELF_SEE.name(),
                                 StatusTypeEnum.FAILED.name(),
                                 StatusTypeEnum.TRANSCODE_FAILED.name()))
-                .lt(UploadDetail::getStatus, Constant.MAX_RETRY_TIMES)
+                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
                 .gt(UploadDetail::getVoiceId, 0)
                 .list();
 

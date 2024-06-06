@@ -16,6 +16,7 @@ import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.utils.Constant;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -89,6 +90,7 @@ public class SystemController {
                 .orderByDesc(UploadDetail::getPriority);
         LambdaQueryWrapper<UploadDetail> queryWrapper2 = Wrappers.lambdaQuery(UploadDetail.class)
                 .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name())
+                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
                 .orderByDesc(UploadDetail::getPriority);
         IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);
         List<UploadDetail> list2 = uploadDetailService.list(queryWrapper2);

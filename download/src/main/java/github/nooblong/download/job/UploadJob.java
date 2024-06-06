@@ -66,6 +66,7 @@ public class UploadJob {
     public void uploadOne() {
         LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
                 .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
                 .orderByDesc(UploadDetail::getPriority)
                 .last("limit 1");
         List<UploadDetail> uploadDetailList = uploadDetailService.list(wrapper);
