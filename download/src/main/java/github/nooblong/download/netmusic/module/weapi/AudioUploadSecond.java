@@ -1,9 +1,13 @@
 package github.nooblong.download.netmusic.module.weapi;
 
+import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import github.nooblong.common.util.CommonUtil;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.module.base.SimpleWeApiModule;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.OkUtil;
@@ -32,12 +36,6 @@ public class AudioUploadSecond extends SimpleWeApiModule {
     private InputStream dataInputStream;
     private Long uploadDetailId;
 
-    final UploadDetailService uploadDetailService;
-
-    public AudioUploadSecond(UploadDetailService uploadDetailService) {
-        this.uploadDetailService = uploadDetailService;
-    }
-
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
         this.token = (String) queryMap.get("token");
@@ -58,11 +56,18 @@ public class AudioUploadSecond extends SimpleWeApiModule {
         headerMap.put("X-Nos-Meta-Content-Type", "audio/mpeg");
     }
 
+    public void logNow(Long uploadDetailId, String content) {
+        UploadDetail uploadDetail = Db.getById(uploadDetailId, UploadDetail.class);
+        uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
+                DateUtil.now() + " " + content + "\n");
+        Db.updateById(uploadDetail);
+    }
+
     @Override
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
         byte[] buffer = new byte[5242880];
-        uploadDetailService.logNow(uploadDetailId, ">>> 开始上传");
+        logNow(uploadDetailId, ">>> 开始上传");
         ArrayNode responseArray = objectMapper.createArrayNode();
         try (ReadableByteChannel sourceChannel = Channels.newChannel(dataInputStream)) {
             ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
@@ -78,12 +83,12 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                             headerMap, getMethod(), "audio/mpeg"), client);
                     partNum++;
                     responseArray.add(responseWithHeader);
-                    uploadDetailService.logNow(uploadDetailId, ">>> 已上传5Mb");
+                    logNow(uploadDetailId, ">>> 已上传5Mb");
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             }
-            uploadDetailService.logNow(uploadDetailId, ">>> 上传结束");
+            logNow(uploadDetailId, ">>> 上传结束");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
