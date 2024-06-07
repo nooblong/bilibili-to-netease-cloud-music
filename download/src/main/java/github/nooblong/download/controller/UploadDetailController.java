@@ -122,6 +122,7 @@ public class UploadDetailController {
     public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
                                               @RequestParam(name = "pageSize") int pageSize,
                                               @RequestParam(required = false, name = "title") String title,
+                                              @RequestParam(required = false, name = "uploadName") String uploadName,
                                               @RequestParam(required = false, name = "remark") String remark,
                                               @RequestParam(required = false, name = "username") String username,
                                               @RequestParam(required = false, name = "status") String status) {
@@ -130,7 +131,8 @@ public class UploadDetailController {
 
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<UploadDetail>().orderByDesc(UploadDetail::getId);
-        wrapper.like(title != null, UploadDetail::getUploadName, title);
+        wrapper.like(title != null, UploadDetail::getTitle, title);
+        wrapper.like(uploadName != null, UploadDetail::getUploadName, title);
         if (remark != null) {
             LambdaQueryWrapper<Subscribe> like = Wrappers.lambdaQuery(Subscribe.class).like(Subscribe::getRemark, remark);
             List<Subscribe> list = SimpleQuery.list(like, i -> i);
