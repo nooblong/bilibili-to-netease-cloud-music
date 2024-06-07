@@ -121,6 +121,8 @@ public class UploadDetailController {
     @GetMapping()
     public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
                                               @RequestParam(name = "pageSize") int pageSize,
+                                              @RequestParam(name = "column", required = false) String column,
+                                              @RequestParam(name = "orderBy", required = false) String orderBy,
                                               @RequestParam(required = false, name = "title") String title,
                                               @RequestParam(required = false, name = "uploadName") String uploadName,
                                               @RequestParam(required = false, name = "remark") String remark,
@@ -156,6 +158,23 @@ public class UploadDetailController {
         } else {
             wrapper.like(status != null, UploadDetail::getStatus, status);
         }
+
+        if (column != null && orderBy != null) {
+            if (orderBy.equalsIgnoreCase("desc")) {
+                if (column.equalsIgnoreCase("createTime")) {
+                    wrapper.orderByDesc(UploadDetail::getCreateTime);
+                } else if (column.equalsIgnoreCase("updateTime")) {
+                    wrapper.orderByDesc(UploadDetail::getUpdateTime);
+                }
+            } else {
+                if (column.equalsIgnoreCase("createTime")) {
+                    wrapper.orderByAsc(UploadDetail::getCreateTime);
+                } else if (column.equalsIgnoreCase("updateTime")) {
+                    wrapper.orderByAsc(UploadDetail::getUpdateTime);
+                }
+            }
+        }
+
         IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);
 
         for (UploadDetail record : page.getRecords()) {
