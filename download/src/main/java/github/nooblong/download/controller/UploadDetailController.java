@@ -132,7 +132,7 @@ public class UploadDetailController {
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
 
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
-        LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<UploadDetail>().orderByDesc(UploadDetail::getId);
+        LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(title != null, UploadDetail::getTitle, title);
         wrapper.like(uploadName != null, UploadDetail::getUploadName, title);
         if (remark != null) {
@@ -173,6 +173,8 @@ public class UploadDetailController {
                     wrapper.orderByAsc(UploadDetail::getUpdateTime);
                 }
             }
+        } else {
+            wrapper.orderByDesc(UploadDetail::getId);
         }
 
         IPage<UploadDetail> page = uploadDetailService.page(pageNew, wrapper);
