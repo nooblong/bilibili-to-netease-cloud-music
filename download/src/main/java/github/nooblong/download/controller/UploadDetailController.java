@@ -200,6 +200,7 @@ public class UploadDetailController {
         Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "只能操作自己的");
         byId.setRetryTimes(0);
         byId.setStatus(StatusTypeEnum.WAIT);
+        uploadDetailService.updateById(byId);
         return Result.ok("ok");
     }
 
