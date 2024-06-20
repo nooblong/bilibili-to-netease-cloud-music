@@ -4,7 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-public class LeetCode {}
+public class LeetCode {
+}
 
 class MyLinkedListTest {
     // 1->2->3->4->5
@@ -1265,7 +1266,7 @@ class TestJava {
     void sumOfLeftLeaves() {
         System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{3, 9, 20, null, null, 15, 7})));
         System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{1, null, 2})));
-        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{3,4,5,-7,-6,null,null,-7,null,-5,null,null,null,-4})));
+        System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{3, 4, 5, -7, -6, null, null, -7, null, -5, null, null, null, -4})));
         System.out.println(sumOfLeftLeaves(TreeNode.arrayToTree(new Integer[]{1, 2, 3})));
     }
 
@@ -1296,6 +1297,167 @@ class TestJava {
         } else {
             return l;
         }
+    }
+
+    @Test
+    void hasPathSum() {
+        System.out.println(
+                hasPathSum(TreeNode.arrayToTree(new Integer[]{5, 4, 8, 11, null, 13, 4, 7, 2, null, null, null, 1}), 5));
+        System.out.println(
+                hasPathSum(TreeNode.arrayToTree(new Integer[]{1, -2, -3, 1, 3, -2, null, -1}), 5));
+    }
+
+    public boolean hasPathSum(TreeNode root, int targetSum) {
+        Stack<TreeNode> stack = new Stack<>();
+        stack.push(root);
+        if (root == null) {
+            return false;
+        }
+        boolean has = false;
+        while (!stack.isEmpty()) {
+            TreeNode pop = stack.pop();
+            if (pop.val == targetSum && pop.left == null && pop.right == null) {
+                has = true;
+                break;
+            }
+            if (pop.right != null) {
+                pop.right.val += pop.val;
+                stack.push(pop.right);
+            }
+            if (pop.left != null) {
+                pop.left.val += pop.val;
+                stack.push(pop.left);
+            }
+        }
+        return has;
+    }
+
+    int postIdx;
+    int[] postorder;
+    int[] inorder;
+    Map<Integer, Integer> idxmap = new HashMap<>();
+
+    public void preOrder(TreeNode root) {
+        System.out.print(root != null ? root.val + " " : "null ");
+        if (root != null) {
+            preOrder(root.left);
+            preOrder(root.right);
+        }
+    }
+
+    public void levelOrderPrint(TreeNode root) {
+        if (root == null) return;
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            TreeNode node = queue.poll();
+            if (node != null) {
+                System.out.print(node.val + " ");
+                queue.add(node.left);
+                queue.add(node.right);
+            } else {
+                System.out.print("null ");
+            }
+        }
+    }
+
+    @Test
+    void maxBinaryTree() {
+        TreeNode treeNode = constructMaximumBinaryTree(new int[]{3, 2, 1});
+        levelOrderPrint(treeNode);
+    }
+
+    public TreeNode constructMaximumBinaryTree(int[] nums) {
+        Stack<TreeNode> stack = new Stack<>();
+        for (int i = 0; i < nums.length; i++) {
+            TreeNode node = new TreeNode(nums[i]);
+            while (!stack.isEmpty() && nums[i] > stack.peek().val) {
+                node.left = stack.pop();
+            }
+            if (!stack.isEmpty() && nums[i] <= stack.peek().val) {
+                stack.peek().right = node;
+            }
+            stack.push(node);
+        }
+        int size = stack.size();
+        for (int i = 0; i < size - 1; i++) {
+            stack.pop();
+        }
+        return stack.pop();
+    }
+
+    @Test
+    void mergeTwoBinaryTrees() {
+//        TreeNode treeNode = mergeTrees(TreeNode.arrayToTree(new Integer[]{1, 3, 2, 5}),
+//        TreeNode.arrayToTree(new Integer[]{2, 1, 3, null, 4, null, 7}));
+        TreeNode treeNode = mergeTrees(TreeNode.arrayToTree(new Integer[]{1,2,null,3}),
+                TreeNode.arrayToTree(new Integer[]{1,null,2,null,3}));
+        levelOrderPrint(treeNode);
+    }
+
+    public TreeNode mergeTrees(TreeNode root1, TreeNode root2) {
+        Queue<TreeNode> queue1 = new LinkedList<>();
+        Queue<TreeNode> queue2 = new LinkedList<>();
+        queue1.offer(root1);
+        queue2.offer(root2);
+        List<TreeNode> list = new ArrayList<>();
+        TreeNode result;
+        while (!queue1.isEmpty() && !queue2.isEmpty()) {
+            TreeNode node1 = queue1.poll();
+            TreeNode node2 = queue2.poll();
+            if (node1 != null && node2 != null) {
+                list.add(new TreeNode(node1.val + node2.val));
+                queue1.offer(node1.left);
+                queue1.offer(node1.right);
+                queue2.offer(node2.left);
+                queue2.offer(node2.right);
+            }
+            if (node1 == null && node2 != null) {
+                list.add(node2);
+                queue1.offer(null);
+                queue1.offer(null);
+                queue2.offer(node2.left);
+                queue2.offer(node2.right);
+            }
+            if (node1 != null && node2 == null) {
+                list.add(node1);
+                queue2.offer(null);
+                queue2.offer(null);
+                queue1.offer(node1.left);
+                queue1.offer(node1.right);
+            }
+            if (node1 == null && node2 == null) {
+                list.add(null);
+            }
+        }
+        return buildTreeFromLevelOrder(list);
+    }
+
+    public TreeNode buildTreeFromLevelOrder(List<TreeNode> levelOrder) {
+        if (levelOrder == null || levelOrder.isEmpty()) {
+            return null;
+        }
+        Queue<TreeNode> queue = new LinkedList<>();
+        TreeNode root = levelOrder.get(0);
+        queue.add(root);
+        int i = 1;
+        while (!queue.isEmpty() && i < levelOrder.size()) {
+            TreeNode current = queue.poll();
+
+            if (levelOrder.get(i) != null) {
+                current.left = levelOrder.get(i);
+                queue.add(current.left);
+            }
+            i++;
+
+            if (i < levelOrder.size() && levelOrder.get(i) != null) {
+                current.right = levelOrder.get(i);
+                queue.add(current.right);
+            }
+            i++;
+        }
+
+        return root;
     }
 
 }
