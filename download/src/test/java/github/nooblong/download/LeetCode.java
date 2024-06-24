@@ -1390,8 +1390,8 @@ class TestJava {
     void mergeTwoBinaryTrees() {
 //        TreeNode treeNode = mergeTrees(TreeNode.arrayToTree(new Integer[]{1, 3, 2, 5}),
 //        TreeNode.arrayToTree(new Integer[]{2, 1, 3, null, 4, null, 7}));
-        TreeNode treeNode = mergeTrees(TreeNode.arrayToTree(new Integer[]{1,2,null,3}),
-                TreeNode.arrayToTree(new Integer[]{1,null,2,null,3}));
+        TreeNode treeNode = mergeTrees(TreeNode.arrayToTree(new Integer[]{1, 2, null, 3}),
+                TreeNode.arrayToTree(new Integer[]{1, null, 2, null, 3}));
         levelOrderPrint(treeNode);
     }
 
@@ -1458,6 +1458,109 @@ class TestJava {
         }
 
         return root;
+    }
+
+    @Test
+    void validateBinarySearchTree() {
+        System.out.println(isValidBST(TreeNode.arrayToTree(new Integer[]{2, 1, 3})));
+        System.out.println(isValidBST(TreeNode.arrayToTree(new Integer[]{5, 4, 6, null, null, 3, 7})));
+        System.out.println(isValidBST(TreeNode.arrayToTree(new Integer[]{3, 1, 5, 0, 2, 4, 6, null, null, null, 3})));
+    }
+
+    public boolean isValidBST(TreeNode root) {
+        return help(root, Integer.MAX_VALUE, Integer.MIN_VALUE);
+    }
+
+    public boolean help(TreeNode root, long max, long min) {
+        if (root == null) {
+            return true;
+        }
+        boolean left = help(root.left, Math.min(root.val, max), min);
+        boolean right = help(root.right, max, Math.max(root.val, min));
+        if (root.val >= max || root.val <= min) {
+            return false;
+        }
+        return (root.left == null || root.left.val < root.val) &&
+                (root.right == null || root.right.val > root.val) && left && right;
+    }
+
+    @Test
+    void minimumAbsoluteDifferenceInBst() {
+//        System.out.println(getMinimumDifference(TreeNode.arrayToTree(new Integer[]{4, 2, 6, 1, 3})));
+        System.out.println(getMinimumDifference(TreeNode.arrayToTree(new Integer[]{1, 0, 48, null, null, 12, 49})));
+    }
+
+    public int getMinimumDifference(TreeNode root) {
+        int min = Integer.MAX_VALUE;
+        Integer pre = null;
+        Stack<TreeNode> stack = new Stack<>();
+        while (!stack.isEmpty() || root != null) {
+            if (root != null) {
+                stack.push(root);
+                root = root.left;
+            }
+            if (root == null) {
+                TreeNode pop = stack.pop();
+                System.out.print(pop.val + " ");
+                if (pre != null && Math.abs(pre - pop.val) < min) {
+                    min = Math.abs(pre - pop.val);
+                }
+                pre = pop.val;
+                root = pop.right;
+            }
+        }
+        return min;
+    }
+
+    @Test
+    void testJava() {
+        ArrayList<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 2, 2, 3, 3, 7, 8, 9));
+        int i = list.indexOf(7);
+        int i1 = list.lastIndexOf(7);
+        System.out.println(i1 - i + 1);
+        HashSet<Integer> set = new HashSet<>(list);
+        System.out.println(set);
+        for (Integer integer : set) {
+            list.removeIf(j -> j.equals(integer));
+        }
+        int[] array = list.stream().distinct().mapToInt(Integer::intValue).toArray();
+        System.out.println("-----");
+//        System.out.println(Arrays.toString(findMode(TreeNode.arrayToTree(new Integer[]{1, null, 2, 2}))));
+        System.out.println(Arrays.toString(findMode(TreeNode.arrayToTree(new Integer[]{1, 0, 1, 0, 0, 1, 1, 0}))));
+    }
+
+    Integer maxTimes = 1;
+    Integer pre = null;
+    Integer curTimes = null;
+
+    public int[] findMode(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        help(res, root);
+        return res.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    void help(List<Integer> list, TreeNode node) {
+        if (node == null) {
+            return;
+        }
+        help(list, node.left);
+        if (pre != null && node.val == pre) {
+            curTimes++;
+            if (curTimes > maxTimes) {
+                maxTimes = curTimes;
+                list.clear();
+                list.add(node.val);
+            } else if (curTimes.equals(maxTimes)) {
+                list.add(node.val);
+            }
+        } else {
+            pre = node.val;
+            curTimes = 1;
+            if (maxTimes == 1) {
+                list.add(node.val);
+            }
+        }
+        help(list, node.right);
     }
 
 }
