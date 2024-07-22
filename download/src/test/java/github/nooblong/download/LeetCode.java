@@ -1563,5 +1563,75 @@ class TestJava {
         help(list, node.right);
     }
 
+    @Test
+    void deleteNodeInABst() {
+        TreeNode treeNode = deleteNode(TreeNode.arrayToTree(new Integer[]{5, 3, 6, 2, 4, null, 7}), 7);
+        levelOrderPrint(treeNode);
+    }
+
+    public TreeNode deleteNode(TreeNode root, int key) {
+        if (root == null) {
+            return null;
+        }
+        if (root.val == key && root.left == null && root.right == null) {
+            return null;
+        }
+        if (root.val == key) {
+            if (root.left != null && root.right == null) {
+                return root.left;
+            }
+            if (root.right != null && root.left == null) {
+                return root.right;
+            }
+
+            root = fix(root);
+            return root;
+        }
+        if (root.left != null && root.left.val == key) {
+            if (root.left.left != null) {
+                TreeNode tmp = root.left.right;
+                if (root.left.left.right == null) {
+                    root.left.left.right = tmp;
+                    root.left = root.left.left;
+                } else {
+                    root.left = fix(root.left);
+                }
+            } else if (root.left.right != null) {
+                root.left = root.left.right;
+            } else {
+                return root;
+            }
+        }
+        if (root.right != null && root.right.val == key) {
+            if (root.right.left != null) {
+                TreeNode tmp = root.right.right;
+                if (root.right.left.right == null) {
+                    root.right.left.right = tmp;
+                    root.right = root.right.left;
+                } else {
+                    root.right = fix(root.right);
+                }
+            } else if (root.right.right != null) {
+                root.right = root.right.right;
+            } else {
+                return root;
+            }
+        }
+        root.left = deleteNode(root.left, key);
+        root.right = deleteNode(root.right, key);
+        return root;
+    }
+
+    public TreeNode fix(TreeNode root) {
+        TreeNode successor = root.right;
+        while (successor.left != null) {
+            successor = successor.left;
+        }
+        TreeNode newNode = deleteNode(root, successor.val);
+        successor.right = root.right;
+        successor.left = root.left;
+        return successor;
+    }
+
 }
 
