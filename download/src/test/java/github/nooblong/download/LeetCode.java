@@ -1599,6 +1599,7 @@ class TestJava {
             } else if (root.left.right != null) {
                 root.left = root.left.right;
             } else {
+                root.left = null;
                 return root;
             }
         }
@@ -1614,6 +1615,7 @@ class TestJava {
             } else if (root.right.right != null) {
                 root.right = root.right.right;
             } else {
+                root.right = null;
                 return root;
             }
         }
@@ -1624,6 +1626,9 @@ class TestJava {
 
     public TreeNode fix(TreeNode root) {
         TreeNode successor = root.right;
+        if (successor == null) {
+            return root;
+        }
         while (successor.left != null) {
             successor = successor.left;
         }
