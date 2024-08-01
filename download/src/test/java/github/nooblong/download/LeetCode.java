@@ -1638,5 +1638,32 @@ class TestJava {
         return successor;
     }
 
+    List<List<Integer>> results = new ArrayList<>();
+    List<Integer> result = new ArrayList<>();
+
+    @Test
+    void combinations() {
+        printListList(combine(4, 2));
+    }
+
+    public List<List<Integer>> combine(int n, int k) {
+        backtracking(n, k, 1);
+        return results;
+    }
+
+    void backtracking(int n, int k, int startIndex) {
+        if (result.size() == k) {
+            results.add(new ArrayList<>(result));
+            return;
+        }
+
+        for (int i = startIndex; i <= n; i++) {
+            result.add(i);
+            backtracking(n, k, i + 1);
+            result.remove(result.size() - 1);
+        }
+    }
+
+
 }
 
