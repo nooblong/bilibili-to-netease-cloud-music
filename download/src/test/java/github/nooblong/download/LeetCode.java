@@ -3,6 +3,7 @@ package github.nooblong.download;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LeetCode {
 }
@@ -1664,6 +1665,55 @@ class TestJava {
         }
     }
 
+    static class A {
+        List<String> result = new ArrayList<>();
+        List<Character> path = new ArrayList<>();
+        List<List<Character>> list = new ArrayList<>();
+
+        public List<String> letterCombinations(String digits) {
+            if (digits.isEmpty()) {
+                return result;
+            }
+            list.add(Collections.emptyList());
+            list.add(Collections.emptyList());
+            list.add(Arrays.asList('a', 'b', 'c'));
+            list.add(Arrays.asList('d', 'e', 'f'));
+            list.add(Arrays.asList('g', 'h', 'i'));
+            list.add(Arrays.asList('j', 'k', 'l'));
+            list.add(Arrays.asList('m', 'n', 'o'));
+            list.add(Arrays.asList('p', 'q', 'r', 's'));
+            list.add(Arrays.asList('t', 'u', 'v'));
+            list.add(Arrays.asList('w', 'x', 'y', 'z'));
+            int[] intArray = new int[digits.length()];
+            for (int i = 0; i < digits.length(); i++) {
+                intArray[i] = Character.getNumericValue(digits.charAt(i));
+            }
+            help(intArray, 0);
+            return result;
+        }
+
+        void help(int[] digits, int startIndex) {
+            if (path.size() == digits.length) {
+                String str = path.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining());
+                result.add(str);
+                return;
+            }
+            List<Character> l = list.get(digits[startIndex]);
+            for (int i = 0; i < l.size(); i++) {
+                path.add(l.get(i));
+                help(digits, startIndex + 1);
+                path.remove(path.size() - 1);
+            }
+        }
+    }
+
+    @Test
+    void letter() {
+        List<String> strings = new A().letterCombinations("23");
+        System.out.println(strings);
+    }
 
 }
 
