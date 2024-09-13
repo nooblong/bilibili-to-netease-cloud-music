@@ -1,26 +1,90 @@
 package github.nooblong.system;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
+import github.nooblong.download.utils.OkUtil;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Data
+@Component
+@Slf4j
 public class Mc {
 
-    public static void main(String[] args) throws IOException {
-        Mc mc = new Mc();
-        mc.setHost(new InetSocketAddress("cn-sz-yd-plustmp2.natfrp.cloud", 21942));
-        StatusResponse statusResponse = mc.fetchData();
-        System.out.println(statusResponse);
+    public static final String TOKEN_URL = "https://bots.qq.com";
+    public static final String BASE_URL = "https://api.sgroup.qq.com";
+    public static OkHttpClient client = new OkHttpClient();
+    public static ObjectMapper mapper = new ObjectMapper();
+    public static String accessToken = null;
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+//        Mc.StatusResponse(description=Mc.Description(text=All the Mods 9),
+//        players=Mc.Players(max=20, online=1, sample=[Mc.Player(name=nooblong, id=aa3d2f33-39dd-3074-b676-c243b240a809)]),
+//        version=Mc.Version(name=1.20.1, protocol=763),
+//        favicon=data:image/png;base64,it/==,
+//        time=0)
+
+        for (int i = 0; i < 100; i++) {
+            Mc mc = new Mc();
+            mc.setHost(new InetSocketAddress("cn-sz-yd-plustmp2.natfrp.cloud", 21942));
+            StatusResponse statusResponse = mc.fetchData();
+            System.out.println(statusResponse);
+            mc.updateAccessToken();
+            mc.sendMsg("hello world");
+            Thread.sleep(50000);
+        }
+    }
+
+    public String getAccessToken() {
+        ObjectNode objectNode = mapper.createObjectNode();
+        objectNode.put("appId", "???");
+        objectNode.put("clientSecret", "???");
+        Request post = OkUtil.post(objectNode, TOKEN_URL + "/app/getAppAccessToken");
+        JsonNode jsonResponse = OkUtil.getJsonResponse(post, client);
+        System.out.println(jsonResponse.toPrettyString());
+        return jsonResponse.get("access_token").asText();
+    }
+
+    public void sendMsg(String text) {
+        ObjectNode objectNode = mapper.createObjectNode();
+        objectNode.put("content", text);
+        objectNode.put("msg_type", 0);
+        HashMap<String, String> header = new HashMap<>();
+        header.put("Authorization", "QQBot " + accessToken);
+        Request post = OkUtil.post(objectNode, BASE_URL + "/v2/users/" + "292862284" + "/messages", header);
+
+        JsonNode jsonResponse = OkUtil.getJsonResponse(post, client);
+        System.out.println(jsonResponse.toPrettyString());
+    }
+
+    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void check() {
+
+    }
+
+    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void updateAccessToken() {
+        accessToken = getAccessToken();
     }
 
     private InetSocketAddress host;
     private int timeout = 7000;
     private Gson gson = new Gson();
+    public Map<String, Date> playTime = new HashMap<>();
 
     public int readVarInt(DataInputStream in) throws IOException {
         int i = 0;
