@@ -138,6 +138,9 @@ public class SubscribeController {
         Long selectUserId = null;
         if (username != null) {
             List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
+            if (selectUser.isEmpty()) {
+                return Result.ok("ok", new Page<>(pageNo, pageSize));
+            }
             selectUserId = selectUser.get(0).getId();
         }
         IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize),
