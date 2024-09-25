@@ -103,7 +103,11 @@ public class SystemController {
             uploadDetails.addAll(0, list2);
             page.setRecords(uploadDetails);
         }
-        page.getRecords().forEach(record -> record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() : record.getTitle()));
+        page.getRecords().forEach(record -> {
+            record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() :
+                    record.getTitle());
+            record.setLog(null);
+        });
         return Result.ok("ok", page);
     }
 
