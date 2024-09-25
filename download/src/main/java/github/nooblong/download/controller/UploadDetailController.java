@@ -189,6 +189,7 @@ public class UploadDetailController {
             record.setStatusDesc(record.getStatus().getDesc());
             record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() :
                     record.getTitle());
+            record.setLog(null);
         }
         return Result.ok("查询成功", page);
     }
