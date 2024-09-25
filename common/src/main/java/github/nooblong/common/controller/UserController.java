@@ -67,10 +67,9 @@ public class UserController {
         try {
             JwtUtil.verifierFromContext();
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return Result.fail("fail");
+            return Result.fail("未登录");
         }
-        return Result.ok("刷新成功");
+        return Result.ok("已登录");
     }
 
 }
