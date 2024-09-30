@@ -61,6 +61,17 @@ public class UploadDetailController {
         return Result.ok("ok", byId);
     }
 
+    @DeleteMapping("/{id}")
+    public Result<Boolean> delete(@PathVariable(name = "id") Long id) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        UploadDetail byId = uploadDetailService.getById(id);
+        if (!userId.equals(byId.getUserId())) {
+            throw new RuntimeException("只能修改自己的");
+        }
+        uploadDetailService.removeById(id);
+        return Result.ok("ok");
+    }
+
     @PostMapping("/addQueue")
     public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
