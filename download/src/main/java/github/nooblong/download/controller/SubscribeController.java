@@ -67,13 +67,15 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getAvailableBilibiliCookie());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo,
+                    bilibiliClient.getAvailableBilibiliCookie());
             JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("data").get("bvid").asText());
         }
         if (!subscribe.getVoiceListId().equals(byId.getVoiceListId())) {
             // 获取播客图片
-            JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(), user.getId());
+            JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(),
+                    user.getId());
             String text = voiceListDetail.get("coverUrl").asText();
             subscribe.setNetCover(text);
         }
@@ -101,12 +103,14 @@ public class SubscribeController {
             // 解析成bvid而不是url
             subscribe.setProcessTime(null);
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, bilibiliClient.getAvailableBilibiliCookie());
+            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo,
+                    bilibiliClient.getAvailableBilibiliCookie());
             JsonNode info = bilibiliFullVideo.getVideoInfo();
             subscribe.setTargetId(info.get("bvid").asText());
         }
         // 获取播客图片
-        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(), user.getId());
+        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(),
+                user.getId());
         String text = voiceListDetail.get("coverUrl").asText();
         subscribe.setNetCover(text);
         Db.save(subscribe);
@@ -128,20 +132,39 @@ public class SubscribeController {
     @GetMapping
     public Result<IPage<Subscribe>> subscribeList(@RequestParam(name = "pageNo") int pageNo,
                                                   @RequestParam(name = "pageSize") int pageSize,
+                                                  @RequestParam(name = "username", required = false) String username,
+                                                  @RequestParam(name = "status", required = false) Integer status,
                                                   HttpServletResponse response) {
-        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize), Subscribe.class);
+        Long selectUserId = null;
+        if (username != null) {
+            List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
+            if (selectUser.isEmpty()) {
+                return Result.ok("ok", new Page<>(pageNo, pageSize));
+            }
+            selectUserId = selectUser.get(0).getId();
+        }
+        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize),
+                Wrappers.lambdaQuery(Subscribe.class)
+                        .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
+                        .eq(status != null, Subscribe::getEnable, status));
+        if (list.getRecords().isEmpty()) {
+            return Result.ok("ok", list);
+        }
         LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
-                .in(SubscribeReg::getSubscribeId, list.getRecords().stream().map(Subscribe::getId).collect(Collectors.toList()));
+                .in(SubscribeReg::getSubscribeId,
+                        list.getRecords().stream().map(Subscribe::getId).collect(Collectors.toList()));
         List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
-        list.getRecords().forEach(subscribe -> subscribeRegs.forEach(subscribeReg -> {
-            if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
-                subscribe.getSubscribeRegs().add(subscribeReg);
-            }
+        list.getRecords().forEach(subscribe -> {
+            subscribeRegs.forEach(subscribeReg -> {
+                if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
+                    subscribe.getSubscribeRegs().add(subscribeReg);
+                }
+            });
             subscribe.setTypeDesc(subscribe.getType().getDesc());
             subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
-        }));
+        });
         response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
         return Result.ok("ok", list);
     }

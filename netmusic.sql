@@ -63,6 +63,7 @@ CREATE TABLE `sys_user`
     `net_cookies`  varchar(8192) NOT NULL DEFAULT '',
     `bili_cookies` varchar(4096) NOT NULL DEFAULT '',
     `update_time`  datetime      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `visit_times`  int           NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
     UNIQUE KEY `sys_user_pk` (`username`)
 ) ENGINE = InnoDB

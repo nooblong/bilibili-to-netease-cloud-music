@@ -21,10 +21,13 @@ import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -73,36 +76,36 @@ public class UploadDetailController {
     }
 
     @PostMapping("/addQueue")
-    public Result<String> addQueue(@RequestBody @Validated AddQueueRequest req) {
+    public Result<String> addQueue(@RequestBody @Validated List<@Valid AddQueueRequest> reqs) {
         Long userId = JwtUtil.verifierFromContext().getId();
-
-        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
-        UploadDetail uploadDetail = new UploadDetail();
-        uploadDetail.setBvid(simpleVideoInfo.getBvid());
-        uploadDetail.setCid(req.getCid());
-        uploadDetail.setVoiceListId(req.getVoiceListId());
-        uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);
-        uploadDetail.setBeginSec(req.getVoiceBeginSec());
-        uploadDetail.setEndSec(req.getVoiceEndSec());
-        if (req.getVoiceBeginSec() != 0 && req.getVoiceEndSec() == 0) {
-            uploadDetail.setEndSec(99999999D);
-        }
-        uploadDetail.setOffset(req.getVoiceOffset());
-        uploadDetail.setUploadName(req.getCustomUploadName());
-        uploadDetail.setTitle(simpleVideoInfo.getTitle());
-        uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
-        uploadDetail.setPriority(10L);
-        uploadDetail.setUserId(userId);
-
-        if (req.isCrack()) {
-            if (!userId.equals(1L)) {
-                return Result.fail("暂不开放");
-            } else {
-                uploadDetail.setCrack(1L);
+        for (@Valid AddQueueRequest req : reqs) {
+            SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
+            UploadDetail uploadDetail = new UploadDetail();
+            uploadDetail.setBvid(simpleVideoInfo.getBvid());
+            uploadDetail.setCid(req.getCid());
+            uploadDetail.setVoiceListId(req.getVoiceListId());
+            uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);
+            uploadDetail.setBeginSec(req.getVoiceBeginSec());
+            uploadDetail.setEndSec(req.getVoiceEndSec());
+            if (req.getVoiceBeginSec() != 0 && req.getVoiceEndSec() == 0) {
+                uploadDetail.setEndSec(99999999D);
             }
-        }
+            uploadDetail.setOffset(req.getVoiceOffset());
+            uploadDetail.setUploadName(req.getCustomUploadName());
+            uploadDetail.setTitle(simpleVideoInfo.getTitle());
+            uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
+            uploadDetail.setPriority(10L);
+            uploadDetail.setUserId(userId);
 
-        Db.save(uploadDetail);
+            if (req.isCrack()) {
+                if (!userId.equals(1L)) {
+                    return Result.fail("暂不开放");
+                } else {
+                    uploadDetail.setCrack(1L);
+                }
+            }
+            Db.save(uploadDetail);
+        }
         return Result.ok("添加队列成功");
     }
 
@@ -147,12 +150,14 @@ public class UploadDetailController {
         wrapper.like(title != null, UploadDetail::getTitle, title);
         wrapper.like(uploadName != null, UploadDetail::getUploadName, title);
         if (remark != null) {
-            LambdaQueryWrapper<Subscribe> like = Wrappers.lambdaQuery(Subscribe.class).like(Subscribe::getRemark, remark);
+            LambdaQueryWrapper<Subscribe> like = Wrappers.lambdaQuery(Subscribe.class).like(Subscribe::getRemark,
+                    remark);
             List<Subscribe> list = SimpleQuery.list(like, i -> i);
             if (list.isEmpty()) {
                 return Result.ok("ok", new Page<>(0, 0, 0));
             }
-            wrapper.in(UploadDetail::getVoiceListId, list.stream().map(Subscribe::getVoiceListId).collect(Collectors.toList()));
+            wrapper.in(UploadDetail::getVoiceListId,
+                    list.stream().map(Subscribe::getVoiceListId).collect(Collectors.toList()));
         }
         if (username != null) {
             LambdaQueryWrapper<SysUser> like = Wrappers.lambdaQuery(SysUser.class).like(SysUser::getUsername, username);
@@ -193,7 +198,9 @@ public class UploadDetailController {
         for (UploadDetail record : page.getRecords()) {
             record.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
             record.setStatusDesc(record.getStatus().getDesc());
-            record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() : record.getTitle());
+            record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() :
+                    record.getTitle());
+            record.setLog(null);
         }
         return Result.ok("查询成功", page);
     }
