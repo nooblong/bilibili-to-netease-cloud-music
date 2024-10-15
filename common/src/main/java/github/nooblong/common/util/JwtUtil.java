@@ -19,7 +19,7 @@ import java.util.UUID;
 public class JwtUtil {
 
     private static final String ISSUER = "NOOBLONG";
-    private static final int EXPIRE_HOUR = 96;
+    private static final int EXPIRE_HOUR = 1000;
 
     /*获取签发的token，返回给前端*/
     public static String generateTokenByRS256(SysUser user) throws Exception {
