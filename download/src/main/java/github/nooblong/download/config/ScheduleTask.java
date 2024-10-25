@@ -1,16 +1,20 @@
 package github.nooblong.download.config;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
+import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.job.GetUpJob;
 import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -71,6 +75,17 @@ public class ScheduleTask {
                 log.info("用户 {} 网易cookie刷新结果: {}", sysUser.getUsername(), loginrefresh.toString());
             }
         }
+    }
+
+    @PostConstruct
+    public void restartJob() {
+        List<UploadDetail> list = Db.list(Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name()));
+        if (!list.isEmpty()) {
+            list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
+            list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
+        }
+        Db.updateBatchById(list);
     }
 
 //    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
