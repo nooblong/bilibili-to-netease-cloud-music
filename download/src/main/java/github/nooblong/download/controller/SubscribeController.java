@@ -1,5 +1,6 @@
 package github.nooblong.download.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -136,7 +137,7 @@ public class SubscribeController {
                                                   @RequestParam(name = "status", required = false) Integer status,
                                                   HttpServletResponse response) {
         Long selectUserId = null;
-        if (username != null) {
+        if (StrUtil.isNotBlank(username)) {
             List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
             if (selectUser.isEmpty()) {
                 return Result.ok("ok", new Page<>(pageNo, pageSize));

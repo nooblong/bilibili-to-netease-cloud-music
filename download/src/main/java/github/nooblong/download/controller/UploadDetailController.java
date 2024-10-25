@@ -147,9 +147,9 @@ public class UploadDetailController {
 
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(title != null, UploadDetail::getTitle, title);
-        wrapper.like(uploadName != null, UploadDetail::getUploadName, title);
-        if (remark != null) {
+        wrapper.like(StrUtil.isNotBlank(title), UploadDetail::getTitle, title);
+        wrapper.like(StrUtil.isNotBlank(uploadName), UploadDetail::getUploadName, title);
+        if (StrUtil.isNotBlank(remark)) {
             LambdaQueryWrapper<Subscribe> like = Wrappers.lambdaQuery(Subscribe.class).like(Subscribe::getRemark,
                     remark);
             List<Subscribe> list = SimpleQuery.list(like, i -> i);
@@ -159,7 +159,7 @@ public class UploadDetailController {
             wrapper.in(UploadDetail::getVoiceListId,
                     list.stream().map(Subscribe::getVoiceListId).collect(Collectors.toList()));
         }
-        if (username != null) {
+        if (StrUtil.isNotBlank(username)) {
             LambdaQueryWrapper<SysUser> like = Wrappers.lambdaQuery(SysUser.class).like(SysUser::getUsername, username);
             List<SysUser> list = SimpleQuery.list(like, i -> i);
             if (list.isEmpty()) {
@@ -167,15 +167,15 @@ public class UploadDetailController {
             }
             wrapper.in(UploadDetail::getUserId, list.stream().map(SysUser::getId).collect(Collectors.toList()));
         }
-        if (status != null && status.equalsIgnoreCase("other")) {
+        if (StrUtil.isNotBlank(status) && status.equalsIgnoreCase("other")) {
             wrapper.notIn(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name(),
                     StatusTypeEnum.ONLY_SELF_SEE.name(),
                     StatusTypeEnum.AUDITING.name());
         } else {
-            wrapper.like(status != null, UploadDetail::getStatus, status);
+            wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
         }
 
-        if (column != null && orderBy != null) {
+        if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {
             if (orderBy.equalsIgnoreCase("desc")) {
                 if (column.equalsIgnoreCase("createTime")) {
                     wrapper.orderByDesc(UploadDetail::getCreateTime);
