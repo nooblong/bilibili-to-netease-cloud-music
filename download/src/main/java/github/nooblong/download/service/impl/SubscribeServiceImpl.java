@@ -59,94 +59,117 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             try {
                 log.info("处理订阅: {}, id: {}, 类型: {}, targetId: {}", subscribe.getRemark(), subscribe.getId(),
                         subscribe.getType(), subscribe.getTargetId());
-                Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
-                    case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
-                            VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE, availableBilibiliCookie);
-                    case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
+                if (subscribe.getType() == SubscribeTypeEnum.COLLECTION) {
+                    // 如果是合集，正向和反向都遍历
+                    log.info("开始正向遍历");
+                    Iterator<SimpleVideoInfo> iterator1 = factory.createCollectionIterator(subscribe.getTargetId(),
                             subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
                             CollectionVideoOrder.CHANGE, availableBilibiliCookie);
-                    case FAVORITE -> factory.createFavoriteIterator(subscribe.getTargetId(),
+                    process(subscribe, iterator1);
+                    log.info("开始反向遍历");
+                    Iterator<SimpleVideoInfo> iterator2 = factory.createCollectionIterator(subscribe.getTargetId(),
+                            subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1, availableBilibiliCookie);
-                    case PART -> factory.createPartIterator(subscribe.getTargetId(),
-                            VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            subscribe.getLimitSec(), availableBilibiliCookie);
-                };
-
-                boolean isProcess = false;
-                int processNum = 0;
-                while (iterator.hasNext()) {
-                    SimpleVideoInfo next = iterator.next();
-                    if (next.getCreateTime() != null &&
-                            // 倒序就全部遍历，没办法看时间
-                            subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())
-                            && DateUtil.compare(new Date(next.getCreateTime() * 1000), subscribe.getProcessTime()) < 0) {
-                        log.info("遍历达到处理时间: {}", DateUtil.formatDateTime(subscribe.getProcessTime()));
-                        break;
-                    }
-                    // 判断上传时间区间
-                    if (next.getCreateTime() != null &&
-                            !DateUtil.isIn(new Date(next.getCreateTime() * 1000), subscribe.getFromTime(), subscribe.getToTime())) {
-                        log.info("跳过非区间: {}", DateUtil.formatDateTime(
-                                new Date(next.getCreateTime() * 1000)));
-                        continue;
-                    }
-
-                    // 查重
-                    boolean unique = uploadDetailService.isUnique(next.getBvid(),
-                            next.getCid() == null ? "" : next.getCid(),
-                            subscribe.getVoiceListId());
-                    if (!unique) {
-                        log.info("歌曲已上传: {}, {}", next.getTitle(), next.getPartName());
-                        continue;
-                    }
-
-                    UploadDetail uploadDetail = new UploadDetail();
-                    uploadDetail.setBvid(next.getBvid())
-                            .setCid(next.getCid())
-                            .setSubscribeId(subscribe.getId())
-                            .setTitle(next.getTitle())
-                            .setCrack(subscribe.getCrack().longValue())
-                            .setUseVideoCover(subscribe.getUseVideoCover().longValue())
-                            .setVoiceListId(subscribe.getVoiceListId())
-                            .setPriority(subscribe.getPriority().longValue())
-                            .setCreateTime(new Date())
-                            .setUserId(subscribe.getUserId());
-                    if (next.getCreateTime() != null) {
-                        log.info("保存: {}, bvid: {}, date: {}",
-                                uploadDetail.getTitle(), uploadDetail.getBvid(),
-                                DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
-                    } else {
-                        log.info("保存(无视频创建时间，应该为多p视频): {}, bvid: {}",
-                                uploadDetail.getTitle(), uploadDetail.getBvid());
-                    }
-                    Db.save(uploadDetail);
-                    isProcess = true;
-                    processNum++;
-                }
-                if (isProcess) {
-                    subscribe.setProcessTime(new Date());
-                    log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
-                    subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
-                            + "个新视频" + "\n");
-                    if (subscribe.getType() == SubscribeTypeEnum.PART) {
-                        subscribe.setEnable(0);
-                    }
-                    // 只有第一次是从老到新
-                    subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
-                    updateById(subscribe);
+                            CollectionVideoOrder.DEFAULT, availableBilibiliCookie);
+                    process(subscribe, iterator2);
                 } else {
-                    log.info("未检测到新视频: {}", DateUtil.now());
-                    subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
-                    updateById(subscribe);
+                    Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
+                        case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
+                                subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                                VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE,
+                                availableBilibiliCookie);
+//                        case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
+//                                subscribe.getLimitSec(),
+//                                VideoOrder.valueOf(subscribe.getVideoOrder()),
+//                                CollectionVideoOrder.CHANGE, availableBilibiliCookie);
+                        case FAVORITE -> factory.createFavoriteIterator(subscribe.getTargetId(),
+                                VideoOrder.valueOf(subscribe.getVideoOrder()),
+                                subscribe.getLimitSec(), subscribe.getCheckPart() == 1, availableBilibiliCookie);
+                        case PART -> factory.createPartIterator(subscribe.getTargetId(),
+                                VideoOrder.valueOf(subscribe.getVideoOrder()),
+                                subscribe.getLimitSec(), availableBilibiliCookie);
+                        default -> throw new IllegalStateException("Unexpected value: " + subscribe.getType());
+                    };
+                    process(subscribe, iterator);
                 }
             } catch (Exception e) {
                 log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
+                log.error(e.getMessage(), e);
                 subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
                 updateById(subscribe);
             }
+        }
+    }
+
+    private void process(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator) {
+        boolean isProcess = false;
+        int processNum = 0;
+        while (iterator.hasNext()) {
+            SimpleVideoInfo next = iterator.next();
+            if (next.getCreateTime() != null &&
+                    // 倒序就全部遍历，没办法看时间
+                    subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())
+                    && DateUtil.compare(new Date(next.getCreateTime() * 1000), subscribe.getProcessTime()) < 0) {
+                log.info("检测到视频: {}, 遍历达到处理时间: {}", next.getTitle(), DateUtil.formatDateTime(subscribe.getProcessTime()));
+                break;
+            }
+            // 判断上传时间区间
+            if (next.getCreateTime() != null &&
+                    !DateUtil.isIn(new Date(next.getCreateTime() * 1000), subscribe.getFromTime(),
+                            subscribe.getToTime())) {
+                log.info("跳过非区间: {}", DateUtil.formatDateTime(
+                        new Date(next.getCreateTime() * 1000)));
+                continue;
+            }
+
+            // 查重
+            boolean unique = uploadDetailService.isUnique(next.getBvid(),
+                    next.getCid() == null ? "" : next.getCid(),
+                    subscribe.getVoiceListId());
+            if (!unique) {
+                log.info("歌曲已上传: {}, {}", next.getTitle(), next.getPartName());
+                continue;
+            }
+
+            UploadDetail uploadDetail = new UploadDetail();
+            uploadDetail.setBvid(next.getBvid())
+                    .setCid(next.getCid())
+                    .setSubscribeId(subscribe.getId())
+                    .setTitle(next.getTitle())
+                    .setCrack(subscribe.getCrack().longValue())
+                    .setUseVideoCover(subscribe.getUseVideoCover().longValue())
+                    .setVoiceListId(subscribe.getVoiceListId())
+                    .setPriority(subscribe.getPriority().longValue())
+                    .setCreateTime(new Date())
+                    .setUserId(subscribe.getUserId());
+            if (next.getCreateTime() != null) {
+                log.info("保存: {}, bvid: {}, date: {}",
+                        uploadDetail.getTitle(), uploadDetail.getBvid(),
+                        DateUtil.format(new Date(next.getCreateTime() * 1000), DatePattern.NORM_DATE_PATTERN));
+            } else {
+                log.info("保存(无视频创建时间，应该为多p视频): {}, bvid: {}",
+                        uploadDetail.getTitle(), uploadDetail.getBvid());
+            }
+            Db.save(uploadDetail);
+            isProcess = true;
+            processNum++;
+        }
+        if (isProcess) {
+            subscribe.setProcessTime(new Date());
+            log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
+                    + "个新视频" + "\n");
+            if (subscribe.getType() == SubscribeTypeEnum.PART) {
+                subscribe.setEnable(0);
+            }
+            // 只有第一次是从老到新
+            subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
+            updateById(subscribe);
+        } else {
+            log.info("未检测到新视频: {}", DateUtil.now());
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
+            updateById(subscribe);
         }
     }
 

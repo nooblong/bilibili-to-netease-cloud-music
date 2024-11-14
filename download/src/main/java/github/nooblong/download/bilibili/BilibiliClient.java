@@ -226,6 +226,12 @@ public class BilibiliClient {
         builder.addQueryParameter("pn", String.valueOf(pn));
         builder.addQueryParameter("id_", String.valueOf(collectionId));
         builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(1):parse");
+        if (collectionVideoOrder == CollectionVideoOrder.CHANGE) {
+            builder.addQueryParameter("sort", "channel_series.ChannelOrder(\"true\"):parse");
+        }
+        if (collectionVideoOrder == CollectionVideoOrder.DEFAULT) {
+            builder.addQueryParameter("sort", "channel_series.ChannelOrder(\"false\"):parse");
+        }
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.notNull(response, "获取合集视频失败");
         return new IteratorCollectionTotal().setData((ArrayNode) response.get("data").get("archives"))
