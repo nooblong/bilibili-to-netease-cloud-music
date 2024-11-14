@@ -194,11 +194,11 @@ public class UploadJob {
         String s1 = "编码:" + ext;
         String s2 = "码率:" + bitRate1 / 1000 + "kbps" + "->" + bitRate2 / 1000 + "kbps";
         String s3 = "采样率:" + samplingRate1 + "hz" + "->" + samplingRate2 + "hz";
-        context.desc += s1;
-        context.desc += "\n";
-        context.desc += s2;
-        context.desc += "\n";
-        context.desc += s3;
+//        context.desc += s1;
+//        context.desc += "\n";
+//        context.desc += s2;
+//        context.desc += "\n";
+//        context.desc += s3;
         uploadDetailService.logNow(context.uploadDetailId, "\n>>> 添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
                 + "音频转码成功");
         log.info("介绍: {}", context.desc);
