@@ -68,6 +68,7 @@ public class UploadJob {
                 .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
                 .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
                 .orderByDesc(UploadDetail::getPriority)
+                .orderByAsc(UploadDetail::getCreateTime)
                 .last("limit 1");
         List<UploadDetail> uploadDetailList = uploadDetailService.list(wrapper);
         if (uploadDetailList.isEmpty()) {
