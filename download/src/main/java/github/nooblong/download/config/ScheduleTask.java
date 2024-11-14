@@ -84,8 +84,8 @@ public class ScheduleTask {
         if (!list.isEmpty()) {
             list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
             list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
+            Db.updateBatchById(list);
         }
-        Db.updateBatchById(list);
     }
 
 //    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
