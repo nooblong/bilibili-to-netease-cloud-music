@@ -87,11 +87,13 @@ public class SystemController {
                                                  @RequestParam(name = "pageSize") int pageSize) {
         LambdaQueryWrapper<UploadDetail> queryWrapper = Wrappers.lambdaQuery(UploadDetail.class)
                 .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
-                .orderByDesc(UploadDetail::getPriority);
+                .orderByDesc(UploadDetail::getPriority)
+                .orderByAsc(UploadDetail::getCreateTime);
         LambdaQueryWrapper<UploadDetail> queryWrapper2 = Wrappers.lambdaQuery(UploadDetail.class)
                 .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name())
                 .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
-                .orderByDesc(UploadDetail::getPriority);
+                .orderByDesc(UploadDetail::getPriority)
+                .orderByAsc(UploadDetail::getCreateTime);
         IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);
         List<UploadDetail> list2 = uploadDetailService.list(queryWrapper2);
         if (!list2.isEmpty()) {
