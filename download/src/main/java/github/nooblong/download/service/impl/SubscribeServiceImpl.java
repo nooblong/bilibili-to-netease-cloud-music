@@ -65,13 +65,27 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     Iterator<SimpleVideoInfo> iterator1 = factory.createCollectionIterator(subscribe.getTargetId(),
                             subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.CHANGE, availableBilibiliCookie);
+                            CollectionVideoOrder.DEFAULT, availableBilibiliCookie);
                     process(subscribe, iterator1);
                     log.info("开始反向遍历");
                     Iterator<SimpleVideoInfo> iterator2 = factory.createCollectionIterator(subscribe.getTargetId(),
                             subscribe.getLimitSec(),
                             VideoOrder.valueOf(subscribe.getVideoOrder()),
+                            CollectionVideoOrder.CHANGE, availableBilibiliCookie);
+                    process(subscribe, iterator2);
+                } else if (subscribe.getType() == SubscribeTypeEnum.OLDCOLLECTION) {
+                    // 如果是合集，正向和反向都遍历
+                    log.info("开始正向遍历");
+                    Iterator<SimpleVideoInfo> iterator1 = factory.createOldCollectionIterator(subscribe.getTargetId(),
+                            subscribe.getLimitSec(),
+                            VideoOrder.valueOf(subscribe.getVideoOrder()),
                             CollectionVideoOrder.DEFAULT, availableBilibiliCookie);
+                    process(subscribe, iterator1);
+                    log.info("开始反向遍历");
+                    Iterator<SimpleVideoInfo> iterator2 = factory.createOldCollectionIterator(subscribe.getTargetId(),
+                            subscribe.getLimitSec(),
+                            VideoOrder.valueOf(subscribe.getVideoOrder()),
+                            CollectionVideoOrder.CHANGE, availableBilibiliCookie);
                     process(subscribe, iterator2);
                 } else {
                     Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {

@@ -79,8 +79,14 @@ public class BilibiliController {
     }
 
     @GetMapping("/getSeriesInfo")
-    public Result<JsonNode> getFavoriteInfo(@RequestParam(name = "id") String id) {
+    public Result<JsonNode> getSeriesInfo(@RequestParam(name = "id") String id) {
         JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
+        return Result.ok("查询成功", seriesMeta1);
+    }
+
+    @GetMapping("/getOldSeriesInfo")
+    public Result<JsonNode> getOldSeriesInfo(@RequestParam(name = "id") String id) {
+        JsonNode seriesMeta1 = bilibiliClient.getOldSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 

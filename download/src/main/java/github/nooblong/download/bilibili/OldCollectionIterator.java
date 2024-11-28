@@ -23,13 +23,13 @@ public class OldCollectionIterator extends SimplePageIterator {
 
     @Override
     SimpleVideoInfo[] getNextPage(int currentPn, int pageSize) {
-        return factory.getCollectionVideoListFromBilibili(collectionId, pageSize, currentPn + 1,
+        return factory.getOldCollectionVideoListFromBilibili(collectionId, pageSize, currentPn + 1,
                 collectionVideoOrder, bilibiliCookie).getData().toArray(new SimpleVideoInfo[0]);
     }
 
     @Override
     SimpleVideoInfo[] getPreviousPage(int currentPn, int pageSize) {
-        return factory.getCollectionVideoListFromBilibili(collectionId, pageSize, currentPn - 1,
+        return factory.getOldCollectionVideoListFromBilibili(collectionId, pageSize, currentPn - 1,
                 collectionVideoOrder, bilibiliCookie).getData().toArray(new SimpleVideoInfo[0]);
     }
 
