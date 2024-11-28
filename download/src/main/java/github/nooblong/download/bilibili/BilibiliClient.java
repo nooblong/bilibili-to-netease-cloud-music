@@ -238,6 +238,26 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("total").asInt());
     }
 
+    public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
+        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
+        builder.addQueryParameter("ps", String.valueOf(ps));
+        builder.addQueryParameter("pn", String.valueOf(pn));
+        builder.addQueryParameter("id_", String.valueOf(collectionId));
+        builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(0):parse");
+        if (collectionVideoOrder == CollectionVideoOrder.CHANGE) {
+            builder.addQueryParameter("sort", "channel_series.ChannelOrder(\"true\"):parse");
+        }
+        if (collectionVideoOrder == CollectionVideoOrder.DEFAULT) {
+            builder.addQueryParameter("sort", "channel_series.ChannelOrder(\"false\"):parse");
+        }
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.notNull(response, "获取合集视频失败");
+        return new IteratorCollectionTotal().setData((ArrayNode) response.get("data").get("archives"))
+                .setTotalNum(response.get("data").get("page").get("total").asInt());
+    }
+
     public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
         HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
         cred.forEach(builder::addQueryParameter);
@@ -257,6 +277,15 @@ public class BilibiliClient {
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
         builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(1):parse");
+        return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+    }
+
+    public JsonNode getOldSeriesMeta(String seriesId, Map<String, String> cred) {
+        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
+        builder.addQueryParameter("id_", seriesId);
+        builder.addQueryParameter("type_", "channel_series.ChannelSeriesType(0):parse");
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 

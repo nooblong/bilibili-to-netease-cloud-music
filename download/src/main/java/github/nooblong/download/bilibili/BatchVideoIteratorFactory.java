@@ -17,5 +17,9 @@ public interface BatchVideoIteratorFactory {
 
     Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec, VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder, Map<String, String> bilibiliCookie);
 
+    Iterator<SimpleVideoInfo> createOldCollectionIterator(String collectionId, int limitSec,
+                                                          VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
+                                                          Map<String, String> bilibiliCookie);
+
     BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie);
 }

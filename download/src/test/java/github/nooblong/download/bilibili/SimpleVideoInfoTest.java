@@ -1,6 +1,7 @@
 package github.nooblong.download.bilibili;
 
 import github.nooblong.download.BaseTest;
+import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,14 @@ class SimpleVideoInfoTest extends BaseTest {
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
         System.out.println(bilibiliClient.getSeriesMeta(bilibiliFullVideo.getMySeriesId(), availableBilibiliCookie).toPrettyString());
+    }
+
+    @Test
+    void getSeriesMeta2() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+//        SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
+//        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        System.out.println(bilibiliClient.getOldSeriesMeta("1869296", availableBilibiliCookie).toPrettyString());
     }
 
     @Test

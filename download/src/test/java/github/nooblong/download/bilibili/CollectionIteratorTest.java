@@ -28,4 +28,19 @@ class CollectionIteratorTest extends BaseTest {
             }
         }
     }
+
+    @Test
+    void nextOld() {
+        // collectionId: 1284839
+        Iterator<SimpleVideoInfo> upIterator = factory.createOldCollectionIterator("1869296", 9999,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.DEFAULT, new HashMap<>());
+        int times = 0;
+        while (upIterator.hasNext()) {
+            SimpleVideoInfo next = upIterator.next();
+            System.out.println(next.getTitle());
+            if (++times >= 1000) {
+                break;
+            }
+        }
+    }
 }

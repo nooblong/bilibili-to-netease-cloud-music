@@ -49,6 +49,13 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     }
 
     @Override
+    public Iterator<SimpleVideoInfo> createOldCollectionIterator(String collectionId, int limitSec,
+                                                                 VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
+                                                                 Map<String, String> bilibiliCookie) {
+        return new OldCollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder, bilibiliCookie);
+    }
+
+    @Override
     public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
         SimpleVideoInfo byUrl = bilibiliClient.createByUrl(bvid);
         return bilibiliClient.init(byUrl, bilibiliCookie);
@@ -99,6 +106,30 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
             collectionVideos = bilibiliClient.getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
         } catch (Throwable e) {
             log.error("获取合集失败: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        collectionVideos.getData().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(jsonNode.get("duration").asInt())
+                    .setBvid(jsonNode.get("bvid").asText())
+                    .setCreateTime(jsonNode.get("pubdate").asLong())
+                    .setTitle(jsonNode.get("title").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(collectionVideos.getTotalNum());
+        return result;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
+                                                                                           CollectionVideoOrder collectionVideoOrder,
+                                                                                           Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal collectionVideos = null;
+        try {
+            collectionVideos = bilibiliClient.getOldCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
+        } catch (Throwable e) {
+            log.error("获取旧合集失败: {}", e.getMessage());
             throw new RuntimeException(e);
         }
         List<SimpleVideoInfo> data = new ArrayList<>();
