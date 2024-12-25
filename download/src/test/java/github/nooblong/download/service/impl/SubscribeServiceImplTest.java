@@ -12,8 +12,10 @@ class SubscribeServiceImplTest extends BaseTest {
     private SubscribeServiceImpl subscribeService;
 
     @Test
-    void subscribe() {
+    void subscribe() throws InterruptedException {
         subscribeService.checkAndSave();
+        System.out.println("执行完成...");
+        Thread.sleep(1000000);
     }
 
 }

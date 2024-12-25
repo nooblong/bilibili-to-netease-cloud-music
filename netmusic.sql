@@ -106,3 +106,31 @@ CREATE TABLE `upload_detail`
   COLLATE = utf8mb4_general_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+create index upload_detail_crack_index
+    on upload_detail (crack);
+
+create index upload_detail_priority_index
+    on upload_detail (priority);
+
+create index upload_detail_privacy_index
+    on upload_detail (privacy);
+
+create index upload_detail_retry_times_index
+    on upload_detail (retry_times);
+
+create index upload_detail_status_index
+    on upload_detail (status);
+
+create index upload_detail_subscribe_id_index
+    on upload_detail (subscribe_id);
+
+create index upload_detail_use_video_cover_index
+    on upload_detail (use_video_cover);
+
+create index upload_detail_user_id_index
+    on upload_detail (user_id);
+
+create index upload_detail_voice_list_id_index
+    on upload_detail (voice_list_id);
+
