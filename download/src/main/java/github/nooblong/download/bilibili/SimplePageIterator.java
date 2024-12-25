@@ -110,6 +110,8 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                                         limitSec, bilibiliCookie);
                         while (partIterator.hasNext()) {
                             SimpleVideoInfo next = partIterator.next();
+                            // 将视频的createTime赋值
+                            next.setCreateTime(result.getCreateTime());
                             insidePartList.add(next);
                         }
                     } catch (ArrayIndexOutOfBoundsException e) {
