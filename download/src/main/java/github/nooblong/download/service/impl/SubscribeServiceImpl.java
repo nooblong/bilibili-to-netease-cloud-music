@@ -57,6 +57,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
+                // todo: 多p检测打开的话，检测第一个视频的所有分p
                 log.info("处理订阅: {}, id: {}, 类型: {}, targetId: {}", subscribe.getRemark(), subscribe.getId(),
                         subscribe.getType(), subscribe.getTargetId());
                 if (subscribe.getType() == SubscribeTypeEnum.COLLECTION) {
