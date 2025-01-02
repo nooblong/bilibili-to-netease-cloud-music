@@ -137,6 +137,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 continue;
             }
 
+            // todo: 判断关键词跳过
+
             // 查重
             boolean unique = uploadDetailService.isUnique(next.getBvid(),
                     next.getCid() == null ? "" : next.getCid(),
