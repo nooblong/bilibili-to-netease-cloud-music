@@ -6,7 +6,7 @@ kill $(ps aux | grep java.*system | grep -v 'grep' | awk '{print $2}')
 
 kill $(ps aux | grep python | grep -v 'grep' | awk '{print $2}')
 
-sleep 5s
+sleep 20s
 
 rm -f /root/spring.txt
 
