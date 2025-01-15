@@ -53,9 +53,6 @@ public class SubscribeController {
     @PutMapping("/{id}")
     public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
-        if (!uploadDetailService.hasUploaded(user.getId())) {
-            return Result.fail("请先上传一遍单个的证明可以上传");
-        }
         Subscribe byId = Db.getById(id, Subscribe.class);
         if (subscribe.getCrack() > 0) {
             Long userId = JwtUtil.verifierFromContext().getId();

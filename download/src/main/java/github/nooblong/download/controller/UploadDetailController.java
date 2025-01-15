@@ -205,11 +205,6 @@ public class UploadDetailController {
         return Result.ok("查询成功", page);
     }
 
-    @GetMapping("/checkHasUploaded")
-    public Result<Boolean> checkHasUploaded() {
-        return Result.ok("ok", uploadDetailService.hasUploaded(JwtUtil.verifierFromContext().getId()));
-    }
-
     @GetMapping("/restartJob/{id}")
     public Result<String> restartJob(@PathVariable(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();

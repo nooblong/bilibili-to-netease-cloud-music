@@ -83,14 +83,6 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     }
 
     @Override
-    public boolean hasUploaded(Long userId) {
-        Long count = lambdaQuery().eq(UploadDetail::getUserId, userId)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name())
-                .count();
-        return count > 0;
-    }
-
-    @Override
     public List<UploadDetail> listAllWait() {
         return lambdaQuery().eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
                 .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
