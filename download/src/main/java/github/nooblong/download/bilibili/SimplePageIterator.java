@@ -27,12 +27,15 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     Map<String, String> bilibiliCookie;
 
     public SimplePageIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder
-            , boolean checkPart, Map<String, String> bilibiliCookie) {
+            , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
         this.factory = factory;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
         this.checkPart = checkPart;
         this.bilibiliCookie = bilibiliCookie;
+        if (lastTotalIndex > 0) {
+            this.totalIndex = lastTotalIndex;
+        }
     }
 
     @Override

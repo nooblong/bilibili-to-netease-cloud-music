@@ -26,8 +26,9 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     @Override
     public Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec, boolean checkPart,
                                                       VideoOrder videoOrder, UserVideoOrder userVideoOrder,
-                                                      Map<String, String> bilibiliCookie) {
-        return new UpIterator(this, upId, keyWord, limitSec, videoOrder, userVideoOrder, checkPart, bilibiliCookie);
+                                                      Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+        return new UpIterator(this, upId, keyWord, limitSec,
+                videoOrder, userVideoOrder, checkPart, bilibiliCookie, lastTotalIndex);
     }
 
     @Override
@@ -44,15 +45,17 @@ public class BilibiliBatchIteratorFactory implements BatchVideoIteratorFactory {
     @Override
     public Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec,
                                                               VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
-                                                              Map<String, String> bilibiliCookie) {
-        return new CollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder, bilibiliCookie);
+                                                              Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+        return new CollectionIterator(this, limitSec, videoOrder,
+                collectionId, collectionVideoOrder, bilibiliCookie, lastTotalIndex);
     }
 
     @Override
     public Iterator<SimpleVideoInfo> createOldCollectionIterator(String collectionId, int limitSec,
                                                                  VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
-                                                                 Map<String, String> bilibiliCookie) {
-        return new OldCollectionIterator(this, limitSec, videoOrder, collectionId, collectionVideoOrder, bilibiliCookie);
+                                                                 Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+        return new OldCollectionIterator(this, limitSec, videoOrder,
+                collectionId, collectionVideoOrder, bilibiliCookie, lastTotalIndex);
     }
 
     @Override

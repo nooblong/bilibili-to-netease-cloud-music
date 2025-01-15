@@ -15,8 +15,8 @@ public class CollectionIterator extends SimplePageIterator {
 
     public CollectionIterator(BilibiliBatchIteratorFactory factory, int limitSec,
                               VideoOrder videoOrder, String collectionId, CollectionVideoOrder collectionVideoOrder,
-                              Map<String, String> bilibiliCookie) {
-        super(factory, limitSec, videoOrder, false, bilibiliCookie);
+                              Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+        super(factory, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex);
         this.collectionId = collectionId;
         this.collectionVideoOrder = collectionVideoOrder;
     }

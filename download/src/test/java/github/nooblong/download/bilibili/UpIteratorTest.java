@@ -19,7 +19,7 @@ class UpIteratorTest extends BaseTest {
     void next() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("349032426", "", 300, true,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, availableBilibiliCookie);
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, availableBilibiliCookie, -1);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

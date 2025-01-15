@@ -9,17 +9,22 @@ import java.util.Map;
 
 public interface BatchVideoIteratorFactory {
 
-    Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec, boolean checkPart, VideoOrder videoOrder, UserVideoOrder userVideoOrder, Map<String, String> bilibiliCookie);
+
+    Iterator<SimpleVideoInfo> createUpIterator(String upId, String keyWord, int limitSec, boolean checkPart,
+                                               VideoOrder videoOrder, UserVideoOrder userVideoOrder,
+                                               Map<String, String> bilibiliCookie, Integer lastTotalIndex);
 
     Iterator<SimpleVideoInfo> createPartIterator(String bvid, VideoOrder videoOrder, int limitSec, Map<String, String> bilibiliCookie);
 
     Iterator<SimpleVideoInfo> createFavoriteIterator(String favoriteId, VideoOrder videoOrder, int limitSec, boolean checkPart, Map<String, String> bilibiliCookie);
 
-    Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec, VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder, Map<String, String> bilibiliCookie);
+    Iterator<SimpleVideoInfo> createCollectionIterator(String collectionId, int limitSec,
+                                                       VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
+                                                       Map<String, String> bilibiliCookie, Integer lastTotalIndex);
 
     Iterator<SimpleVideoInfo> createOldCollectionIterator(String collectionId, int limitSec,
                                                           VideoOrder videoOrder, CollectionVideoOrder collectionVideoOrder,
-                                                          Map<String, String> bilibiliCookie);
+                                                          Map<String, String> bilibiliCookie, Integer lastTotalIndex);
 
     BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie);
 }

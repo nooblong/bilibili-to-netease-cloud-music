@@ -45,6 +45,7 @@ public class Subscribe implements Serializable {
     private Integer checkPart;
     private Integer priority;
     private String log;
+    private Integer lastTotalIndex;
 
     @TableField(exist = false)
     private List<SubscribeReg> subscribeRegs = new ArrayList<>();

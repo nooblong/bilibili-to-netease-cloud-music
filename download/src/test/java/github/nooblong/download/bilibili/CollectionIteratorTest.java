@@ -18,7 +18,7 @@ class CollectionIteratorTest extends BaseTest {
     void next() {
         // collectionId: 1284839
         Iterator<SimpleVideoInfo> upIterator = factory.createCollectionIterator("1284839", 9999,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.CHANGE, new HashMap<>());
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.CHANGE, new HashMap<>(), -1);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
@@ -33,7 +33,7 @@ class CollectionIteratorTest extends BaseTest {
     void nextOld() {
         // collectionId: 1284839
         Iterator<SimpleVideoInfo> upIterator = factory.createOldCollectionIterator("1869296", 9999,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.DEFAULT, new HashMap<>());
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.DEFAULT, new HashMap<>(), -1);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

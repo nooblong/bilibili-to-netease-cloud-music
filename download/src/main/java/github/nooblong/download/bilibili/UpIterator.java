@@ -18,8 +18,8 @@ public class UpIterator extends SimplePageIterator {
 
     public UpIterator(BilibiliBatchIteratorFactory factory, String upId, String keyWord, int limitSec,
                       VideoOrder videoOrder, UserVideoOrder userVideoOrder, boolean checkPart,
-                      Map<String, String> bilibiliCookie) {
-        super(factory, limitSec, videoOrder, checkPart, bilibiliCookie);
+                      Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+        super(factory, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;
