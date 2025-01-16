@@ -14,15 +14,22 @@ import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.utils.Constant;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Configuration
 @Slf4j
@@ -79,12 +86,30 @@ public class ScheduleTask {
 
     @PostConstruct
     public void restartJob() {
+        deleteOnStart();
         List<UploadDetail> list = Db.list(Wrappers.lambdaQuery(UploadDetail.class)
                 .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name()));
         if (!list.isEmpty()) {
             list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
             list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
             Db.updateBatchById(list);
+        }
+    }
+
+    public void deleteOnStart() {
+        Path path = Paths.get(Constant.TMP_FOLDER);
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .peek(System.out::println)
+                    .forEach(file -> {
+                        if (!file.equals(path.toFile())) {
+                            boolean delete = file.delete();
+                        }
+                    });
+            System.out.println("删除下载文件成功");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
