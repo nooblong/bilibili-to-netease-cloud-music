@@ -7,6 +7,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: 用户名
     password: 密码
+    hikari:
+      max-lifetime: 600000
   servlet:
     multipart:
       max-file-size: 100000000
