@@ -56,7 +56,7 @@ public class SubscribeController {
         Subscribe byId = Db.getById(id, Subscribe.class);
         if (subscribe.getCrack() > 0) {
             Long userId = JwtUtil.verifierFromContext().getId();
-            if (!userId.equals(1L)) {
+            if (!userId.equals(1L)  && !userId.equals(53L)) {
                 return Result.fail("暂不开放绕过订阅");
             }
         }
@@ -93,7 +93,7 @@ public class SubscribeController {
         subscribe.setUserId(user.getId());
         if (subscribe.getCrack() > 0) {
             Long id = JwtUtil.verifierFromContext().getId();
-            if (!id.equals(1L)) {
+            if (!id.equals(1L) && !id.equals(53L)) {
                 return Result.fail("暂不开放绕过订阅");
             }
         }

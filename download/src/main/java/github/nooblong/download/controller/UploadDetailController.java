@@ -98,7 +98,7 @@ public class UploadDetailController {
             uploadDetail.setUserId(userId);
 
             if (req.isCrack()) {
-                if (!userId.equals(1L)) {
+                if (!userId.equals(1L) && !userId.equals(53L)) {
                     return Result.fail("暂不开放");
                 } else {
                     uploadDetail.setCrack(1L);
