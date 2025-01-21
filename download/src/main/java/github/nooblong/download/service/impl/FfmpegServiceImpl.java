@@ -44,20 +44,21 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     }
 
     @NotNull
-    public static EncodingAttributes getEncodingAttributes(double beginSec, double endSec, int voiceOffset, String ext) {
-        double duration = endSec - beginSec;
-
+    public static EncodingAttributes getEncodingAttributes(Double beginSec, Double endSec, Integer voiceOffset, String ext) {
         AudioAttributes audioAttributes = new AudioAttributes();
         // 设置编码过程的音量值。如果为 null 或未指定，则将选择默认值。如果是 256，则不会执行任何音量更改。
         // 音量是“振幅比”或“声压级”比率 2560 是音量=20dB 公式是 dBnumber=20*lg(振幅比) 128 表示减小 50% 512 表示音量加倍
-        audioAttributes.setVolume(voiceOffset == 0 ? null : voiceOffset);
+        audioAttributes.setVolume(voiceOffset == null ? 0 : voiceOffset);
         audioAttributes.setCodec("libmp3lame");
         audioAttributes.setBitRate(320000);
         EncodingAttributes encodingAttributes = new EncodingAttributes();
         encodingAttributes.setAudioAttributes(audioAttributes);
         encodingAttributes.setOutputFormat(ext);
-        encodingAttributes.setDuration(((float) duration) == 0 ? null : (float) duration);
-        encodingAttributes.setOffset(((float) beginSec) == 0 ? null : (float) beginSec);
+        if (beginSec != null && endSec != null) {
+            double duration =  endSec - beginSec;
+            encodingAttributes.setDuration((float) duration);
+            encodingAttributes.setOffset(beginSec.floatValue());
+        }
 
         VideoAttributes videoAttributes = new VideoAttributes();
         encodingAttributes.setVideoAttributes(videoAttributes);

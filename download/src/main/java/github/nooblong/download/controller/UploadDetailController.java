@@ -35,8 +35,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/uploadDetail")
 public class UploadDetailController {
+
     final UploadDetailService uploadDetailService;
+
     final NetMusicClient netMusicClient;
+
     final BilibiliClient bilibiliClient;
 
     public UploadDetailController(UploadDetailService uploadDetailService,
@@ -47,101 +50,16 @@ public class UploadDetailController {
         this.bilibiliClient = bilibiliClient;
     }
 
-    @GetMapping("/{id}")
-    public Result<UploadDetail> get(@PathVariable(name = "id") Long id) {
-        return Result.ok("ok", Db.getById(id, UploadDetail.class));
-    }
-
-    @PutMapping("/{id}")
-    public Result<UploadDetail> update(@PathVariable(name = "id") Long id, @RequestBody UploadDetail uploadDetail) {
-        Long userId = JwtUtil.verifierFromContext().getId();
-        UploadDetail byId = uploadDetailService.getById(id);
-        if (!userId.equals(byId.getUserId())) {
-            throw new RuntimeException("只能修改自己的");
-        }
-        byId.setUploadName(uploadDetail.getUploadName());
-        uploadDetailService.updateById(byId);
-        return Result.ok("ok", byId);
-    }
-
-    @DeleteMapping("/{id}")
-    public Result<Boolean> delete(@PathVariable(name = "id") Long id) {
-        Long userId = JwtUtil.verifierFromContext().getId();
-        UploadDetail byId = uploadDetailService.getById(id);
-        if (!userId.equals(byId.getUserId())) {
-            throw new RuntimeException("只能修改自己的");
-        }
-        uploadDetailService.removeById(id);
-        return Result.ok("ok");
-    }
-
-    @PostMapping("/addQueue")
-    public Result<String> addQueue(@RequestBody @Validated List<@Valid AddQueueRequest> reqs) {
-        Long userId = JwtUtil.verifierFromContext().getId();
-        for (@Valid AddQueueRequest req : reqs) {
-            SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
-            UploadDetail uploadDetail = new UploadDetail();
-            uploadDetail.setBvid(simpleVideoInfo.getBvid());
-            uploadDetail.setCid(req.getCid());
-            uploadDetail.setVoiceListId(req.getVoiceListId());
-            uploadDetail.setUseVideoCover(req.isUseDefaultImg() ? 1L : 0L);
-            uploadDetail.setBeginSec(req.getVoiceBeginSec());
-            uploadDetail.setEndSec(req.getVoiceEndSec());
-            if (req.getVoiceBeginSec() != 0 && req.getVoiceEndSec() == 0) {
-                uploadDetail.setEndSec(99999999D);
-            }
-            uploadDetail.setOffset(req.getVoiceOffset());
-            uploadDetail.setUploadName(req.getCustomUploadName());
-            uploadDetail.setTitle(simpleVideoInfo.getTitle());
-            uploadDetail.setPrivacy(req.isPrivacy() ? 1L : 0L);
-            uploadDetail.setPriority(10L);
-            uploadDetail.setUserId(userId);
-
-            if (req.isCrack()) {
-                if (!userId.equals(1L) && !userId.equals(53L)) {
-                    return Result.fail("暂不开放");
-                } else {
-                    uploadDetail.setCrack(1L);
-                }
-            }
-            Db.save(uploadDetail);
-        }
-        return Result.ok("添加队列成功");
-    }
-
-    @PostMapping("/addToMyList")
-    public Result<String> addToMyList(@RequestBody @Validated AddToMyRequest req, HttpServletRequest request) throws JsonProcessingException {
-        UploadDetail uploadDetail = Db.getById(req.getVoiceDetailId(), UploadDetail.class);
-        SysUser user = JwtUtil.verifierFromContext();
-        if (uploadDetail == null) {
-            return Result.fail("不存在的id");
-        }
-        UploadDetail addToMy = new UploadDetail();
-        addToMy.setBvid(uploadDetail.getBvid());
-        addToMy.setCid(uploadDetail.getCid());
-        addToMy.setVoiceListId(Long.valueOf(req.getVoiceListId()));
-        addToMy.setPriority(9L);
-        addToMy.setTitle(uploadDetail.getTitle());
-        addToMy.setUserId(user.getId());
-        addToMy.setUploadName(uploadDetail.getUploadName());
-        addToMy.setBeginSec(uploadDetail.getBeginSec());
-        addToMy.setEndSec(uploadDetail.getEndSec());
-        addToMy.setUseVideoCover(uploadDetail.getUseVideoCover());
-        addToMy.setOffset(uploadDetail.getOffset());
-        uploadDetailService.save(addToMy);
-        return Result.ok("添加队列成功");
-    }
-
-    @GetMapping()
-    public Result<IPage<UploadDetail>> recent(@RequestParam(name = "pageNo") int pageNo,
-                                              @RequestParam(name = "pageSize") int pageSize,
-                                              @RequestParam(name = "column", required = false) String column,
-                                              @RequestParam(name = "orderBy", required = false) String orderBy,
-                                              @RequestParam(required = false, name = "title") String title,
-                                              @RequestParam(required = false, name = "uploadName") String uploadName,
-                                              @RequestParam(required = false, name = "remark") String remark,
-                                              @RequestParam(required = false, name = "username") String username,
-                                              @RequestParam(required = false, name = "status") String status) {
+    @GetMapping("/list")
+    public Result<IPage<UploadDetail>> list(@RequestParam(name = "pageNo") int pageNo,
+                                            @RequestParam(name = "pageSize") int pageSize,
+                                            @RequestParam(name = "column", required = false) String column,
+                                            @RequestParam(name = "orderBy", required = false) String orderBy,
+                                            @RequestParam(required = false, name = "title") String title,
+                                            @RequestParam(required = false, name = "voiceListId") String voiceListId,
+                                            @RequestParam(required = false, name = "uploadName") String uploadName,
+                                            @RequestParam(required = false, name = "username") String username,
+                                            @RequestParam(required = false, name = "status") String status) {
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
 
@@ -149,31 +67,13 @@ public class UploadDetailController {
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(title), UploadDetail::getTitle, title);
         wrapper.like(StrUtil.isNotBlank(uploadName), UploadDetail::getUploadName, title);
-        if (StrUtil.isNotBlank(remark)) {
-            LambdaQueryWrapper<Subscribe> like = Wrappers.lambdaQuery(Subscribe.class).like(Subscribe::getRemark,
-                    remark);
-            List<Subscribe> list = SimpleQuery.list(like, i -> i);
-            if (list.isEmpty()) {
-                return Result.ok("ok", new Page<>(0, 0, 0));
-            }
-            wrapper.in(UploadDetail::getVoiceListId,
-                    list.stream().map(Subscribe::getVoiceListId).collect(Collectors.toList()));
-        }
         if (StrUtil.isNotBlank(username)) {
             LambdaQueryWrapper<SysUser> like = Wrappers.lambdaQuery(SysUser.class).like(SysUser::getUsername, username);
             List<SysUser> list = SimpleQuery.list(like, i -> i);
-            if (list.isEmpty()) {
-                return Result.ok("ok", new Page<>(0, 0, 0));
-            }
-            wrapper.in(UploadDetail::getUserId, list.stream().map(SysUser::getId).collect(Collectors.toList()));
+            wrapper.in(!list.isEmpty(), UploadDetail::getUserId,
+                    list.stream().map(SysUser::getId).collect(Collectors.toList()));
         }
-        if (StrUtil.isNotBlank(status) && status.equalsIgnoreCase("other")) {
-            wrapper.notIn(UploadDetail::getStatus, StatusTypeEnum.ONLINE.name(),
-                    StatusTypeEnum.ONLY_SELF_SEE.name(),
-                    StatusTypeEnum.AUDITING.name());
-        } else {
-            wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
-        }
+        wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
 
         if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {
             if (orderBy.equalsIgnoreCase("desc")) {
@@ -205,12 +105,67 @@ public class UploadDetailController {
         return Result.ok("查询成功", page);
     }
 
-    @GetMapping("/restartJob/{id}")
-    public Result<String> restartJob(@PathVariable(name = "id") Long id) {
+    @GetMapping("/getById")
+    public Result<UploadDetail> get(@RequestParam(name = "id") Long id) {
+        return Result.ok("ok", Db.getById(id, UploadDetail.class));
+    }
+
+    @PostMapping("/edit")
+    public Result<UploadDetail> update(@RequestBody UploadDetail uploadDetail) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        UploadDetail byId = uploadDetailService.getById(uploadDetail.getId());
+        Assert.isTrue(byId.getUserId().equals(userId), "assert error");
+        uploadDetailService.updateById(byId);
+        return Result.ok("ok", byId);
+    }
+
+    @PostMapping("/delete")
+    public Result<Boolean> delete(@RequestParam(name = "id") Long id) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        UploadDetail byId = uploadDetailService.getById(id);
+        Assert.isTrue(byId.getUserId().equals(userId), "assert error");
+        uploadDetailService.removeById(id);
+        return Result.ok("ok");
+    }
+
+    @PostMapping("/add")
+    public Result<String> addQueue(@RequestBody List<AddQueueRequest> reqs) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        for (AddQueueRequest req : reqs) {
+            Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
+            Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
+            SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
+            UploadDetail uploadDetail = new UploadDetail();
+            uploadDetail.setBvid(simpleVideoInfo.getBvid());
+            uploadDetail.setCid(req.getCid());
+            uploadDetail.setVoiceListId(req.getVoiceListId());
+            uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
+            uploadDetail.setBeginSec(req.getVoiceBeginSec());
+            uploadDetail.setEndSec(req.getVoiceEndSec());
+            uploadDetail.setOffset(req.getVoiceOffset());
+            uploadDetail.setUploadName(req.getUploadName());
+            uploadDetail.setTitle(simpleVideoInfo.getTitle());
+            uploadDetail.setPrivacy(req.getPrivacy() != null && req.getPrivacy() ? 1L : 0L);
+            uploadDetail.setPriority(10L);
+            uploadDetail.setUserId(userId);
+
+            if (req.getCrack() != null && req.getCrack()) {
+                List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
+                        .eq(SysUser::getId, userId), i -> i);
+                Assert.isTrue(!userList.isEmpty() &&
+                        userList.get(0).getIsAdmin() == 1, "assert error");
+            }
+            Db.save(uploadDetail);
+        }
+        return Result.ok("添加队列成功");
+    }
+
+    @PostMapping("/restartJob")
+    public Result<String> restartJob(@RequestParam(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
         UploadDetail byId = uploadDetailService.getById(id);
-        Assert.notNull(byId, "空id");
-        Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "只能操作自己的");
+        Assert.notNull(byId, "null id");
+        Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "assert error");
         byId.setRetryTimes(0);
         byId.setStatus(StatusTypeEnum.WAIT);
         uploadDetailService.updateById(byId);

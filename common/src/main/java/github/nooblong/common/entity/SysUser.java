@@ -29,4 +29,6 @@ public class SysUser implements Serializable {
 
     private Date updateTime;
 
+    private Integer isAdmin;
+
 }

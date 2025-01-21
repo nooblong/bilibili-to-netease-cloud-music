@@ -6,18 +6,14 @@ import lombok.Data;
 
 @Data
 public class AddQueueRequest {
-    @NotBlank
     String bvid;
     String cid;
-    String customUploadName;
-    String title;
-    @Min(0)
+    String uploadName;
     Long voiceListId;
-    boolean useDefaultImg;
-    double voiceOffset;
-    double voiceBeginSec;
-    double voiceEndSec;
-    boolean privacy;
-    boolean crack;
-    boolean move;
+    Boolean useDefaultImg;
+    Double voiceOffset;
+    Double voiceBeginSec;
+    Double voiceEndSec;
+    Boolean privacy;
+    Boolean crack;
 }
