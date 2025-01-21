@@ -37,9 +37,13 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Double endSec;
     private Long voiceId;
     private Long voiceListId;
+    @TableField(exist = false)
+    private String voiceListName;
     private Long privacy;
     private Integer retryTimes;
+    private Integer uploadRetryTimes;
     private StatusTypeEnum status;
+    private StatusTypeEnum uploadStatus;
     private String bvid;
     private String cid;
     /**
@@ -49,8 +53,6 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long useVideoCover;
     private Long crack;
     private Long priority;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long instanceId;
     private String log;
 
     @TableField(exist = false)
