@@ -5,4 +5,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface UserVoicelistService extends IService<UserVoicelist> {
 
+    void syncUserVoicelist();
+
 }

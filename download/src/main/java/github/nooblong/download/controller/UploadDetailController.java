@@ -18,6 +18,7 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +49,18 @@ public class UploadDetailController {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
+    }
+
+    @GetMapping("/listVoicelist")
+    public Result<List<UserVoicelist>> listVoicelist(@RequestParam(name = "username", required = false) String username) {
+        List<SysUser> userList = Db.list(Wrappers.lambdaQuery(SysUser.class)
+                .eq(username != null, SysUser::getUsername, username));
+        if (userList.isEmpty()) {
+            return Result.ok("ok", new ArrayList<>());
+        }
+        List<UserVoicelist> list = Db.list(Wrappers.lambdaQuery(UserVoicelist.class)
+                .in(UserVoicelist::getUserId, userList.stream().map(SysUser::getId).collect(Collectors.toList())));
+        return Result.ok("ok", list);
     }
 
     @GetMapping("/list")

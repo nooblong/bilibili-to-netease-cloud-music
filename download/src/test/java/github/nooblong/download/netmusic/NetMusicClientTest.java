@@ -24,4 +24,10 @@ class NetMusicClientTest extends BaseTest {
         JsonNode audioprogramtrans = netMusicClient.getMusicDataByUserId(hashMap, "audioprogramtrans", 1L);
         System.out.println(audioprogramtrans.toPrettyString());
     }
+
+    @Test
+    void getUserVoicelist() {
+        JsonNode userVoiceList = netMusicClient.getUserVoiceList(53L);
+        System.out.println(userVoiceList.toPrettyString());
+    }
 }

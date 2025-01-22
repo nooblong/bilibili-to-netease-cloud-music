@@ -146,6 +146,11 @@ public class NetMusicClient {
                 ;
     }
 
+    public JsonNode getUserVoiceList(Long userId) {
+        Map<String, Object> queryMap = new HashMap<>();
+        return this.getMusicDataByUserId(queryMap, "voiceListSearch", userId).get("data");
+    }
+
     public JsonNode getVoiceListDetail(String voiceListId, Long userId) {
         Map<String, Object> params = new HashMap<>();
         params.put("voiceListId", voiceListId);

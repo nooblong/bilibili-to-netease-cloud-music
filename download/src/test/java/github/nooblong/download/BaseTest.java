@@ -9,6 +9,7 @@ import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.service.UserVoicelistService;
 import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -42,6 +43,8 @@ public class BaseTest {
     public IUserService userService;
     @Autowired
     public BilibiliClient bilibiliClient;
+    @Autowired
+    public UserVoicelistService userVoicelistService;
 
     @Test
     void time() throws InterruptedException {
