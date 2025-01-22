@@ -6,3 +6,14 @@ alter table upload_detail
 
 alter table upload_detail
     add upload_status varchar(64) default 'WAIT' not null;
+
+create table user_voicelist
+(
+    id              bigint auto_increment
+        primary key,
+    user_id         bigint                  not null,
+    voicelist_id    bigint                  not null,
+    voicelist_image varchar(512) default '' not null,
+    voicelist_name  varchar(256) default '' not null
+);
+

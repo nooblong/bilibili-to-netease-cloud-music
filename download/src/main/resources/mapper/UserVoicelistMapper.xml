@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="github.nooblong.download.mapper.UserVoicelistMapper">
+
+    <resultMap id="BaseResultMap" type="github.nooblong.download.entity.UserVoicelist">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="voicelistId" column="voicelist_id" jdbcType="BIGINT"/>
+            <result property="voicelistImage" column="voicelist_image" jdbcType="VARCHAR"/>
+            <result property="voicelistName" column="voicelist_name" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,voicelist_id,
+        voicelist_image,voicelist_name
+    </sql>
+</mapper>
