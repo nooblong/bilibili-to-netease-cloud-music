@@ -9,6 +9,7 @@ spring:
     password: 密码
     hikari:
       max-lifetime: 600000
+      minimum-idle: 5
   servlet:
     multipart:
       max-file-size: 100000000
