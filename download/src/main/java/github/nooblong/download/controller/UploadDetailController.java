@@ -87,6 +87,7 @@ public class UploadDetailController {
                     list.stream().map(SysUser::getId).collect(Collectors.toList()));
         }
         wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
+        wrapper.eq(StrUtil.isNotBlank(voiceListId), UploadDetail::getVoiceListId, voiceListId);
 
         if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {
             if (orderBy.equalsIgnoreCase("desc")) {
