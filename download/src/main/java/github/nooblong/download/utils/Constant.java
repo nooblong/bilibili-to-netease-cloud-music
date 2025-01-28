@@ -1,6 +1,9 @@
 package github.nooblong.download.utils;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -9,16 +12,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Slf4j
+@Component
 public class Constant {
-    public static final String BILI_API_URL = "localhost";
-    public static final int BILI_API_PORT = 9000;
-    public static final String FULL_BILI_API = "http://" + BILI_API_URL + ":" + BILI_API_PORT;
+    @Value("${bilibiliApiUrl}")
+    public String bau;
+    public static String BAU = "";
     public static final String FFMPEG_FORMAT_MP3 = "mp3";
     public static final String FFMPEG_FORMAT_FLAC = "flac";
     public static final String FFMPEG_FORMAT_M4A = "m4a";
     public static final int SEARCH_PAGE_SIZE = 30;
     public static final int MAX_RETRY_TIMES = 5;
     public static String TMP_FOLDER;
+
+    @PostConstruct
+    public void init() {
+        BAU = bau;
+    }
 
     static {
         String tempDir = System.getProperty("java.io.tmpdir");

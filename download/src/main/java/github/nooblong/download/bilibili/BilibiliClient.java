@@ -71,7 +71,7 @@ public class BilibiliClient {
     }
 
     public boolean needRefreshCookie(Map<String, String> cred) {
-        JsonNode need = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+        JsonNode need = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/check_refresh", cred), okHttpClient);
         if (need.get("code").asInt() != 0) {
             throw new RuntimeException("b站账号未登录");
@@ -80,7 +80,7 @@ public class BilibiliClient {
     }
 
     public Map<String, String> refresh(Map<String, String> cred) {
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/refresh", cred), okHttpClient);
         if (response.get("code").asInt() != 0) {
             throw new RuntimeException("刷新cookie出错");
@@ -92,7 +92,7 @@ public class BilibiliClient {
 
     public void validate(@Nonnull Map<String, String> cred, Long userId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode node = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+        JsonNode node = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/check_valid", cred), okHttpClient);
         Assert.isTrue(node.get("code").asInt() == 0 && node.get("data").asBoolean(), "验证cookie出错");
         Assert.isTrue(node.get("data").asBoolean(), "cookie刷新后无法使用");
@@ -108,7 +108,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
         builder.addQueryParameter("bvid", bilibiliFullVideo.getBvid());
@@ -120,7 +120,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list");
         builder.addQueryParameter("uid", uid);
@@ -209,7 +209,7 @@ public class BilibiliClient {
 
     public boolean isLogin(Map<String, String> credMap) {
         try {
-            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                     + "/user/get_self_info", credMap), okHttpClient);
             Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
             return true;
@@ -219,7 +219,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -239,7 +239,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -259,7 +259,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list_content");
         builder.addQueryParameter("page", String.valueOf(page));
@@ -272,7 +272,7 @@ public class BilibiliClient {
 
 
     public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -281,7 +281,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getOldSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -290,7 +290,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord, Map<String, String> cred) {
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -311,7 +311,7 @@ public class BilibiliClient {
     public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
-        HttpUrl.Builder builder = new HttpUrl.Builder().host(Constant.BILI_API_URL).port(Constant.BILI_API_PORT).scheme("http");
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
         builder.addQueryParameter("bvid", video.getBvid());
@@ -400,11 +400,11 @@ public class BilibiliClient {
     }
 
     public JsonNode getSpiBuvidSync() {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/get_spi_buvid_sync"), okHttpClient);
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/get_spi_buvid_sync"), okHttpClient);
     }
 
     public JsonNode updateQrcodeData() {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/update_qrcode_data"), okHttpClient);
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/update_qrcode_data"), okHttpClient);
     }
 
     public JsonNode loginWithKey(String key, SysUser user) {
@@ -433,7 +433,7 @@ public class BilibiliClient {
                   ac_time_value=ac_time_value,
               )
          */
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.FULL_BILI_API + "/login/login_with_key?key=" + key),
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/login_with_key?key=" + key),
                 okHttpClient);
         /*
         {"code":0,

@@ -1,4 +1,5 @@
 initialDelay: 1
+bilibiliApiUrl: ""
 server:
   port: 25565
 spring:

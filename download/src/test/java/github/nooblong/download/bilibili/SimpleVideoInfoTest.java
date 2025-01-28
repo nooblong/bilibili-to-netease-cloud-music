@@ -1,7 +1,6 @@
 package github.nooblong.download.bilibili;
 
 import github.nooblong.download.BaseTest;
-import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import org.junit.jupiter.api.Test;
@@ -43,8 +42,8 @@ class SimpleVideoInfoTest extends BaseTest {
     @Test
     void getUpVideos1() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
-        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos("8356881", 30, 1,
-                UserVideoOrder.FAVORITE, "", availableBilibiliCookie);
+        IteratorCollectionTotal collectionTotal = bilibiliClient.getUpVideos("631070414", 30, 1,
+                UserVideoOrder.PUBDATE, "", availableBilibiliCookie);
         System.out.println(collectionTotal.getData().toPrettyString());
     }
 }
