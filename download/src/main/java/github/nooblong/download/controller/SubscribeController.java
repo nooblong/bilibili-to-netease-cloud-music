@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
@@ -27,6 +28,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -98,34 +100,34 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @GetMapping
-    public Result<IPage<Subscribe>> subscribeList(@RequestParam(name = "pageNo") int pageNo,
-                                                  @RequestParam(name = "pageSize") int pageSize,
-                                                  @RequestParam(name = "username", required = false) String username,
-                                                  @RequestParam(name = "status", required = false) Integer status,
-                                                  HttpServletResponse response) {
+    @GetMapping("/list")
+    public Result<List<Subscribe>> subscribeList(@RequestParam(name = "username", required = false) String username,
+                                                 @RequestParam(name = "status", required = false) Integer status,
+                                                 @RequestParam(name = "voiceListId", required = false) Long voiceListId,
+                                                 HttpServletResponse response) {
         Long selectUserId = null;
         if (StrUtil.isNotBlank(username)) {
             List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
             if (selectUser.isEmpty()) {
-                return Result.ok("ok", new Page<>(pageNo, pageSize));
+                return Result.ok("ok", new ArrayList<>());
             }
             selectUserId = selectUser.get(0).getId();
         }
-        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize),
+        List<Subscribe> list = Db.list(
                 Wrappers.lambdaQuery(Subscribe.class)
                         .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
+                        .eq(voiceListId != null, Subscribe::getVoiceListId, voiceListId)
                         .eq(status != null, Subscribe::getEnable, status));
-        if (list.getRecords().isEmpty()) {
+        if (list.isEmpty()) {
             return Result.ok("ok", list);
         }
         LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
                 .in(SubscribeReg::getSubscribeId,
-                        list.getRecords().stream().map(Subscribe::getId).collect(Collectors.toList()));
+                        list.stream().map(Subscribe::getId).collect(Collectors.toList()));
         List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
-        list.getRecords().forEach(subscribe -> {
+        list.forEach(subscribe -> {
             subscribeRegs.forEach(subscribeReg -> {
                 if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
                     subscribe.getSubscribeRegs().add(subscribeReg);
@@ -133,6 +135,7 @@ public class SubscribeController {
             });
             subscribe.setTypeDesc(subscribe.getType().getDesc());
             subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
+            subscribe.setLog(CommonUtil.limitString(subscribe.getLog(), 10));
         });
         response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
         return Result.ok("ok", list);

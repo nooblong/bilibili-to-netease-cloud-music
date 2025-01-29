@@ -23,3 +23,6 @@ alter table subscribe
 alter table subscribe
     add channel_ids varchar(1024) default '' not null;
 
+alter table subscribe
+    add up_name varchar(256) default '' not null;
+
