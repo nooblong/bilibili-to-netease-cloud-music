@@ -17,3 +17,9 @@ create table user_voicelist
     voicelist_name  varchar(256) default '' not null
 );
 
+alter table subscribe
+    change target_id up_id varchar(256) default '' not null;
+
+alter table subscribe
+    add channel_ids varchar(1024) default '' not null;
+

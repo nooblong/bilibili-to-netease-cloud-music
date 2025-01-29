@@ -10,7 +10,7 @@ import java.util.Map;
 @Slf4j
 public class PartIterator implements Iterator<SimpleVideoInfo> {
 
-    BilibiliBatchIteratorFactory factory;
+    BilibiliClient bilibiliClient;
     int limitSec;
     VideoOrder videoOrder;
     SimpleVideoInfo[] videos;
@@ -19,9 +19,9 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
     String bvid;
     Map<String, String> bilibiliCookie;
 
-    public PartIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder, String bvid,
+    public PartIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder, String bvid,
                         Map<String, String> bilibiliCookie) {
-        this.factory = factory;
+        this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
         this.bvid = bvid;
@@ -60,7 +60,7 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
             log.info("初始化集合:");
             // 第一次初始化
             // 先查总数
-            IteratorCollectionTotalList<SimpleVideoInfo> partVideosFromBilibili = factory.getPartVideosFromBilibili(bvid, bilibiliCookie);
+            IteratorCollectionTotalList<SimpleVideoInfo> partVideosFromBilibili = bilibiliClient.getPartVideosFromBilibili(bvid, bilibiliCookie);
             videos = partVideosFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
             upVideosTotalNum = partVideosFromBilibili.getTotalNum();
         }

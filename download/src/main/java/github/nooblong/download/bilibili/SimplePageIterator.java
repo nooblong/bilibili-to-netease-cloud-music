@@ -14,7 +14,7 @@ import java.util.Map;
 @Slf4j
 public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 
-    BilibiliBatchIteratorFactory factory;
+    BilibiliClient bilibiliClient;
     int limitSec;
     VideoOrder videoOrder;
     SimpleVideoInfo[] videos;
@@ -26,9 +26,9 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     List<SimpleVideoInfo> insidePartList = new ArrayList<>();
     Map<String, String> bilibiliCookie;
 
-    public SimplePageIterator(BilibiliBatchIteratorFactory factory, int limitSec, VideoOrder videoOrder
+    public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder
             , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
-        this.factory = factory;
+        this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
         this.checkPart = checkPart;
@@ -101,7 +101,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 return next();
             }
             if (checkPart) {
-                BilibiliFullVideo fullVideo = factory.getFullVideo(result.getBvid(), bilibiliCookie);
+                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), bilibiliCookie);
                 if (fullVideo.getHasMultiPart()) {
                     log.info("simple检测到多p视频: {}", fullVideo.getTitle());
                     // 多p视频不要直接返回，从p1开始返回
@@ -109,8 +109,8 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                     try {
 
                         Iterator<SimpleVideoInfo> partIterator =
-                                factory.createPartIterator(fullVideo.getBvid(), VideoOrder.PUB_NEW_FIRST_THEN_OLD,
-                                        limitSec, bilibiliCookie);
+                                new PartIterator(bilibiliClient, limitSec, VideoOrder.PUB_NEW_FIRST_THEN_OLD,
+                                        fullVideo.getBvid(), bilibiliCookie);
                         while (partIterator.hasNext()) {
                             SimpleVideoInfo next = partIterator.next();
                             // 将视频的createTime赋值

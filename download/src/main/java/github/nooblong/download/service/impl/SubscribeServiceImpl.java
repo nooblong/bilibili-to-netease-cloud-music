@@ -6,10 +6,10 @@ import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.util.CommonUtil;
-import github.nooblong.download.bilibili.BilibiliBatchIteratorFactory;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.bilibili.FavoriteIterator;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
-import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
+import github.nooblong.download.bilibili.UpIterator;
 import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.bilibili.enums.VideoOrder;
@@ -37,15 +37,12 @@ import java.util.Map;
 public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe>
         implements SubscribeService {
 
-    private final BilibiliBatchIteratorFactory factory;
     final UploadDetailService uploadDetailService;
     final BilibiliClient bilibiliClient;
 
 
-    public SubscribeServiceImpl(BilibiliBatchIteratorFactory factory,
-                                UploadDetailService uploadDetailService,
+    public SubscribeServiceImpl(UploadDetailService uploadDetailService,
                                 BilibiliClient bilibiliClient) {
-        this.factory = factory;
         this.uploadDetailService = uploadDetailService;
         this.bilibiliClient = bilibiliClient;
     }
@@ -57,61 +54,22 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             try {
-                // todo: 多p检测打开的话，检测第一个视频的所有分p
-                log.info("处理订阅: {}, id: {}, 类型: {}, targetId: {}", subscribe.getRemark(), subscribe.getId(),
-                        subscribe.getType(), subscribe.getTargetId());
-                if (subscribe.getType() == SubscribeTypeEnum.COLLECTION) {
-                    // 如果是合集，正向和反向都遍历
-                    log.info("开始正向遍历");
-                    Iterator<SimpleVideoInfo> iterator1 = factory.createCollectionIterator(subscribe.getTargetId(),
-                            subscribe.getLimitSec(),
-                            VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.DEFAULT, availableBilibiliCookie, subscribe.getLastTotalIndex());
-                    process(subscribe, iterator1);
-                    log.info("开始反向遍历");
-                    Iterator<SimpleVideoInfo> iterator2 = factory.createCollectionIterator(subscribe.getTargetId(),
-                            subscribe.getLimitSec(),
-                            VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.CHANGE, availableBilibiliCookie, subscribe.getLastTotalIndex());
-                    process(subscribe, iterator2);
-                } else if (subscribe.getType() == SubscribeTypeEnum.OLDCOLLECTION) {
-                    // 如果是合集，正向和反向都遍历
-                    log.info("开始正向遍历");
-                    Iterator<SimpleVideoInfo> iterator1 = factory.createOldCollectionIterator(subscribe.getTargetId(),
-                            subscribe.getLimitSec(),
-                            VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.DEFAULT, availableBilibiliCookie, subscribe.getLastTotalIndex());
-                    process(subscribe, iterator1);
-                    log.info("开始反向遍历");
-                    Iterator<SimpleVideoInfo> iterator2 = factory.createOldCollectionIterator(subscribe.getTargetId(),
-                            subscribe.getLimitSec(),
-                            VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            CollectionVideoOrder.CHANGE, availableBilibiliCookie, subscribe.getLastTotalIndex());
-                    process(subscribe, iterator2);
-                } else {
-                    Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
-                        case UP -> factory.createUpIterator(subscribe.getTargetId(), subscribe.getKeyWord(),
-                                subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
-                                VideoOrder.valueOf(subscribe.getVideoOrder()), UserVideoOrder.PUBDATE,
-                                availableBilibiliCookie, subscribe.getLastTotalIndex());
-//                        case COLLECTION -> factory.createCollectionIterator(subscribe.getTargetId(),
-//                                subscribe.getLimitSec(),
-//                                VideoOrder.valueOf(subscribe.getVideoOrder()),
-//                                CollectionVideoOrder.CHANGE, availableBilibiliCookie);
-                        case FAVORITE -> factory.createFavoriteIterator(subscribe.getTargetId(),
-                                VideoOrder.valueOf(subscribe.getVideoOrder()),
-                                subscribe.getLimitSec(), subscribe.getCheckPart() == 1, availableBilibiliCookie);
-                        case PART -> factory.createPartIterator(subscribe.getTargetId(),
-                                VideoOrder.valueOf(subscribe.getVideoOrder()),
-                                subscribe.getLimitSec(), availableBilibiliCookie);
-                        default -> throw new IllegalStateException("Unexpected value: " + subscribe.getType());
-                    };
-                    process(subscribe, iterator);
-                }
+                Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
+                    case UP -> new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
+                            subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
+                            UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
+                            availableBilibiliCookie, subscribe.getLastTotalIndex());
+                    case FAVORITE -> new FavoriteIterator(subscribe.getUpId(), bilibiliClient,
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                            availableBilibiliCookie);
+                    default -> throw new IllegalStateException("订阅缺少类型: " + subscribe.getType());
+                };
+                process(subscribe, iterator);
             } catch (Exception e) {
                 log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
                 log.error(e.getMessage(), e);
-                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅处理失败，原因: " + e.getMessage() + "\n");
+                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
+                        " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
                 updateById(subscribe);
             }
         }
@@ -126,7 +84,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     // 倒序就全部遍历，没办法看时间
                     subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())
                     && DateUtil.compare(new Date(next.getCreateTime() * 1000), subscribe.getProcessTime()) < 0) {
-                log.info("检测到视频: {}, 遍历达到处理时间: {}", next.getTitle(), DateUtil.formatDateTime(subscribe.getProcessTime()));
+                log.info("检测到视频: {}, 遍历达到处理时间: {}", next.getTitle(),
+                        DateUtil.formatDateTime(subscribe.getProcessTime()));
                 break;
             }
             // 判断上传时间区间
@@ -181,9 +140,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
                     + "个新视频" + "\n");
-            if (subscribe.getType() == SubscribeTypeEnum.PART) {
-                subscribe.setEnable(0);
-            }
             // 只有第一次是从老到新
             subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
             updateById(subscribe);

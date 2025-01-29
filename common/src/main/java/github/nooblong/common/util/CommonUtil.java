@@ -29,4 +29,10 @@ public class CommonUtil {
         }
     }
 
+    public static String limitString(String input) {
+        if (input == null) {
+            return ""; // 返回空字符串以处理 null 情况
+        }
+        return input.length() > 20 ? input.substring(0, 20) : input;
+    }
 }

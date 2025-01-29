@@ -50,61 +50,32 @@ public class SubscribeController {
         this.subscribeService = subscribeService;
     }
 
-    @PutMapping("/{id}")
-    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable(name = "id") Long id) {
+    @PostMapping("/edit")
+    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @RequestParam(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(id, Subscribe.class);
         if (subscribe.getCrack() > 0) {
-            Long userId = JwtUtil.verifierFromContext().getId();
-            if (!userId.equals(1L)  && !userId.equals(53L)) {
-                return Result.fail("暂不开放绕过订阅");
+            if (user.getIsAdmin() != 1) {
+                return Result.fail("fail: crack");
             }
         }
-        Assert.isTrue(byId.getUserId().equals(user.getId()), "你想干嘛?");
-        if (subscribe.getType() == SubscribeTypeEnum.PART) {
-            // 解析成bvid而不是url
-            subscribe.setProcessTime(null);
-            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo,
-                    bilibiliClient.getAvailableBilibiliCookie());
-            JsonNode info = bilibiliFullVideo.getVideoInfo();
-            subscribe.setTargetId(info.get("data").get("bvid").asText());
-        }
-        if (!subscribe.getVoiceListId().equals(byId.getVoiceListId())) {
-            // 获取播客图片
-            JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(),
-                    user.getId());
-            String text = voiceListDetail.get("coverUrl").asText();
-            subscribe.setNetCover(text);
-        }
-
+        Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
         Db.remove(Wrappers.lambdaQuery(SubscribeReg.class).eq(SubscribeReg::getSubscribeId, byId.getId()));
         List<SubscribeReg> subscribeRegs = subscribe.getSubscribeRegs();
         subscribeRegs.forEach(subscribeReg -> subscribeReg.setSubscribeId(byId.getId()));
         Db.saveBatch(subscribeRegs);
-
         Db.updateById(subscribe);
         return Result.ok("ok", subscribe);
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
         subscribe.setUserId(user.getId());
         if (subscribe.getCrack() > 0) {
-            Long id = JwtUtil.verifierFromContext().getId();
-            if (!id.equals(1L) && !id.equals(53L)) {
-                return Result.fail("暂不开放绕过订阅");
+            if (user.getIsAdmin() != 1) {
+                return Result.fail("fail: crack");
             }
-        }
-        if (subscribe.getType() == SubscribeTypeEnum.PART) {
-            // 解析成bvid而不是url
-            subscribe.setProcessTime(null);
-            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid(subscribe.getTargetId());
-            BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo,
-                    bilibiliClient.getAvailableBilibiliCookie());
-            JsonNode info = bilibiliFullVideo.getVideoInfo();
-            subscribe.setTargetId(info.get("bvid").asText());
         }
         // 获取播客图片
         JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(),
@@ -117,11 +88,11 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
-    @DeleteMapping("/{id}")
-    public Result<Subscribe> delete(@PathVariable(name = "id") Long id) {
+    @DeleteMapping("/delete")
+    public Result<Subscribe> delete(@RequestParam(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(id, Subscribe.class);
-        Assert.isTrue(byId.getUserId().equals(user.getId()), "你想干嘛?");
+        Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
         Db.removeById(byId);
         Db.remove(Wrappers.lambdaQuery(SubscribeReg.class).eq(SubscribeReg::getSubscribeId, byId.getId()));
         return Result.ok("ok", byId);
@@ -177,27 +148,9 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @GetMapping("/subscribeVoiceList")
-    public Result<ArrayNode> subscribeVoiceList() {
-        List<Subscribe> list = Db.list(Subscribe.class);
-        if (list.isEmpty()) {
-            return Result.fail("订阅为空");
-        }
-        Map<Long, List<Subscribe>> longListMap = SimpleQuery.listGroupBy(list, Subscribe::getVoiceListId);
-        ObjectMapper objectMapper = new ObjectMapper();
-        ArrayNode resultArray = objectMapper.createArrayNode();
-        longListMap.forEach((voiceListId, subscribes) -> {
-            ObjectNode objectNode = objectMapper.createObjectNode();
-            objectNode.put("voiceListId", voiceListId);
-            objectNode.putPOJO("subscribes", subscribes);
-            resultArray.add(objectNode);
-        });
-        return Result.ok("ok", resultArray);
-    }
-
     @GetMapping("/checkUpJob")
     public Result<String> checkUpJob() {
-        Assert.isTrue(JwtUtil.verifierFromContext().getId().equals(1L), "非管理员");
+        Assert.isTrue(JwtUtil.verifierFromContext().getIsAdmin() == 1, "fail: no permission");
         subscribeService.checkAndSave();
         return Result.ok("ok");
     }

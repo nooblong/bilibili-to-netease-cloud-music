@@ -13,6 +13,7 @@ import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
+import github.nooblong.download.entity.IteratorCollectionTotalList;
 import github.nooblong.download.utils.Constant;
 import github.nooblong.download.utils.OkUtil;
 import jakarta.annotation.Nonnull;
@@ -33,10 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -308,6 +306,19 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("count").asInt());
     }
 
+    public JsonNode getUpChannels(String upId, Map<String, String> cred) {
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_channels");
+        builder.addQueryParameter("ps", "1");
+        builder.addQueryParameter("pn", "20");
+        builder.addQueryParameter("uid", upId);
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.notNull(response, "获取Up合集列表失败");
+        Assert.isTrue(response.get("code").asInt() != -1, "获取Up合集失败");
+        return response;
+    }
+
     public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
@@ -322,6 +333,11 @@ public class BilibiliClient {
         bilibiliFullVideo.setVideoInfo(response);
         bilibiliFullVideo.setSelectCid(video.getCid());
         return bilibiliFullVideo;
+    }
+
+    public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
+        SimpleVideoInfo byUrl = createByUrl(bvid);
+        return init(byUrl, bilibiliCookie);
     }
 
     public static String getFileExt(String fileName) {
@@ -476,5 +492,106 @@ public class BilibiliClient {
         }
 
         return response;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn,
+                                                                                   UserVideoOrder userVideoOrder, String keyWord,
+                                                                                   Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal collectionTotal = getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliCookie);
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        collectionTotal.getData().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(BilibiliClient.parseStrTime(jsonNode.get("length").asText()))
+                    .setBvid(jsonNode.get("bvid").asText())
+                    .setCreateTime(jsonNode.get("created").asLong())
+                    .setTitle(jsonNode.get("title").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(collectionTotal.getTotalNum());
+        return result;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid,
+                                                                                  Map<String, String> bilibiliCookie) {
+        SimpleVideoInfo video = createByUrl(bvid);
+        BilibiliFullVideo bilibiliFullVideo = init(video, bilibiliCookie);
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        bilibiliFullVideo.getPartVideos().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(jsonNode.get("duration").asInt())
+                    .setBvid(bvid)
+                    .setCid(jsonNode.get("cid").asText())
+                    .setPartName(jsonNode.get("part").asText())
+                    .setTitle(jsonNode.get("part").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(data.size());
+        return result;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
+                                                                                           CollectionVideoOrder collectionVideoOrder,
+                                                                                           Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal collectionVideos = null;
+        try {
+            collectionVideos = getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
+        } catch (Throwable e) {
+            log.error("获取合集失败: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        collectionVideos.getData().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(jsonNode.get("duration").asInt())
+                    .setBvid(jsonNode.get("bvid").asText())
+                    .setCreateTime(jsonNode.get("pubdate").asLong())
+                    .setTitle(jsonNode.get("title").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(collectionVideos.getTotalNum());
+        return result;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
+                                                                                              CollectionVideoOrder collectionVideoOrder,
+                                                                                              Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal collectionVideos = null;
+        try {
+            collectionVideos = getOldCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
+        } catch (Throwable e) {
+            log.error("获取旧合集失败: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        collectionVideos.getData().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(jsonNode.get("duration").asInt())
+                    .setBvid(jsonNode.get("bvid").asText())
+                    .setCreateTime(jsonNode.get("pubdate").asLong())
+                    .setTitle(jsonNode.get("title").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(collectionVideos.getTotalNum());
+        return result;
+    }
+
+    public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page, Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page,bilibiliCookie);
+        List<SimpleVideoInfo> data = new ArrayList<>();
+        favoriteVideos.getData().forEach(jsonNode -> {
+            SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
+                    .setDuration(jsonNode.get("duration").asInt())
+                    .setBvid(jsonNode.get("bvid").asText())
+                    .setCreateTime(jsonNode.get("fav_time").asLong())
+                    .setTitle(jsonNode.get("title").asText());
+            data.add(simpleVideoInfo);
+        });
+        IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
+        result.setData(data).setTotalNum(favoriteVideos.getTotalNum());
+        return result;
     }
 }
