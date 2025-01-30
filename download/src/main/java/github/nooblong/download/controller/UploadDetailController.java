@@ -145,58 +145,30 @@ public class UploadDetailController {
     }
 
     @PostMapping("/add")
-    public Result<String> addQueue(@RequestBody AddQueueRequest req) {
+    public Result<String> addQueue(@RequestBody AddQueueRequest reqs) {
         Long userId = JwtUtil.verifierFromContext().getId();
-        List<CidNameRequest> cidNameRequests = req.getCid();
-        if (cidNameRequests != null && cidNameRequests.size() > 1) {
-            for (CidNameRequest cidNameRequest : cidNameRequests) {
-                Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
-                Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
-                SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
-                UploadDetail uploadDetail = new UploadDetail();
-                uploadDetail.setBvid(simpleVideoInfo.getBvid());
-                uploadDetail.setCid(cidNameRequest.getCid());
-                uploadDetail.setVoiceListId(req.getVoiceListId());
-                uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
-                uploadDetail.setBeginSec(req.getVoiceBeginSec());
-                uploadDetail.setEndSec(req.getVoiceEndSec());
-                uploadDetail.setOffset(req.getVoiceOffset());
-                uploadDetail.setUploadName(cidNameRequest.getName());
-                uploadDetail.setTitle(simpleVideoInfo.getTitle());
-                uploadDetail.setPrivacy(req.getPrivacy() != null && req.getPrivacy() ? 1L : 0L);
-                uploadDetail.setPriority(10L);
-                uploadDetail.setUserId(userId);
-                if (req.getCrack() != null && req.getCrack()) {
-                    List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
-                            .eq(SysUser::getId, userId), i -> i);
-                    Assert.isTrue(!userList.isEmpty() &&
-                            userList.get(0).getIsAdmin() == 1, "assert error");
-                }
-                Db.save(uploadDetail);
-            }
-        } else {
+        for (UploadDetail req : reqs.getUploadDetails()) {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
             SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
-//            uploadDetail.setCid(req.getCid() == null ? null : req.getCid().get(0).getCid());
+            uploadDetail.setCid(req.getCid());
             uploadDetail.setVoiceListId(req.getVoiceListId());
-            uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
-            uploadDetail.setBeginSec(req.getVoiceBeginSec());
-            uploadDetail.setEndSec(req.getVoiceEndSec());
-            uploadDetail.setOffset(req.getVoiceOffset());
+            uploadDetail.setUseVideoCover(req.getUseVideoCover());
+            uploadDetail.setBeginSec(req.getBeginSec());
+            uploadDetail.setEndSec(req.getEndSec());
+            uploadDetail.setOffset(req.getOffset());
             uploadDetail.setUploadName(req.getUploadName());
-            uploadDetail.setTitle(simpleVideoInfo.getTitle());
-            uploadDetail.setPrivacy(req.getPrivacy() != null && req.getPrivacy() ? 1L : 0L);
+            uploadDetail.setPrivacy(req.getPrivacy());
             uploadDetail.setPriority(10L);
             uploadDetail.setUserId(userId);
-
-            if (req.getCrack() != null && req.getCrack()) {
+            uploadDetail.setCrack(req.getCrack());
+            if (req.getCrack() == 1) {
                 List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
                         .eq(SysUser::getId, userId), i -> i);
                 Assert.isTrue(!userList.isEmpty() &&
-                        userList.get(0).getIsAdmin() == 1, "assert error");
+                        userList.get(0).getIsAdmin() == 1, "crack error");
             }
             Db.save(uploadDetail);
         }
