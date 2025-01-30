@@ -147,6 +147,9 @@ public class UploadDetailController {
     @PostMapping("/add")
     public Result<String> addQueue(@RequestBody AddQueueRequest reqs) {
         Long userId = JwtUtil.verifierFromContext().getId();
+        List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
+                .eq(SysUser::getId, userId), i -> i);
+        boolean isAdmin = !userList.isEmpty() && userList.get(0).getIsAdmin() == 1;
         for (UploadDetail req : reqs.getUploadDetails()) {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
@@ -161,14 +164,11 @@ public class UploadDetailController {
             uploadDetail.setOffset(req.getOffset());
             uploadDetail.setUploadName(req.getUploadName());
             uploadDetail.setPrivacy(req.getPrivacy());
-            uploadDetail.setPriority(10L);
+            uploadDetail.setPriority(isAdmin ? 999L : 10L);
             uploadDetail.setUserId(userId);
             uploadDetail.setCrack(req.getCrack());
             if (req.getCrack() == 1) {
-                List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
-                        .eq(SysUser::getId, userId), i -> i);
-                Assert.isTrue(!userList.isEmpty() &&
-                        userList.get(0).getIsAdmin() == 1, "crack error");
+                Assert.isTrue(isAdmin, "crack error");
             }
             Db.save(uploadDetail);
         }

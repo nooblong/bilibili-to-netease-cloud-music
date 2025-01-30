@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,7 +44,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Integer retryTimes;
     private Integer uploadRetryTimes;
     private StatusTypeEnum status;
-    private StatusTypeEnum uploadStatus;
+    private UploadStatusTypeEnum uploadStatus;
     private String bvid;
     private String cid;
     /**
