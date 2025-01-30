@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class AddQueueRequest {
     String bvid;
-    List<String> cid;
+    List<CidNameRequest> cid;
     String uploadName;
     Long voiceListId;
     Boolean useDefaultImg;

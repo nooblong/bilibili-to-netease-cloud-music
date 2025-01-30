@@ -14,7 +14,9 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.api.AddToMyRequest;
+import github.nooblong.download.api.CidNameRequest;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
@@ -145,20 +147,21 @@ public class UploadDetailController {
     @PostMapping("/add")
     public Result<String> addQueue(@RequestBody AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
-        if (req.getCid() != null && req.getCid().size() > 1) {
-            for (String cid : req.getCid()) {
+        List<CidNameRequest> cidNameRequests = req.getCid();
+        if (cidNameRequests != null && cidNameRequests.size() > 1) {
+            for (CidNameRequest cidNameRequest : cidNameRequests) {
                 Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
                 Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
                 SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
                 UploadDetail uploadDetail = new UploadDetail();
                 uploadDetail.setBvid(simpleVideoInfo.getBvid());
-                uploadDetail.setCid(cid);
+                uploadDetail.setCid(cidNameRequest.getCid());
                 uploadDetail.setVoiceListId(req.getVoiceListId());
                 uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
                 uploadDetail.setBeginSec(req.getVoiceBeginSec());
                 uploadDetail.setEndSec(req.getVoiceEndSec());
                 uploadDetail.setOffset(req.getVoiceOffset());
-                uploadDetail.setUploadName(req.getUploadName());
+                uploadDetail.setUploadName(cidNameRequest.getName());
                 uploadDetail.setTitle(simpleVideoInfo.getTitle());
                 uploadDetail.setPrivacy(req.getPrivacy() != null && req.getPrivacy() ? 1L : 0L);
                 uploadDetail.setPriority(10L);
@@ -177,7 +180,7 @@ public class UploadDetailController {
             SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
-            uploadDetail.setCid(req.getCid() == null ? null : req.getCid().get(0));
+//            uploadDetail.setCid(req.getCid() == null ? null : req.getCid().get(0).getCid());
             uploadDetail.setVoiceListId(req.getVoiceListId());
             uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
             uploadDetail.setBeginSec(req.getVoiceBeginSec());
