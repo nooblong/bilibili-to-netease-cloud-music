@@ -4,10 +4,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class AddQueueRequest {
     String bvid;
-    String cid;
+    List<String> cid;
     String uploadName;
     Long voiceListId;
     Boolean useDefaultImg;

@@ -143,15 +143,41 @@ public class UploadDetailController {
     }
 
     @PostMapping("/add")
-    public Result<String> addQueue(@RequestBody List<AddQueueRequest> reqs) {
+    public Result<String> addQueue(@RequestBody AddQueueRequest req) {
         Long userId = JwtUtil.verifierFromContext().getId();
-        for (AddQueueRequest req : reqs) {
+        if (req.getCid() != null && req.getCid().size() > 1) {
+            for (String cid : req.getCid()) {
+                Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
+                Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
+                SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
+                UploadDetail uploadDetail = new UploadDetail();
+                uploadDetail.setBvid(simpleVideoInfo.getBvid());
+                uploadDetail.setCid(cid);
+                uploadDetail.setVoiceListId(req.getVoiceListId());
+                uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
+                uploadDetail.setBeginSec(req.getVoiceBeginSec());
+                uploadDetail.setEndSec(req.getVoiceEndSec());
+                uploadDetail.setOffset(req.getVoiceOffset());
+                uploadDetail.setUploadName(req.getUploadName());
+                uploadDetail.setTitle(simpleVideoInfo.getTitle());
+                uploadDetail.setPrivacy(req.getPrivacy() != null && req.getPrivacy() ? 1L : 0L);
+                uploadDetail.setPriority(10L);
+                uploadDetail.setUserId(userId);
+                if (req.getCrack() != null && req.getCrack()) {
+                    List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
+                            .eq(SysUser::getId, userId), i -> i);
+                    Assert.isTrue(!userList.isEmpty() &&
+                            userList.get(0).getIsAdmin() == 1, "assert error");
+                }
+                Db.save(uploadDetail);
+            }
+        } else {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
             SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
-            uploadDetail.setCid(req.getCid());
+            uploadDetail.setCid(req.getCid() == null ? null : req.getCid().get(0));
             uploadDetail.setVoiceListId(req.getVoiceListId());
             uploadDetail.setUseVideoCover(req.getUseDefaultImg() != null && req.getUseDefaultImg() ? 1L : 0L);
             uploadDetail.setBeginSec(req.getVoiceBeginSec());
