@@ -40,7 +40,6 @@ public class Subscribe implements Serializable {
     private Integer limitSec;
     private String videoOrder;
     private String remark;
-    private String netCover;
     private Integer enable;
     private Integer crack;
     private Integer useVideoCover;

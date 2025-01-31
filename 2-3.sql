@@ -26,3 +26,6 @@ alter table subscribe
 alter table subscribe
     add up_name varchar(256) default '' not null;
 
+alter table subscribe
+    drop column net_cover;
+

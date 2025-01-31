@@ -79,11 +79,6 @@ public class SubscribeController {
                 return Result.fail("fail: crack");
             }
         }
-        // 获取播客图片
-        JsonNode voiceListDetail = netMusicClient.getVoiceListDetail(subscribe.getVoiceListId().toString(),
-                user.getId());
-        String text = voiceListDetail.get("coverUrl").asText();
-        subscribe.setNetCover(text);
         Db.save(subscribe);
         subscribe.getSubscribeRegs().forEach(subscribeReg -> subscribeReg.setSubscribeId(subscribe.getId()));
         Db.saveBatch(subscribe.getSubscribeRegs());

@@ -20,6 +20,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -36,6 +37,12 @@ public class BilibiliController {
     @GetMapping("/checkLogin")
     public Result<Boolean> checkLogin() {
         return Result.ok("执行成功", bilibiliClient.getAvailableBilibiliCookie() != null);
+    }
+
+    @GetMapping("/getUpChannels")
+    public Result<JsonNode> getUpChannels(@RequestParam(name = "upId") String upId) {
+        JsonNode upChannels = bilibiliClient.getUpChannels(upId, new HashMap<>());
+        return Result.ok("ok", upChannels);
     }
 
     @GetMapping("/getVideoInfo")
