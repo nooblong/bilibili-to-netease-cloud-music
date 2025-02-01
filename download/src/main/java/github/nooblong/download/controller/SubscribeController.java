@@ -79,6 +79,7 @@ public class SubscribeController {
                 return Result.fail("fail: crack");
             }
         }
+        subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
         Db.save(subscribe);
         subscribe.getSubscribeRegs().forEach(subscribeReg -> subscribeReg.setSubscribeId(subscribe.getId()));
         Db.saveBatch(subscribe.getSubscribeRegs());

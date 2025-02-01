@@ -5,6 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class CommonUtil {
 
     public static void debug() {
@@ -41,5 +45,27 @@ public class CommonUtil {
             return "";
         }
         return input.length() > num ? input.substring(0, num) : input;
+    }
+
+    // 将字符串转换为 List<String>，去除空格和空项
+    public static List<String> toList(String str) {
+        if (str == null || str.isEmpty()) {
+            return List.of(); // 返回空列表
+        }
+        return Arrays.stream(str.split(","))
+                .map(String::trim) // 去除多余空格
+                .filter(s -> !s.isEmpty()) // 过滤空字符串
+                .collect(Collectors.toList());
+    }
+
+    // 将 List<String> 转换为逗号分隔的字符串
+    public static String toCommaSeparatedString(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return "";
+        }
+        return list.stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.joining(","));
     }
 }

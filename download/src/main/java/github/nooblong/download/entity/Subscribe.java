@@ -27,6 +27,8 @@ public class Subscribe implements Serializable {
     private String upId;
     private String upName;
     private String channelIds;
+    @TableField(exist = false)
+    private List<String> channelIdsList;
     private SubscribeTypeEnum type;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date processTime;
