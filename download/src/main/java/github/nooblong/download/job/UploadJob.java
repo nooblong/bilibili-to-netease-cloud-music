@@ -114,7 +114,8 @@ public class UploadJob {
             codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
             // 上传之前先设置名字
             uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
-            String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()), uploadDetail.getUserId(),
+            String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()),
+                    uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
             clear(context, Long.valueOf(voiceId));
 
@@ -239,8 +240,9 @@ public class UploadJob {
     }
 
     private String doUpload(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
-                                   String voiceListId, String coverImgId, String categoryId,
-                                   String secondCategoryId, String description, Long userId, String privacy, Long uploadDetailId) {
+                            String voiceListId, String coverImgId, String categoryId,
+                            String secondCategoryId, String description, Long userId, String privacy,
+                            Long uploadDetailId) {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
@@ -351,6 +353,8 @@ public class UploadJob {
                     if (content.equals("pubdate")) {
                         Date videoCreateTime = context.bilibiliFullVideo.getVideoCreateTime();
                         return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
+                    } else if (content.equals("title")) {
+                        return uploadDetail.getTitle();
                     } else if (NumberUtil.isNumber(content)) {
                         if (replaceMap.containsKey(Integer.valueOf(content))) {
                             return replaceMap.getOrDefault(Integer.valueOf(content), "");
