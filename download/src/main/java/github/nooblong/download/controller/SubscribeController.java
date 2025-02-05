@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,9 +54,9 @@ public class SubscribeController {
     }
 
     @PostMapping("/edit")
-    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @RequestParam(name = "id") Long id) {
+    public Result<Subscribe> edit(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
-        Subscribe byId = Db.getById(id, Subscribe.class);
+        Subscribe byId = Db.getById(subscribe.getId(), Subscribe.class);
         if (subscribe.getCrack() > 0) {
             if (user.getIsAdmin() != 1) {
                 return Result.fail("fail: crack");
@@ -80,13 +81,16 @@ public class SubscribeController {
             }
         }
         subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
+        JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(), new HashMap<>());
+        subscribe.setUpImage(userInfo.get("data").get("face").asText());
+        subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
         subscribe.getSubscribeRegs().forEach(subscribeReg -> subscribeReg.setSubscribeId(subscribe.getId()));
         Db.saveBatch(subscribe.getSubscribeRegs());
         return Result.ok("ok", subscribe);
     }
 
-    @DeleteMapping("/delete")
+    @GetMapping("/delete")
     public Result<Subscribe> delete(@RequestParam(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(id, Subscribe.class);

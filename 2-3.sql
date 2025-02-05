@@ -29,3 +29,12 @@ alter table subscribe
 alter table subscribe
     drop column net_cover;
 
+alter table subscribe
+    add up_image varchar(512) default '' not null after up_name;
+
+alter table subscribe
+    drop key subscribe_pk;
+
+alter table subscribe
+    add constraint subscribe_pk
+        unique (user_id, up_id, voice_list_id);

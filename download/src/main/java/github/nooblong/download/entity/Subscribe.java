@@ -26,6 +26,7 @@ public class Subscribe implements Serializable {
     private Long voiceListId;
     private String upId;
     private String upName;
+    private String upImage;
     private String channelIds;
     @TableField(exist = false)
     private List<String> channelIdsList;

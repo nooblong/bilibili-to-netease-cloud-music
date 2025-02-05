@@ -319,6 +319,17 @@ public class BilibiliClient {
         return response;
     }
 
+    public JsonNode getUserInfo(String upId, Map<String, String> cred) {
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
+        builder.addQueryParameter("uid", upId);
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.notNull(response, "获取Up信息失败");
+        Assert.isTrue(response.get("code").asInt() != -1, "获取Up信息失败");
+        return response;
+    }
+
     public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
