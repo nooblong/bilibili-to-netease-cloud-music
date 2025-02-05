@@ -81,7 +81,7 @@ public class SubscribeController {
             }
         }
         subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
-        JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(), new HashMap<>());
+        JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(), bilibiliClient.getAvailableBilibiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
