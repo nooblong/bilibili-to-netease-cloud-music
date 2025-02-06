@@ -319,6 +319,16 @@ public class BilibiliClient {
         return response;
     }
 
+    public JsonNode getSelfInfo(Map<String, String> cred) {
+        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("user").addPathSegment("get_self_info");
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.notNull(response, "获取个人信息失败");
+        Assert.isTrue(response.get("code").asInt() != -1, "获取个人信息失败");
+        return response;
+    }
+
     public JsonNode getUserInfo(String upId, Map<String, String> cred) {
         HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -431,49 +441,13 @@ public class BilibiliClient {
     }
 
     public JsonNode updateQrcodeData() {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/update_qrcode_data"), okHttpClient);
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/generate_qrcode"), okHttpClient);
     }
 
     public JsonNode loginWithKey(String key, SysUser user) {
         // 查询到成功就保存到用户cookie
-        /*
-          def parse_credential_url(events: dict) -> Credential:
-              url = events["url"]
-              cookies_list = url.split("?")[1].split("&")
-              sessdata = ""
-              bili_jct = ""
-              dedeuserid = ""
-              for cookie in cookies_list:
-                  if cookie[:8] == "SESSDATA":
-                      sessdata = cookie[9:]
-                  if cookie[:8] == "bili_jct":
-                      bili_jct = cookie[9:]
-                  if cookie[:11].upper() == "DEDEUSERID=":
-                      dedeuserid = cookie[11:]
-              ac_time_value = events["refresh_token"]
-              buvid3 = get_spi_buvid_sync()["b_3"]
-              return Credential(
-                  sessdata=sessdata,
-                  bili_jct=bili_jct,
-                  buvid3=buvid3,
-                  dedeuserid=dedeuserid,
-                  ac_time_value=ac_time_value,
-              )
-         */
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/login_with_key?key=" + key),
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/check_state?key=" + key),
                 okHttpClient);
-        /*
-        {"code":0,
-        "data":{"url":"https://passport.biligame.com/x/passport-login/web/crossDomain?
-        DedeUserID=6906052&
-        DedeUserID__ckMd5=b315fd91d7ea6429&
-        Expires=1727148141&
-        SESSDATA=8612c6f2,1727148141,64aee*31CjBBJuas5w5n3IIiyB-SuoXW8U24PTGOzUG_qj5x0ttYehM2GJLvBX0F-242_vW2OCcSVmVVZllFNGk4RF9qYTd4YktYS1ZoUnpmNnI1a3RBUkhfY3V2NUM1cHp1aDRMcnA0SVlzVFR4RV9tYVNRTnhuQ01GUzgwZEE2OTlPaUstaWNLczh2V3RBIIEC&
-        bili_jct=9dc72e5c01a78c51569778830e0b7767&
-        gourl=https%3A%2F%2Fwww.bilibili.com",
-        "refresh_token":"86ca36a2b4e264e1deb21823d93bb531","timestamp":1711596141317,"code":0,"message":""}}
-         */
-
         if (response.get("data").get("code").asInt() == 0) {
             JsonNode data = response.get("data");
             String url = data.get("url").asText();
@@ -495,9 +469,6 @@ public class BilibiliClient {
                 }
             }
             cookieNode.put("ac_time_value", refreshToken);
-            JsonNode spiBuvidSync = getSpiBuvidSync();
-            String buvid3 = spiBuvidSync.get("data").get("b_3").asText();
-            cookieNode.put("buvid3", buvid3);
             user.setBiliCookies(cookieNode.toString());
             userService.updateById(user);
         }

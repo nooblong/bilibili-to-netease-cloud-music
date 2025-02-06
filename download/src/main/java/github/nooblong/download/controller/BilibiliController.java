@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.api.VideoInfoResponse;
@@ -29,9 +30,11 @@ import java.util.UUID;
 public class BilibiliController {
 
     final BilibiliClient bilibiliClient;
+    final IUserService userService;
 
-    public BilibiliController(BilibiliClient bilibiliClient) {
+    public BilibiliController(BilibiliClient bilibiliClient, IUserService userService) {
         this.bilibiliClient = bilibiliClient;
+        this.userService = userService;
     }
 
     @GetMapping("/checkLogin")
@@ -42,6 +45,13 @@ public class BilibiliController {
     @GetMapping("/getUpChannels")
     public Result<JsonNode> getUpChannels(@RequestParam(name = "upId") String upId) {
         JsonNode upChannels = bilibiliClient.getUpChannels(upId, new HashMap<>());
+        return Result.ok("ok", upChannels);
+    }
+
+    @GetMapping("/getSelfInfo")
+    public Result<JsonNode> getSelfInfo() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        JsonNode upChannels = bilibiliClient.getSelfInfo(userService.getBilibiliCookieMap(sysUser.getId()));
         return Result.ok("ok", upChannels);
     }
 
