@@ -2,13 +2,23 @@ package github.nooblong.common.util;
 
 import ch.qos.logback.classic.Level;
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class CommonUtil {
 
     public static void debug() {
@@ -67,5 +77,31 @@ public class CommonUtil {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining(","));
+    }
+
+    public static ObjectNode cookieListToObjectNode(List<Cookie> cookieList) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        for (Cookie cookie : cookieList) {
+            if (StrUtil.isNotBlank(cookie.value())) {
+                objectNode.put(cookie.name(), cookie.value());
+            }
+        }
+        return objectNode;
+    }
+
+    @Nonnull
+    public static Map<String, String> convertJsonToMap(String json) {
+        if (json.isBlank()) {
+            return new HashMap<>();
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(json, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            log.error("字符串转json失败: {}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 }

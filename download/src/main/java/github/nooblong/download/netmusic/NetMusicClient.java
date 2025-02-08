@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.service.IUserService;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.netmusic.module.base.BaseModule;
 import github.nooblong.download.netmusic.module.base.ModuleFactory;
 import github.nooblong.download.netmusic.module.weapi.Login;
@@ -77,7 +78,7 @@ public class NetMusicClient {
 //                            }
 //                        }
                         if (url != null && url.toString().contains("/register/anonimous")) {
-                            ObjectNode anonymousCookie = userService.cookieListToObjectNode(cookies);
+                            ObjectNode anonymousCookie = CommonUtil.cookieListToObjectNode(cookies);
                             if (anonymousCookie.has("MUSIC_A")) {
                                 log.info("设置游客token成功!");
                                 OkUtil.anonymousToken = anonymousCookie.get("MUSIC_A").asText();

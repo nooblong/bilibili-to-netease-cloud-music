@@ -5,19 +5,20 @@ import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
+import github.nooblong.common.service.IUserService;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.api.QrResponse;
 import github.nooblong.download.netmusic.NetMusicClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/netmusic")
@@ -25,16 +26,27 @@ import java.util.HashMap;
 public class NetMusicController {
 
     final NetMusicClient netMusicClient;
+    final IUserService userService;
 
-    public NetMusicController(NetMusicClient netMusicClient) {
+    public NetMusicController(NetMusicClient netMusicClient, IUserService userService) {
         this.netMusicClient = netMusicClient;
+        this.userService = userService;
     }
 
     @GetMapping("/loginStatus")
-    public Result<?> getloginStatus() {
-        JsonNode loginstatus;
+    public Result<JsonNode> getloginStatus() {
         SysUser sysUser = JwtUtil.verifierFromContext();
-        loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
+        JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
+        return Result.ok("ok", loginstatus);
+    }
+
+    @PostMapping("/setNetCookie")
+    public Result<JsonNode> setNetCookie(@RequestBody JsonNode json) {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        String cookie = json.toString();
+        Map<String, String> map = CommonUtil.convertJsonToMap(cookie);
+        userService.updateNeteaseCookieByCookieMap(sysUser.getId(), map);
+        JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
         return Result.ok("ok", loginstatus);
     }
 

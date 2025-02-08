@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.mapper.UserMapper;
 import github.nooblong.common.service.IUserService;
+import github.nooblong.common.util.CommonUtil;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cookie;
@@ -28,7 +29,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     public Map<String, String> getBilibiliCookieMap(Long id) {
         SysUser byId = getById(id);
         String biliCookies = byId.getBiliCookies();
-        return convertJsonToMap(biliCookies);
+        return CommonUtil.convertJsonToMap(biliCookies);
     }
 
     @Nonnull
@@ -36,23 +37,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     public Map<String, String> getNeteaseCookieMap(Long id) {
         SysUser byId = getById(id);
         String netCookies = byId.getNetCookies();
-        return convertJsonToMap(netCookies);
+        return CommonUtil.convertJsonToMap(netCookies);
     }
 
-    @Nonnull
-    private Map<String, String> convertJsonToMap(String json) {
-        if (json.isBlank()) {
-            return new HashMap<>();
-        }
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(json, new TypeReference<>() {
-            });
-        } catch (JsonProcessingException e) {
-            log.error("字符串转json失败: {}", e.getMessage());
-            return new HashMap<>();
-        }
-    }
+
 
     @Nonnull
     @Override
@@ -74,9 +62,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         if (cookieList == null || cookieList.isEmpty()) {
             return;
         }
-        ObjectNode jsonNodes = cookieListToObjectNode(cookieList);
+        ObjectNode jsonNodes = CommonUtil.cookieListToObjectNode(cookieList);
         byId.setNetCookies(jsonNodes.toString());
         updateById(byId);
+    }
+
+    @Override
+    public void updateNeteaseCookieByCookieMap(Long id, Map<String, String> cookieMap) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            String cookie = objectMapper.writeValueAsString(cookieMap);
+            SysUser byId = getById(id);
+            byId.setNetCookies(cookie);
+            updateById(byId);
+        } catch (JsonProcessingException e) {
+            log.error("更新网易cookie失败: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -98,20 +99,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         if (cookieList == null || cookieList.isEmpty()) {
             return;
         }
-        ObjectNode jsonNodes = cookieListToObjectNode(cookieList);
+        ObjectNode jsonNodes = CommonUtil.cookieListToObjectNode(cookieList);
         byId.setBiliCookies(jsonNodes.toString());
         updateById(byId);
-    }
-
-    public ObjectNode cookieListToObjectNode(List<Cookie> cookieList) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ObjectNode objectNode = objectMapper.createObjectNode();
-        for (Cookie cookie : cookieList) {
-            if (StrUtil.isNotBlank(cookie.value())) {
-                objectNode.put(cookie.name(), cookie.value());
-            }
-        }
-        return objectNode;
     }
 
     @Override

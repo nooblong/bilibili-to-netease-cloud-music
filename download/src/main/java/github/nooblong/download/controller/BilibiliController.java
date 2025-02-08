@@ -37,11 +37,6 @@ public class BilibiliController {
         this.userService = userService;
     }
 
-    @GetMapping("/checkLogin")
-    public Result<Boolean> checkLogin() {
-        return Result.ok("执行成功", bilibiliClient.getAvailableBilibiliCookie() != null);
-    }
-
     @GetMapping("/getUpChannels")
     public Result<JsonNode> getUpChannels(@RequestParam(name = "upId") String upId) {
         JsonNode upChannels = bilibiliClient.getUpChannels(upId, new HashMap<>());
@@ -65,7 +60,6 @@ public class BilibiliController {
         JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
         StringBuilder sb = new StringBuilder();
         videoStreamUrl.forEach(audio -> {
-            // todo: 1
             if (audio.has("audio_quality")) {
                 sb.append(AudioQuality.descMap.get(videoStreamUrl.get("audio_quality").asInt()));
             }
@@ -124,23 +118,12 @@ public class BilibiliController {
     }
 
     @PostMapping("/setBiliCookies")
-    public Result<String> setBiliCookies(@RequestBody JsonNode jsonNode, HttpServletRequest request) {
+    public Result<JsonNode> setBiliCookies(@RequestBody JsonNode jsonNode) {
         SysUser user = JwtUtil.verifierFromContext();
-        Assert.isTrue(user.getId().intValue() == 1, "你为什么要这么做?");
-        Assert.isTrue(jsonNode.has("sessdata"), "?");
-        Assert.isTrue(jsonNode.has("bili_jct"), "?");
-        Assert.isTrue(jsonNode.has("buvid3") || jsonNode.has("buvid4"), "?");
-        Assert.isTrue(jsonNode.has("buvid3") || jsonNode.has("buvid4"), "?");
         user.setBiliCookies(jsonNode.toString());
         Db.updateById(user);
-        return Result.ok("设置成功");
-    }
-
-    @GetMapping("/getBiliCookies")
-    public Result<String> getBiliCookies(HttpServletRequest request) {
-        SysUser user = JwtUtil.verifierFromContext();
-        Assert.isTrue(user.getId().intValue() == 1, "你为什么要这么做?");
-        return Result.ok(user.getBiliCookies());
+        JsonNode upChannels = bilibiliClient.getSelfInfo(userService.getBilibiliCookieMap(user.getId()));
+        return Result.ok("ok", upChannels);
     }
 
     @GetMapping("/getQrBili")
