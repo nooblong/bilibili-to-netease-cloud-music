@@ -35,36 +35,46 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         log.info("开始刷新用户播客列表...");
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
         for (SysUser user : userList) {
-            if (StrUtil.isNotBlank(user.getNetCookies())) {
-                try {
-                    JsonNode userVoiceList = netMusicClient.getUserVoiceList(user.getId());
-                    if (userVoiceList != null && userVoiceList.get("total") != null &&
-                            userVoiceList.get("total").asInt() > 0) {
-                        List<UserVoicelist> toAdd = new ArrayList<>();
-                        ArrayNode list = (ArrayNode) userVoiceList.get("list");
-                        for (JsonNode jsonNode : list) {
-                            String coverUrl = jsonNode.get("coverUrl").asText();
-                            Long voiceListId = jsonNode.get("voiceListId").asLong();
-                            String voiceListName = jsonNode.get("voiceListName").asText();
-                            Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
-                                    .eq(UserVoicelist::getUserId, user.getId()));
-                            UserVoicelist userVoicelist = new UserVoicelist();
-                            userVoicelist.setUserId(user.getId());
-                            userVoicelist.setVoicelistId(voiceListId);
-                            userVoicelist.setVoicelistName(voiceListName);
-                            userVoicelist.setVoicelistImage(coverUrl);
-                            toAdd.add(userVoicelist);
-                        }
-                        Db.saveBatch(toAdd);
-                    }
-                } catch (Exception e) {
-                    log.error("用户播客列表查询失败: {}", e.getMessage());
-                }
-            }
+            syncVoicelistByUser(user);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void syncUserVoicelist(Long userId) {
+        SysUser user = Db.getById(userId, SysUser.class);
+        syncVoicelistByUser(user);
+    }
+
+    private void syncVoicelistByUser(SysUser user) {
+        if (StrUtil.isNotBlank(user.getNetCookies())) {
+            try {
+                JsonNode userVoiceList = netMusicClient.getUserVoiceList(user.getId());
+                if (userVoiceList != null && userVoiceList.get("total") != null &&
+                        userVoiceList.get("total").asInt() > 0) {
+                    List<UserVoicelist> toAdd = new ArrayList<>();
+                    ArrayNode list = (ArrayNode) userVoiceList.get("list");
+                    for (JsonNode jsonNode : list) {
+                        String coverUrl = jsonNode.get("coverUrl").asText();
+                        Long voiceListId = jsonNode.get("voiceListId").asLong();
+                        String voiceListName = jsonNode.get("voiceListName").asText();
+                        Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
+                                .eq(UserVoicelist::getUserId, user.getId()));
+                        UserVoicelist userVoicelist = new UserVoicelist();
+                        userVoicelist.setUserId(user.getId());
+                        userVoicelist.setVoicelistId(voiceListId);
+                        userVoicelist.setVoicelistName(voiceListName);
+                        userVoicelist.setVoicelistImage(coverUrl);
+                        toAdd.add(userVoicelist);
+                    }
+                    Db.saveBatch(toAdd);
+                }
+            } catch (Exception e) {
+                log.error("用户播客列表查询失败: {}", e.getMessage());
             }
         }
     }

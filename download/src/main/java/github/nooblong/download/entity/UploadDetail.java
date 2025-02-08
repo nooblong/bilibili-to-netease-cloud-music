@@ -38,8 +38,6 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Double endSec;
     private Long voiceId;
     private Long voiceListId;
-    @TableField(exist = false)
-    private String voiceListName;
     private Long privacy;
     private Integer retryTimes;
     private Integer uploadRetryTimes;
@@ -57,11 +55,15 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private String log;
 
     @TableField(exist = false)
+    private String voiceListName;
+    @TableField(exist = false)
     private String userName;
     @TableField(exist = false)
     private String statusDesc;
     @TableField(exist = false)
     private String mergeTitle;
+    @TableField(exist = false)
+    private String subscribeName;
 
     @Override
     public int compareTo(@NotNull UploadDetail o) {

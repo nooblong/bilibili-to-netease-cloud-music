@@ -23,6 +23,7 @@ import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.service.UserVoicelistService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
@@ -31,6 +32,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,12 +47,16 @@ public class UploadDetailController {
 
     final BilibiliClient bilibiliClient;
 
+    final UserVoicelistService userVoicelistService;
+
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
-                                  BilibiliClient bilibiliClient) {
+                                  BilibiliClient bilibiliClient,
+                                  UserVoicelistService userVoicelistService) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
+        this.userVoicelistService = userVoicelistService;
     }
 
     @GetMapping("/listVoicelist")
@@ -65,6 +71,13 @@ public class UploadDetailController {
         return Result.ok("ok", list);
     }
 
+    @GetMapping("/refreshVoiceList")
+    public Result<String> refreshVoiceList() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        userVoicelistService.syncUserVoicelist(sysUser.getId());
+        return Result.ok("ok");
+    }
+
     @GetMapping("/list")
     public Result<IPage<UploadDetail>> list(@RequestParam(name = "pageNo") int pageNo,
                                             @RequestParam(name = "pageSize") int pageSize,
@@ -77,6 +90,7 @@ public class UploadDetailController {
                                             @RequestParam(required = false, name = "status") String status) {
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
+        Map<Long, Subscribe> subscribeMap = new HashMap<>();
 
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<>();
@@ -85,8 +99,14 @@ public class UploadDetailController {
         if (StrUtil.isNotBlank(username)) {
             LambdaQueryWrapper<SysUser> like = Wrappers.lambdaQuery(SysUser.class).like(SysUser::getUsername, username);
             List<SysUser> list = SimpleQuery.list(like, i -> i);
-            wrapper.in(!list.isEmpty(), UploadDetail::getUserId,
-                    list.stream().map(SysUser::getId).collect(Collectors.toList()));
+            if (!list.isEmpty()) {
+                wrapper.eq(UploadDetail::getUserId,
+                        list.get(0).getId());
+                List<Subscribe> subscribes = Db.list(Wrappers.lambdaQuery(Subscribe.class)
+                        .eq(Subscribe::getUserId, list.get(0).getId())
+                        .select(Subscribe::getUpName, Subscribe::getId));
+                subscribeMap = SimpleQuery.list2Map(subscribes, Subscribe::getId, i -> i);
+            }
         }
         wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
         wrapper.eq(StrUtil.isNotBlank(voiceListId), UploadDetail::getVoiceListId, voiceListId);
@@ -116,7 +136,8 @@ public class UploadDetailController {
             record.setStatusDesc(record.getStatus().getDesc());
             record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() :
                     record.getTitle());
-            record.setLog(null);
+            Subscribe subscribe = subscribeMap.get(record.getSubscribeId());
+            record.setSubscribeName(subscribe == null ? "单曲上传" : subscribe.getUpName());
         }
         return Result.ok("查询成功", page);
     }
