@@ -69,6 +69,17 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         }
     }
 
+    @Override
+    public void checkAndSave(Long userId, Long voiceListId) {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1)
+                .eq(Subscribe::getVoiceListId, voiceListId)
+                .eq(Subscribe::getUserId, userId).list();
+        for (Subscribe subscribe : subscribeList) {
+            checkSubscribe(subscribe, availableBilibiliCookie);
+        }
+    }
+
     private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
         AtomicInteger counter = new AtomicInteger(0);
         try {

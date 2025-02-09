@@ -150,9 +150,9 @@ public class SubscribeController {
     }
 
     @GetMapping("/checkMyUpJob")
-    public Result<String> checkMyUpJob() {
+    public Result<String> checkMyUpJob(@RequestParam("voicelistId") Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();
-        subscribeService.checkAndSave(sysUser.getId());
+        subscribeService.checkAndSave(sysUser.getId(), voiceListId);
         return Result.ok("ok");
     }
 
