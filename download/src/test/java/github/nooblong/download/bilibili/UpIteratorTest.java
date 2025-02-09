@@ -2,11 +2,10 @@ package github.nooblong.download.bilibili;
 
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import github.nooblong.download.VideoOrder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 

@@ -2,23 +2,15 @@ package github.nooblong.download.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliFullVideo;
-import github.nooblong.download.bilibili.SimpleVideoInfo;
-import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -29,7 +21,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -155,6 +146,13 @@ public class SubscribeController {
     public Result<String> checkUpJob() {
         Assert.isTrue(JwtUtil.verifierFromContext().getIsAdmin() == 1, "fail: no permission");
         subscribeService.checkAndSave();
+        return Result.ok("ok");
+    }
+
+    @GetMapping("/checkMyUpJob")
+    public Result<String> checkMyUpJob() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        subscribeService.checkAndSave(sysUser.getId());
         return Result.ok("ok");
     }
 

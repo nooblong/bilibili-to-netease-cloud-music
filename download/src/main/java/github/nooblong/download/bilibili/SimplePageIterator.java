@@ -1,7 +1,9 @@
 package github.nooblong.download.bilibili;
 
 import cn.hutool.core.util.NumberUtil;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import cn.hutool.core.util.StrUtil;
+import github.nooblong.common.util.CommonUtil;
+import github.nooblong.download.VideoOrder;
 import github.nooblong.download.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,9 +27,10 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     private final boolean checkPart;
     List<SimpleVideoInfo> insidePartList = new ArrayList<>();
     Map<String, String> bilibiliCookie;
+    String channelIds;
 
     public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder
-            , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
+            , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
@@ -36,6 +39,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
         if (lastTotalIndex > 0) {
             this.totalIndex = lastTotalIndex;
         }
+        this.channelIds = channelIds;
     }
 
     @Override
@@ -100,29 +104,44 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 log.info("simple歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
                 return next();
             }
-            if (checkPart) {
+            if (checkPart || StrUtil.isNotBlank(channelIds)) {
                 BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), bilibiliCookie);
-                if (fullVideo.getHasMultiPart()) {
-                    log.info("simple检测到多p视频: {}", fullVideo.getTitle());
-                    // 多p视频不要直接返回，从p1开始返回
-                    // 对part内做时间限制
-                    try {
 
-                        Iterator<SimpleVideoInfo> partIterator =
-                                new PartIterator(bilibiliClient, limitSec, VideoOrder.PUB_NEW_FIRST_THEN_OLD,
-                                        fullVideo.getBvid(), bilibiliCookie);
-                        while (partIterator.hasNext()) {
-                            SimpleVideoInfo next = partIterator.next();
-                            // 将视频的createTime赋值
-                            next.setCreateTime(result.getCreateTime());
-                            insidePartList.add(next);
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        // ignore
+                if (StrUtil.isNotBlank(channelIds)) {
+                    // 判断是否在合集里
+                    List<String> channelIdList = CommonUtil.toList(channelIds);
+                    String seasonId = fullVideo.getSeasonId();
+                    if (seasonId != null && channelIdList.contains(seasonId)) {
+                        return result;
+                    } else {
+                        log.info("simple歌曲:{} 合集: {} 不属于合集: {}", result.getTitle(), seasonId, channelIds);
                     }
-                    SimpleVideoInfo remove = insidePartList.remove(0);
-                    log.info("simple多p视频第一次返回: {}", remove.getPartName());
-                    return remove;
+                }
+
+                if (checkPart) {
+                    // 判断是否包含多p
+                    if (fullVideo.getHasMultiPart()) {
+                        log.info("simple检测到多p视频: {}", fullVideo.getTitle());
+                        // 多p视频不要直接返回，从p1开始返回
+                        // 对part内做时间限制
+                        try {
+
+                            Iterator<SimpleVideoInfo> partIterator =
+                                    new PartIterator(bilibiliClient, limitSec, VideoOrder.PUB_NEW_FIRST_THEN_OLD,
+                                            fullVideo.getBvid(), bilibiliCookie);
+                            while (partIterator.hasNext()) {
+                                SimpleVideoInfo next = partIterator.next();
+                                // 将视频的createTime赋值
+                                next.setCreateTime(result.getCreateTime());
+                                insidePartList.add(next);
+                            }
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            // ignore
+                        }
+                        SimpleVideoInfo remove = insidePartList.remove(0);
+                        log.info("simple多p视频第一次返回: {}", remove.getPartName());
+                        return remove;
+                    }
                 }
             }
             // 不是多p

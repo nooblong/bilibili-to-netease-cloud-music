@@ -1,5 +1,13 @@
-initialDelay: 1
 bilibiliApiUrl: ""
+
+initialDelay: 3
+enableGetAuditStatus: 1
+enableGetUpJob: 1
+enableUploadJob: 1
+enableRefreshNetCookie: 1
+enableRestartJob: 1
+enableRefreshBiliCookie: 1
+
 server:
   port: 25565
 spring:
@@ -9,7 +17,7 @@ spring:
     username: 用户名
     password: 密码
     hikari:
-      max-lifetime: 600000
+      max-lifetime: 100000
       minimum-idle: 5
   servlet:
     multipart:

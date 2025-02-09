@@ -17,6 +17,7 @@ import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.Constant;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -58,23 +59,48 @@ public class ScheduleTask {
         this.uploadJob = uploadJob;
     }
 
+    @Value("${enableUploadJob}")
+    private int enableUploadJob;
+    @Value("${enableGetAuditStatus}")
+    private int enableGetAuditStatus;
+    @Value("${enableGetUpJob}")
+    private int enableGetUpJob;
+    @Value("${enableRestartJob}")
+    private int enableRestartJob;
+    @Value("${enableRefreshNetCookie}")
+    private int enableRefreshNetCookie;
+    @Value("${enableRefreshBiliCookie}")
+    private int enableRefreshBiliCookie;
+
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getAuditStatus() {
+        if (enableGetAuditStatus <= 0) {
+            return;
+        }
         uploadDetailService.checkAllAuditStatus();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getUpJob() {
+        if (enableGetUpJob <= 0) {
+            return;
+        }
         getUpJob.process();
     }
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void uploadJob() {
+        if (enableUploadJob <= 0) {
+            return;
+        }
         uploadJob.uploadOne();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void refreshNetCookie() {
+        if (enableRefreshNetCookie <= 0) {
+            return;
+        }
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
@@ -86,17 +112,9 @@ public class ScheduleTask {
 
     @PostConstruct
     public void restartJob() {
-        deleteOnStart();
-        List<UploadDetail> list = Db.list(Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name()));
-        if (!list.isEmpty()) {
-            list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
-            list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
-            Db.updateBatchById(list);
+        if (enableRestartJob <= 0) {
+            return;
         }
-    }
-
-    public void deleteOnStart() {
         Path path = Paths.get(Constant.TMP_FOLDER);
         try (Stream<Path> walk = Files.walk(path)) {
             walk.sorted(Comparator.reverseOrder())
@@ -111,10 +129,20 @@ public class ScheduleTask {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        List<UploadDetail> list = Db.list(Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name()));
+        if (!list.isEmpty()) {
+            list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
+            list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
+            Db.updateBatchById(list);
+        }
     }
 
-//    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void refreshBiliCookie() {
+        if (enableRefreshBiliCookie <= 0) {
+            return;
+        }
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (!sysUser.getBiliCookies().isBlank()) {

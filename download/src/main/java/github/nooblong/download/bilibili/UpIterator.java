@@ -1,7 +1,7 @@
 package github.nooblong.download.bilibili;
 
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import github.nooblong.download.VideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
@@ -18,8 +18,8 @@ public class UpIterator extends SimplePageIterator {
 
     public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec,
                       VideoOrder videoOrder, UserVideoOrder userVideoOrder, boolean checkPart,
-                      Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
-        super(bilibiliClient, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex);
+                      Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
+        super(bilibiliClient, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex, channelIds);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;

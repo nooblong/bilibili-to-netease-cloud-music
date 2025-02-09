@@ -13,8 +13,6 @@ import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.StatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
-import github.nooblong.download.api.AddToMyRequest;
-import github.nooblong.download.api.CidNameRequest;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;

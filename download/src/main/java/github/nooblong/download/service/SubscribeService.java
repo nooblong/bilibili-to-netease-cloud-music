@@ -13,4 +13,6 @@ public interface SubscribeService extends IService<Subscribe> {
 
     void checkAndSave();
 
+    void checkAndSave(Long userId);
+
 }

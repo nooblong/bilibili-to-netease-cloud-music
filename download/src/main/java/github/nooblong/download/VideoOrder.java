@@ -1,4 +1,4 @@
-package github.nooblong.download.bilibili.enums;
+package github.nooblong.download;
 
 public enum VideoOrder {
     // up主

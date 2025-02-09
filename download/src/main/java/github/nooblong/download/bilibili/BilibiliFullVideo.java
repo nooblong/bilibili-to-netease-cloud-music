@@ -80,4 +80,8 @@ public class BilibiliFullVideo {
     public int getDuration() {
         return videoInfo.get("data").get("duration").asInt();
     }
+
+    public String getSeasonId() {
+        return videoInfo.get("data").get("season_id").asText();
+    }
 }

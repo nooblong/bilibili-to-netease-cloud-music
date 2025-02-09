@@ -3,6 +3,7 @@ package github.nooblong.download.service.impl;
 
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.util.CommonUtil;
@@ -10,9 +11,8 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.FavoriteIterator;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.UpIterator;
-import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import github.nooblong.download.VideoOrder;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.SubscribeMapper;
@@ -53,25 +53,39 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
-            try {
-                Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
-                    case UP -> new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
-                            subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
-                            UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
-                            availableBilibiliCookie, subscribe.getLastTotalIndex());
-                    case FAVORITE -> new FavoriteIterator(subscribe.getUpId(), bilibiliClient,
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
-                            availableBilibiliCookie);
-                    default -> throw new IllegalStateException("订阅缺少类型: " + subscribe.getType());
-                };
-                process(subscribe, iterator);
-            } catch (Exception e) {
-                log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
-                log.error(e.getMessage(), e);
-                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
-                        " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
-                updateById(subscribe);
-            }
+            checkSubscribe(subscribe, availableBilibiliCookie);
+        }
+    }
+
+    @Override
+    public void checkAndSave(Long userId) {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1)
+                .eq(Subscribe::getUserId, userId).list();
+        for (Subscribe subscribe : subscribeList) {
+            checkSubscribe(subscribe, availableBilibiliCookie);
+        }
+    }
+
+    private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
+        try {
+            Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
+                case UP -> new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
+                        subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
+                        UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
+                        availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds());
+                case FAVORITE -> new FavoriteIterator(subscribe.getUpId(), bilibiliClient,
+                        subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                        availableBilibiliCookie);
+                default -> throw new IllegalStateException("订阅缺少类型: " + subscribe.getType());
+            };
+            process(subscribe, iterator);
+        } catch (Exception e) {
+            log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
+            log.error(e.getMessage(), e);
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
+                    " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
+            updateById(subscribe);
         }
     }
 
@@ -80,6 +94,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         int processNum = 0;
         while (iterator.hasNext()) {
             SimpleVideoInfo next = iterator.next();
+
             if (next.getCreateTime() != null &&
                     // 倒序就全部遍历，没办法看时间
                     subscribe.getVideoOrder().equals(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name())
@@ -88,7 +103,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                         DateUtil.formatDateTime(subscribe.getProcessTime()));
                 break;
             }
-            // 判断上传时间区间
+
+            // 判断from-to区间
             if (next.getCreateTime() != null &&
                     !DateUtil.isIn(new Date(next.getCreateTime() * 1000), subscribe.getFromTime(),
                             subscribe.getToTime())) {
@@ -97,7 +113,13 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 continue;
             }
 
-            // todo: 判断关键词跳过
+            // 判断关键词跳过
+            if (StrUtil.isNotBlank(subscribe.getKeyWord()) &&
+                    StrUtil.isNotBlank(next.getTitle()) &&
+                    !next.getTitle().contains(subscribe.getKeyWord())) {
+                log.info("跳过关键词: {}", subscribe.getKeyWord());
+                continue;
+            }
 
             // 查重
             boolean unique = uploadDetailService.isUnique(next.getBvid(),

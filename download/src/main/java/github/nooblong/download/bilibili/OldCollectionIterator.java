@@ -1,7 +1,7 @@
 package github.nooblong.download.bilibili;
 
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import github.nooblong.download.VideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,8 +15,8 @@ public class OldCollectionIterator extends SimplePageIterator {
 
     public OldCollectionIterator(BilibiliClient bilibiliClient, int limitSec,
                                  VideoOrder videoOrder, String collectionId, CollectionVideoOrder collectionVideoOrder,
-                                 Map<String, String> bilibiliCookie, Integer lastTotalIndex) {
-        super(bilibiliClient, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex);
+                                 Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
+        super(bilibiliClient, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex, channelIds);
         this.collectionId = collectionId;
         this.collectionVideoOrder = collectionVideoOrder;
     }

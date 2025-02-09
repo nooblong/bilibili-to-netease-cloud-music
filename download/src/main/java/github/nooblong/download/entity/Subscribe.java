@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import github.nooblong.download.bilibili.enums.SubscribeTypeEnum;
+import github.nooblong.download.SubscribeTypeEnum;
 import lombok.Data;
 
 import java.io.Serializable;

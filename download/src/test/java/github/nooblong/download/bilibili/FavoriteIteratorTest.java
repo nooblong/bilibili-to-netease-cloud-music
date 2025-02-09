@@ -1,7 +1,7 @@
 package github.nooblong.download.bilibili;
 
 import github.nooblong.download.BaseTest;
-import github.nooblong.download.bilibili.enums.VideoOrder;
+import github.nooblong.download.VideoOrder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

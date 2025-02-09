@@ -1,5 +1,6 @@
 package github.nooblong.download.netmusic;
 
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -60,23 +61,21 @@ public class NetMusicClient {
                             }
                         }
                         // todo: 避免测试时刷新正式cookie
-//                        if (cookieRefreshApi(url)) {
-//                            ObjectNode objectNode = CookieUtil.parseCookiesIn(cookies);
-//                            try {
-//                                String userNetCookiesStr = user.getNetCookies();
-//                                ObjectNode userNetCookies = (ObjectNode) objectMapper.readTree(userNetCookiesStr);
-//                                objectNode.fields().forEachRemaining(entry -> {
-//                                    if (userNetCookies.has(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
-//                                        log.info("更新网易cookie: {}, 与之前相同? {}", entry.getKey(),
-//                                                entry.getValue().asText().equals(userNetCookies.get(entry.getKey()).asText()));
-//                                        userNetCookies.put(entry.getKey(), entry.getValue().asText());
-//                                    }
-//                                });
-//                                user.setNetCookies(userNetCookies.toString());
-//                            } catch (JsonProcessingException e) {
-//                                log.error("刷新网易token出错: {}", e.getMessage());
-//                            }
-//                        }
+                        if (cookieRefreshApi(url)) {
+                            try {
+                                ObjectNode objectNode = CommonUtil.cookieListToObjectNode(cookies);
+                                Map<String, String> neteaseCookieMap = userService.getNeteaseCookieMap(userId);
+                                objectNode.fields().forEachRemaining(entry -> {
+                                    if (neteaseCookieMap.containsKey(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
+                                        neteaseCookieMap.put(entry.getKey(), entry.getValue().asText());
+                                    }
+                                });
+                                userService.updateNeteaseCookieByCookieMap(userId, neteaseCookieMap);
+                                log.info("刷新网易cookie成功, 用户id: {}", userId);
+                            } catch (Exception e) {
+                                log.error("刷新网易cookie出错: {}", e.getMessage());
+                            }
+                        }
                         if (url != null && url.toString().contains("/register/anonimous")) {
                             ObjectNode anonymousCookie = CommonUtil.cookieListToObjectNode(cookies);
                             if (anonymousCookie.has("MUSIC_A")) {
