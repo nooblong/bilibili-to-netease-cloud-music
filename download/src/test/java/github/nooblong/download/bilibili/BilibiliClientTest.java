@@ -15,12 +15,6 @@ class BilibiliClientTest extends BaseTest {
     @Autowired
     BilibiliClient bilibiliClient;
 
-    @Test
-    void validate() throws JsonProcessingException {
-        SysUser byId = Db.getById(1L, SysUser.class);
-        Map<String, String> bilibiliCookieMap = userService.getBilibiliCookieMap(1L);
-        bilibiliClient.validate(bilibiliCookieMap, 1L);
-    }
 
     @Test
     void getUpChannels() {

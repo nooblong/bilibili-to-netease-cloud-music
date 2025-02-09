@@ -1,16 +1,15 @@
 package github.nooblong.download.service.impl;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.util.CommonUtil;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.MusicStatusEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
-import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.mapper.UploadDetailMapper;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
@@ -43,12 +42,14 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     @Override
     public void checkAllAuditStatus() {
 
-        List<UploadDetail> uploadDetailList = lambdaQuery().notIn(UploadDetail::getStatus,
-                        Arrays.asList(StatusTypeEnum.ONLINE.name(),
-                                StatusTypeEnum.ONLY_SELF_SEE.name(),
-                                StatusTypeEnum.FAILED.name(),
-                                StatusTypeEnum.TRANSCODE_FAILED.name()))
-                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
+        List<UploadDetail> uploadDetailList = lambdaQuery().notIn(
+                UploadDetail::getMusicStatus,
+                        Arrays.asList(MusicStatusEnum.ONLINE.name(),
+                                MusicStatusEnum.ONLY_SELF_SEE.name(),
+                                MusicStatusEnum.FAILED.name(),
+                                MusicStatusEnum.TRANSCODE_FAILED.name()))
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.SUCCESS.name())
+                .le(UploadDetail::getMusicRetryTimes, Constant.MAX_RETRY_TIMES)
                 .gt(UploadDetail::getVoiceId, 0)
                 .list();
 
@@ -57,15 +58,15 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
             try {
                 auditStatus = getAuditStatus(String.valueOf(item.getVoiceId()), item.getUserId());
                 try {
-                    item.setStatus(StatusTypeEnum.valueOf(auditStatus));
+                    item.setMusicStatus(MusicStatusEnum.valueOf(auditStatus));
                 } catch (Exception e) {
-                    item.setStatus(StatusTypeEnum.UNKNOWN);
+                    item.setMusicStatus(MusicStatusEnum.UNKNOWN);
                 }
             } catch (Exception e) {
                 log.error("声音:{}获取状态失败:{}", item.getTitle(), e.getMessage());
-                item.setRetryTimes(item.getRetryTimes() + 1);
+                item.setMusicRetryTimes(item.getMusicRetryTimes() + 1);
             }
-            item.setRetryTimes(item.getRetryTimes() + 1);
+            item.setMusicRetryTimes(item.getMusicRetryTimes() + 1);
             item.setUpdateTime(new Date());
             updateById(item);
         }
@@ -83,14 +84,6 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     }
 
     @Override
-    public List<UploadDetail> listAllWait() {
-        return lambdaQuery().eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
-                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
-                .orderByDesc(UploadDetail::getPriority)
-                .list();
-    }
-
-    @Override
     public void logNow(Long uploadDetailId, String content) {
         UploadDetail uploadDetail = getById(uploadDetailId);
         uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
@@ -103,7 +96,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         param.put("id", voiceId);
         JsonNode voicedetail = netMusicClient.getMusicDataByUserId(param, "voicedetail", userId);
         if (voicedetail.get("code").asInt() == 301) {
-            return StatusTypeEnum.NO_LOGIN.getDesc();
+            return "NO_COOKIE";
         }
         String result;
         result = voicedetail.get("data").get("displayStatus").asText();

@@ -10,13 +10,12 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -86,12 +85,11 @@ public class SystemController {
     public Result<IPage<UploadDetail>> queueInfo(@RequestParam(name = "pageNo") int pageNo,
                                                  @RequestParam(name = "pageSize") int pageSize) {
         LambdaQueryWrapper<UploadDetail> queryWrapper = Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.WAIT.name())
                 .orderByDesc(UploadDetail::getPriority)
                 .orderByAsc(UploadDetail::getCreateTime);
         LambdaQueryWrapper<UploadDetail> queryWrapper2 = Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name())
-                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.PROCESSING.name())
                 .orderByDesc(UploadDetail::getPriority)
                 .orderByAsc(UploadDetail::getCreateTime);
         IPage<UploadDetail> page = uploadDetailService.page(new Page<>(pageNo, pageSize), queryWrapper);

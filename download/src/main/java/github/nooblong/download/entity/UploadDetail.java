@@ -3,9 +3,7 @@ package github.nooblong.download.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.MusicStatusEnum;
 import github.nooblong.download.UploadStatusTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,10 +37,10 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long voiceId;
     private Long voiceListId;
     private Long privacy;
-    private Integer retryTimes;
-    private Integer uploadRetryTimes;
-    private StatusTypeEnum status;
+    private MusicStatusEnum musicStatus;
+    private Integer musicRetryTimes;
     private UploadStatusTypeEnum uploadStatus;
+    private Integer uploadRetryTimes;
     private String bvid;
     private String cid;
     /**

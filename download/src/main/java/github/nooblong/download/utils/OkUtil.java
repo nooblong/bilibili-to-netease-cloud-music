@@ -20,6 +20,8 @@ import java.util.function.Consumer;
 @Slf4j
 public class OkUtil {
 
+    private static final Boolean LOG_REQUEST = false;
+
     public static String anonymousToken = "1f5fa7b6a6a9f81a11886e5186fde7fb74afecc68539838b34fd4c1fc57b40cc4b7f5273fc3921d1f66807bb86d2c6cb1366ed0860abc362e189299846f5e4182c0190c476579d923324751bcc9aaf44c3061cd18d77b7a0";
     public static final String MOBILE_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1";
     public static final String PC_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0";
@@ -48,10 +50,12 @@ public class OkUtil {
         headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
         header.forEach(headerBuilder::set);
         Headers headers = headerBuilder.build();
-        log.info("请求网易WeApi Header: {}", headers.toMultimap());
         Request.Builder builder = new Request.Builder().url(url).headers(headers);
         Request request = builder.method(method.toUpperCase(), formBody).build();
-        log.info("请求网易WeApi: {} body: {}", url, jsonNode);
+        if (LOG_REQUEST) {
+            log.info("请求网易WeApi Header: {}", headers.toMultimap());
+            log.info("请求网易WeApi: {} body: {}", url, jsonNode);
+        }
         return request;
     }
 
@@ -65,7 +69,9 @@ public class OkUtil {
         jsonNode.fieldNames().forEachRemaining(s -> formBuilder.add(s, jsonNode.get(s).asText()));
         Request request = new Request.Builder().url(url).headers(headers)
                 .method(method.toUpperCase(), formBuilder.build()).build();
-        log.info("请求网易Api: {} body: {}", request, jsonNode);
+        if (LOG_REQUEST) {
+            log.info("请求网易Api: {} body: {}", request, jsonNode);
+        }
         return request;
     }
 
@@ -80,7 +86,9 @@ public class OkUtil {
         RequestBody formBody = new FormBody.Builder().add("params", eapiEncrypt).build();
         Request request = new Request.Builder().url(url).headers(headers)
                 .method(method.toUpperCase(), formBody).build();
+        if (LOG_REQUEST) {
         log.info("请求网易EApi: {} body: {}", request, jsonNode);
+        }
         return request;
     }
 
@@ -90,7 +98,9 @@ public class OkUtil {
         Request request = new Request.Builder()
                 .headers(justAddHeaders(header))
                 .url(url).method(method.toUpperCase(), requestBody).build();
-        log.info("上传网易云: {}", request);
+        if (LOG_REQUEST) {
+            log.info("上传网易云: {}", request);
+        }
         return request;
     }
 
@@ -101,7 +111,9 @@ public class OkUtil {
                 .header("Content-Type", "image/jpeg")
                 .addHeader("x-nos-token", xNosToken)
                 .build();
-        log.info("上传网易云图片: {}", request);
+        if (LOG_REQUEST) {
+            log.info("上传网易云图片: {}", request);
+        }
         return request;
     }
 
@@ -129,7 +141,9 @@ public class OkUtil {
             ResponseBody body = response.body();
             assert body != null;
             String s = body.string();
-            log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            if (LOG_REQUEST) {
+                log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            }
             return new ObjectMapper().readTree(s);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -154,7 +168,9 @@ public class OkUtil {
                 jsonNode = new ObjectMapper().createObjectNode();
             }
             headerMap.forEach((key, value) -> jsonNode.put(key, value.get(0)));
-            log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            if (LOG_REQUEST) {
+                log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            }
             return jsonNode;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -170,7 +186,9 @@ public class OkUtil {
             ResponseBody body = response.body();
             assert body != null;
             String s = body.string();
-            log.info("response(code:{}): {}", response.code(), s);
+            if (LOG_REQUEST) {
+                log.info("response(code:{}): {}", response.code(), s);
+            }
             String cleaned = XmlUtil.cleanInvalid(s);
             return XmlUtil.parseXml(cleaned);
         } catch (IOException e) {
@@ -183,7 +201,9 @@ public class OkUtil {
             ResponseBody body = response.body();
             assert body != null;
             String s = body.string();
-            log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            if (LOG_REQUEST) {
+                log.info("response(code:{}): {}", response.code(), s.substring(0, Math.min(s.length(), 500)));
+            }
             return s;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -196,13 +216,17 @@ public class OkUtil {
 
     public static Request get(String url) {
         Request request = new Request.Builder().url(url).get().build();
-        log.info("GET: {}", request);
+        if (LOG_REQUEST) {
+            log.info("GET: {}", request);
+        }
         return request;
     }
 
     public static Request get(HttpUrl url) {
         Request request = new Request.Builder().url(url).get().build();
-        log.info("GET: {}", request);
+        if (LOG_REQUEST) {
+            log.info("GET: {}", request);
+        }
         return request;
     }
 
@@ -210,7 +234,9 @@ public class OkUtil {
         HttpUrl.Builder builder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
         params.forEach(builder::addQueryParameter);
         Request request = new Request.Builder().url(builder.build()).get().build();
-        log.info("GET: {}", request);
+        if (LOG_REQUEST) {
+            log.info("GET: {}", request);
+        }
         return request;
     }
 
@@ -218,7 +244,9 @@ public class OkUtil {
         HttpUrl.Builder builder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
         params.forEach(builder::addQueryParameter);
         Request request = new Request.Builder().url(builder.build()).headers(justAddHeaders(headers)).get().build();
-        log.info("GET: {}", request);
+        if (LOG_REQUEST) {
+            log.info("GET: {}", request);
+        }
         return request;
     }
 
@@ -227,7 +255,9 @@ public class OkUtil {
         Request request = new Request.Builder().url(url)
                 .method("POST", requestBody)
                 .build();
-        log.info("POST: {}", request);
+        if (LOG_REQUEST) {
+            log.info("POST: {}", request);
+        }
         assert request.body() != null;
         return request;
     }
@@ -237,7 +267,9 @@ public class OkUtil {
         Request request = new Request.Builder().url(url)
                 .method("POST", requestBody)
                 .build();
-        log.info("POST: {}", request);
+        if (LOG_REQUEST) {
+            log.info("POST: {}", request);
+        }
         assert request.body() != null;
         return request;
     }
@@ -248,7 +280,9 @@ public class OkUtil {
                 .method("POST", requestBody)
                 .headers(justAddHeaders(header))
                 .build();
-        log.info("POST: {}", request);
+        if (LOG_REQUEST) {
+            log.info("POST: {}", request);
+        }
         assert request.body() != null;
         return request;
     }
@@ -259,7 +293,9 @@ public class OkUtil {
                 .method(method.toUpperCase(), requestBody)
                 .headers(justAddHeaders(header))
                 .build();
-        log.info("POST: {}", request);
+        if (LOG_REQUEST) {
+            log.info("POST: {}", request);
+        }
         assert request.body() != null;
         return request;
     }

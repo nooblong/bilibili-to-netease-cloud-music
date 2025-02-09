@@ -22,6 +22,7 @@ public class Constant {
     public static final String FFMPEG_FORMAT_M4A = "m4a";
     public static final int SEARCH_PAGE_SIZE = 30;
     public static final int MAX_RETRY_TIMES = 5;
+    public static final int UPLOAD_MAX_RETRY_TIMES = 5;
     public static String TMP_FOLDER;
 
     @PostConstruct

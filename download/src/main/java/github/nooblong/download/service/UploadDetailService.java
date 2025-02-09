@@ -15,7 +15,5 @@ public interface UploadDetailService extends IService<UploadDetail> {
 
     boolean isUnique(String uniqueSourceId, String secondUniqueSourceId, Long voiceListId);
 
-    List<UploadDetail> listAllWait();
-
     void logNow(Long uploadDetailId, String content);
 }

@@ -61,24 +61,27 @@ public class NetMusicClient {
                             }
                         }
                         if (cookieRefreshApi(url)) {
+                            log.info("? 遇到网易用户set-cookie请求");
                             try {
                                 ObjectNode objectNode = CommonUtil.cookieListToObjectNode(cookies);
                                 Map<String, String> neteaseCookieMap = userService.getNeteaseCookieMap(userId);
                                 objectNode.fields().forEachRemaining(entry -> {
                                     if (neteaseCookieMap.containsKey(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
+                                        log.info("更新cookie中的: {}", entry.getKey());
                                         neteaseCookieMap.put(entry.getKey(), entry.getValue().asText());
                                     }
                                 });
                                 userService.updateNeteaseCookieByCookieMap(userId, neteaseCookieMap);
-                                log.info("刷新网易cookie成功, 用户id: {}", userId);
+                                log.info("success 刷新网易cookie成功, 用户id: {}", userId);
                             } catch (Exception e) {
-                                log.error("刷新网易cookie出错: {}", e.getMessage());
+                                log.error("fail 刷新网易cookie出错: {}", e.getMessage());
                             }
                         }
                         if (url != null && url.toString().contains("/register/anonimous")) {
+                            log.info("? 遇到网易游客set-token请求");
                             ObjectNode anonymousCookie = CommonUtil.cookieListToObjectNode(cookies);
                             if (anonymousCookie.has("MUSIC_A")) {
-                                log.info("设置游客token成功!");
+                                log.info("success 设置游客token成功!");
                                 OkUtil.anonymousToken = anonymousCookie.get("MUSIC_A").asText();
                             }
                         }
@@ -87,8 +90,6 @@ public class NetMusicClient {
                     @Override
                     @Nonnull
                     public List<Cookie> loadForRequest(@Nullable HttpUrl url) {
-                        log.info("对: {} 使用用户cookie: {}", url, userId);
-                        log.info("cookie: {}", cookiesByUser);
                         return cookiesByUser;
                     }
                 })

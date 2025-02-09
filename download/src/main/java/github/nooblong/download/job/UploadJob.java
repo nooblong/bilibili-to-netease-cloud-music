@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
@@ -65,8 +65,7 @@ public class UploadJob {
 
     public void uploadOne() {
         LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.WAIT.name())
-                .le(UploadDetail::getRetryTimes, Constant.MAX_RETRY_TIMES)
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.WAIT.name())
                 .orderByDesc(UploadDetail::getPriority)
                 .orderByAsc(UploadDetail::getCreateTime)
                 .last("limit 1");
@@ -101,8 +100,8 @@ public class UploadJob {
         Assert.notNull(uploadDetail, "uploadDetail为空");
 
         // 先更新了信息先，其他不管
-        uploadDetail.setRetryTimes(uploadDetail.getRetryTimes() + 1);
-        uploadDetail.setStatus(StatusTypeEnum.PROCESSING);
+        uploadDetail.setUploadRetryTimes(uploadDetail.getUploadRetryTimes() + 1);
+        uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
         uploadDetailService.updateById(uploadDetail);
 
         Context context = new Context();
@@ -121,7 +120,10 @@ public class UploadJob {
 
             uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
         } catch (Exception e) {
-            uploadDetail.setStatus(StatusTypeEnum.INTERNAL_ERROR);
+            uploadDetail.setUploadStatus(UploadStatusTypeEnum.ERROR);
+            if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
+                uploadDetail.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
+            }
             Db.updateById(uploadDetail);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + e.getMessage());
             delete(context);
@@ -292,7 +294,7 @@ public class UploadJob {
     private void clear(Context context, Long voiceId) {
         UploadDetail newUploadDetail = uploadDetailService.getById(context.uploadDetailId);
         newUploadDetail.setVoiceId(voiceId);
-        newUploadDetail.setStatus(StatusTypeEnum.AUDITING);
+        newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
         Db.updateById(newUploadDetail);
         uploadDetailService.logNow(context.uploadDetailId, ">>> 数据库数据已更新");
         // 清理数据

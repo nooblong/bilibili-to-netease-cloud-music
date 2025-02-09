@@ -7,14 +7,12 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
@@ -22,11 +20,7 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -106,7 +100,7 @@ public class UploadDetailController {
                 subscribeMap = SimpleQuery.list2Map(subscribes, Subscribe::getId, i -> i);
             }
         }
-        wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getStatus, status);
+        wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getUploadStatus, status);
         wrapper.eq(StrUtil.isNotBlank(voiceListId), UploadDetail::getVoiceListId, voiceListId);
 
         if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {
@@ -131,7 +125,7 @@ public class UploadDetailController {
 
         for (UploadDetail record : page.getRecords()) {
             record.setUserName(longSysUserMap.get(record.getUserId()).getUsername());
-            record.setStatusDesc(record.getStatus().getDesc());
+            record.setStatusDesc(record.getUploadStatus().getDesc());
             record.setMergeTitle(StrUtil.isNotBlank(record.getUploadName()) ? record.getUploadName() :
                     record.getTitle());
             Subscribe subscribe = subscribeMap.get(record.getSubscribeId());
@@ -200,8 +194,9 @@ public class UploadDetailController {
         UploadDetail byId = uploadDetailService.getById(id);
         Assert.notNull(byId, "null id");
         Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "assert error");
-        byId.setRetryTimes(0);
-        byId.setStatus(StatusTypeEnum.WAIT);
+        byId.setUploadRetryTimes(0);
+        byId.setMusicRetryTimes(0);
+        byId.setUploadStatus(UploadStatusTypeEnum.WAIT);
         uploadDetailService.updateById(byId);
         return Result.ok("ok");
     }

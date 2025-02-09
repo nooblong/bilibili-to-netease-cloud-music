@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
-import github.nooblong.download.StatusTypeEnum;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.job.GetUpJob;
@@ -104,8 +104,12 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
-                JsonNode loginrefresh = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh", sysUser.getId());
-                log.info("用户 {} 网易cookie刷新结果: {}", sysUser.getUsername(), loginrefresh.toString());
+                JsonNode loginrefresh = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh",
+                        sysUser.getId());
+                if (!loginrefresh.get("code").asText().equals("200")) {
+                    sysUser.setNetCookies("");
+                    userService.updateById(sysUser);
+                }
             }
         }
     }
@@ -130,9 +134,9 @@ public class ScheduleTask {
             throw new RuntimeException(e);
         }
         List<UploadDetail> list = Db.list(Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getStatus, StatusTypeEnum.PROCESSING.name()));
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.PROCESSING.name()));
         if (!list.isEmpty()) {
-            list.forEach(i -> i.setStatus(StatusTypeEnum.WAIT));
+            list.forEach(i -> i.setUploadStatus(UploadStatusTypeEnum.WAIT));
             list.forEach(i -> log.info("重启任务: {} {}", i.getTitle(), i.getUploadName()));
             Db.updateBatchById(list);
         }
@@ -146,12 +150,26 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (!sysUser.getBiliCookies().isBlank()) {
-                boolean need = bilibiliClient.needRefreshCookie(userService.getBilibiliCookieMap(sysUser.getId()));
-                if (!need) {
-                    log.info("b站cookie无需更新: {}", sysUser.getUsername());
-                } else {
-                    Map<String, String> refresh = bilibiliClient.refresh(userService.getBilibiliCookieMap(sysUser.getId()));
-                    bilibiliClient.validate(refresh, sysUser.getId());
+                try {
+                    JsonNode need = bilibiliClient.checkRefresh(userService.getBilibiliCookieMap(sysUser.getId()));
+                    if (need.get("data").asText().equals("false")) {
+                        log.info("b站cookie无需更新: {}", sysUser.getUsername());
+                    } else if (need.get("data").asText().equals("true")) {
+                        log.info("b站cookie需更新: {}", sysUser.getUsername());
+                        JsonNode refresh = bilibiliClient.refresh(userService.getBilibiliCookieMap(sysUser.getId()));
+                        String sessdata = refresh.get("data").get("sessdata").asText();
+                        String bili_jct = refresh.get("data").get("bili_jct").asText();
+                        String dedeuserid = refresh.get("data").get("dedeuserid").asText();
+                        String ac_time_value = refresh.get("data").get("ac_time_value").asText();
+                        Map<String, String> updateMap = new HashMap<>();
+                        updateMap.put("sessdata", sessdata);
+                        updateMap.put("bili_jct", bili_jct);
+                        updateMap.put("dedeuserid", dedeuserid);
+                        updateMap.put("ac_time_value", ac_time_value);
+                        userService.updateBilibiliCookieByCookieMap(sysUser.getId(), updateMap);
+                    }
+                } catch (Exception e) {
+                    log.error("b站cookie刷新失败: {}", sysUser.getUsername());
                 }
             }
         }

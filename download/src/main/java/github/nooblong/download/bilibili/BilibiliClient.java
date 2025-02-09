@@ -68,41 +68,14 @@ public class BilibiliClient {
         throw new RuntimeException("没有可用b站cookie");
     }
 
-    public boolean needRefreshCookie(Map<String, String> cred) {
-        JsonNode need = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
+    public JsonNode checkRefresh(Map<String, String> cred) {
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/check_refresh", cred), okHttpClient);
-        if (need.get("code").asInt() != 0) {
-            throw new RuntimeException("b站账号未登录");
-        }
-        return need.get("data").asBoolean();
     }
 
-    public Map<String, String> refresh(Map<String, String> cred) {
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
+    public JsonNode refresh(Map<String, String> cred) {
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/refresh", cred), okHttpClient);
-        if (response.get("code").asInt() != 0) {
-            throw new RuntimeException("刷新cookie出错");
-        }
-        JsonNode data = response.get("data");
-        return new ObjectMapper().convertValue(data, new TypeReference<>() {
-        });
-    }
-
-    public void validate(@Nonnull Map<String, String> cred, Long userId) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode node = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
-                + "/Credential/check_valid", cred), okHttpClient);
-        Assert.isTrue(node.get("code").asInt() == 0 && node.get("data").asBoolean(), "验证cookie出错");
-        Assert.isTrue(node.get("data").asBoolean(), "cookie刷新后无法使用");
-        // save
-        Map<String, String> oldCookie = userService.getBilibiliCookieMap(userId);
-        for (String key : cred.keySet()) {
-            String value = cred.get(key);
-            if (StrUtil.isNotEmpty(value)) {
-                oldCookie.put(key, value);
-            }
-        }
-        userService.updateBilibiliCookieByCookieMap(userId, oldCookie);
     }
 
     public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
