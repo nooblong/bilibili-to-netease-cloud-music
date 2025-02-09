@@ -61,7 +61,7 @@ public class NetMusicClient {
                             }
                         }
                         if (cookieRefreshApi(url)) {
-                            log.info("? 遇到网易用户set-cookie请求");
+                            log.info("遇到网易用户set-cookie请求, 用户id: {}", userId);
                             try {
                                 ObjectNode objectNode = CommonUtil.cookieListToObjectNode(cookies);
                                 Map<String, String> neteaseCookieMap = userService.getNeteaseCookieMap(userId);
@@ -72,16 +72,16 @@ public class NetMusicClient {
                                     }
                                 });
                                 userService.updateNeteaseCookieByCookieMap(userId, neteaseCookieMap);
-                                log.info("success 刷新网易cookie成功, 用户id: {}", userId);
+                                log.info("刷新网易cookie成功, 用户id: {}", userId);
                             } catch (Exception e) {
-                                log.error("fail 刷新网易cookie出错: {}", e.getMessage());
+                                log.error("刷新网易cookie出错: {}", e.getMessage());
                             }
                         }
                         if (url != null && url.toString().contains("/register/anonimous")) {
                             log.info("? 遇到网易游客set-token请求");
                             ObjectNode anonymousCookie = CommonUtil.cookieListToObjectNode(cookies);
                             if (anonymousCookie.has("MUSIC_A")) {
-                                log.info("success 设置游客token成功!");
+                                log.info("设置游客token成功!");
                                 OkUtil.anonymousToken = anonymousCookie.get("MUSIC_A").asText();
                             }
                         }

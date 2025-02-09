@@ -147,7 +147,7 @@ public class BilibiliClient {
                     File downloadedFile = new File(path, fileName + "." + ext);
                     BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
                     assert response.body() != null;
-                    log.info("音频文件大小: {}M", response.body().contentLength() / 1024 / 1024);
+                    log.info("音频文件大小: {}K", response.body().contentLength() / 1024);
                     sink.writeAll(response.body().source());
                     sink.close();
                     return downloadedFile.toPath();

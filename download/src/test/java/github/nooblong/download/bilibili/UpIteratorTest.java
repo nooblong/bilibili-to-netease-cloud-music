@@ -8,17 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class UpIteratorTest extends BaseTest {
-
-    @Autowired
-    BilibiliBatchIteratorFactory factory;
 
     @Test
     void next() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
-        Iterator<SimpleVideoInfo> upIterator = factory.createUpIterator("349032426", "", 300, true,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, availableBilibiliCookie, -1);
+        Iterator<SimpleVideoInfo> upIterator = new UpIterator(bilibiliClient, "349032426", "", 300,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, true,
+                availableBilibiliCookie, -1, "", new AtomicInteger());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import github.nooblong.common.util.CommonUtil;
+import github.nooblong.download.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.FavoriteIterator;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
@@ -71,26 +72,38 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
         AtomicInteger counter = new AtomicInteger(0);
         try {
-            Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
-                case UP -> new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
+            if (subscribe.getType() == SubscribeTypeEnum.UP) {
+                UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                         subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
                         UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
                         availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), counter);
-                case FAVORITE -> new FavoriteIterator(subscribe.getUpId(), bilibiliClient,
-                        subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
-                        availableBilibiliCookie);
-                default -> throw new IllegalStateException("订阅缺少类型: " + subscribe.getType());
-            };
-            process(subscribe, iterator);
+                process(subscribe, upIterator);
+                subscribe.setProcessTime(new Date());
+                updateById(subscribe);
+            }
+            if (subscribe.getType() == SubscribeTypeEnum.FAVORITE) {
+                String favIds = subscribe.getChannelIds();
+                List<String> favIdList = CommonUtil.toList(favIds);
+                for (String favId : favIdList) {
+                    FavoriteIterator favIterator = new FavoriteIterator(favId, bilibiliClient,
+                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                            availableBilibiliCookie);
+                    process(subscribe, favIterator);
+                }
+                subscribe.setProcessTime(new Date());
+                updateById(subscribe);
+            }
         } catch (Exception e) {
             // todo: 待测试 last total index
-            log.error("订阅: {}处理失败, 但是遍历到了{}, 下次将从此开始", subscribe.getId(), counter.get());
+            if (counter.get() > 0) {
+                log.error("订阅: {}处理失败, 但是遍历到了{}, 下次将从此开始", subscribe.getId(), counter.get());
+                subscribe.setLastTotalIndex(counter.get());
+            }
             log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
             log.error(e.getMessage(), e);
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
                     " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了:" + counter.get() + "\n");
-            subscribe.setLastTotalIndex(counter.get());
             updateById(subscribe);
         }
     }
@@ -164,17 +177,14 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             processNum++;
         }
         if (isProcess) {
-            subscribe.setProcessTime(new Date());
             log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
                     + "个新视频" + "\n");
             // 只有第一次是从老到新
             subscribe.setVideoOrder(VideoOrder.PUB_NEW_FIRST_THEN_OLD.name());
-            updateById(subscribe);
         } else {
             log.info("未检测到新视频: {}", DateUtil.now());
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
-            updateById(subscribe);
         }
     }
 

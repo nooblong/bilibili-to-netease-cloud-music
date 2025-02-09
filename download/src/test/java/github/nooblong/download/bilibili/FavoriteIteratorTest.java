@@ -10,13 +10,10 @@ import java.util.Iterator;
 
 class FavoriteIteratorTest extends BaseTest {
 
-    @Autowired
-    BilibiliBatchIteratorFactory factory;
-
     @Test
     void next() {
-        Iterator<SimpleVideoInfo> upIterator = factory.createFavoriteIterator("68629352",
-                VideoOrder.PUB_NEW_FIRST_THEN_OLD, 9999, true, new HashMap<>());
+        Iterator<SimpleVideoInfo> upIterator = new FavoriteIterator("68629352", bilibiliClient,
+                9999, true, new HashMap<>());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

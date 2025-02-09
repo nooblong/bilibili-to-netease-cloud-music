@@ -22,7 +22,7 @@ class FfmpegServiceImplTest extends BaseTest {
 
     @Test
     void probeInfo() {
-        File file = new File("/Users/lyl/Downloads/mp4-tmp/卫兰-大哥.mp3");
+        File file = new File("C:\\Users\\lyl\\Music\\『胡广生』空灵凄美的民谣，故事感满满【兰音翻唱】.m4a");
         MultimediaInfo multimediaInfo = ffmpegService.probeInfo(file.toPath());
         System.out.println(multimediaInfo);
     }

@@ -167,7 +167,7 @@ public class UploadJob {
             }
             params.put("size", String.valueOf(size));
         } catch (IOException e) {
-            uploadDetailService.logNow(context.uploadDetailId, "\n>>> 下载的封面图片读取失败: " + path);
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 下载的封面图片读取失败: " + path);
             throw new RuntimeException("下载的封面图片读取失败: " + path);
         }
         params.put("imagePath", path.toString());
@@ -186,26 +186,16 @@ public class UploadJob {
     }
 
     private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset) {
-        MultimediaInfo multimediaInfo1 = ffmpegService.probeInfo(context.musicPath);
-        long bitRate1 = multimediaInfo1.getAudio().getBitRate();
-        long samplingRate1 = multimediaInfo1.getAudio().getSamplingRate();
         Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset);
-        MultimediaInfo multimediaInfo2 = ffmpegService.probeInfo(targetPath);
-        long bitRate2 = multimediaInfo2.getAudio().getBitRate();
-        long samplingRate2 = multimediaInfo2.getAudio().getSamplingRate();
         String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
         context.musicPath = targetPath;
         String s1 = "编码:" + ext;
-        String s2 = "码率:" + bitRate1 / 1000 + "kbps" + "->" + bitRate2 / 1000 + "kbps";
-        String s3 = "采样率:" + samplingRate1 + "hz" + "->" + samplingRate2 + "hz";
-//        context.desc += s1;
-//        context.desc += "\n";
-//        context.desc += s2;
-//        context.desc += "\n";
-//        context.desc += s3;
-        uploadDetailService.logNow(context.uploadDetailId, "\n>>> 添加介绍: " + s1 + "\n" + s2 + "\n" + s3 + "\n"
-                + "音频转码成功");
-        log.info("介绍: {}", context.desc);
+        try {
+            log.info("转码后的文件大小: {}K", Files.size(targetPath) / 1024);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        uploadDetailService.logNow(context.uploadDetailId, ">> " + s1 + "音频转码成功");
     }
 
     private String uploadNetease(Context context, String voiceListId, Long uploadUserId,
@@ -217,7 +207,8 @@ public class UploadJob {
         toAddDesc += ("\n一键上传工具: www.nooblong.tech");
         toAddDesc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
         context.desc += toAddDesc;
-        uploadDetailService.logNow(context.uploadDetailId, ">>> 添加介绍: " + toAddDesc);
+        uploadDetailService.logNow(context.uploadDetailId, ">>> 添加介绍: " +
+                toAddDesc.replaceAll("\n", " ").replaceAll("\r", " ").replaceAll("\t", " "));
 
         Assert.notNull(uploadName, "上传名字为空");
         if (uploadName.length() > 40) {

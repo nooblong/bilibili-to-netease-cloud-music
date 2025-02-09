@@ -31,7 +31,8 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
         File source = sourceUrl.toFile();
         String targetPath = sourceUrl.toAbsolutePath() + "." + Constant.FFMPEG_FORMAT_MP3;
         File target = new File(targetPath);
-        EncodingAttributes encodingAttributes = getEncodingAttributes(beginSec, endSec, (int) voiceOffset, Constant.FFMPEG_FORMAT_MP3);
+        EncodingAttributes encodingAttributes = getEncodingAttributes(beginSec, endSec, (int) voiceOffset,
+                Constant.FFMPEG_FORMAT_MP3);
         Encoder encoder = new Encoder();
         try {
             encoder.encode(new MultimediaObject(source), target, encodingAttributes);
@@ -44,18 +45,21 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
     }
 
     @NotNull
-    public static EncodingAttributes getEncodingAttributes(Double beginSec, Double endSec, Integer voiceOffset, String ext) {
+    public static EncodingAttributes getEncodingAttributes(Double beginSec, Double endSec, Integer voiceOffset,
+                                                           String ext) {
         AudioAttributes audioAttributes = new AudioAttributes();
         // 设置编码过程的音量值。如果为 null 或未指定，则将选择默认值。如果是 256，则不会执行任何音量更改。
-        // 音量是“振幅比”或“声压级”比率 2560 是音量=20dB 公式是 dBnumber=20*lg(振幅比) 128 表示减小 50% 512 表示音量加倍
-        audioAttributes.setVolume(voiceOffset == null ? 0 : voiceOffset);
+        // 音量是“振幅比”或“声压级”比率 2560 是音量=20dB 公式是 dBnumber=20*lg(|振幅比) 128 表示减小 50% 512 表示音量加倍
+        if (voiceOffset != null && voiceOffset != 0) {
+            audioAttributes.setVolume(voiceOffset);
+        }
         audioAttributes.setCodec("libmp3lame");
         audioAttributes.setBitRate(320000);
         EncodingAttributes encodingAttributes = new EncodingAttributes();
         encodingAttributes.setAudioAttributes(audioAttributes);
         encodingAttributes.setOutputFormat(ext);
-        if (beginSec != null && endSec != null) {
-            double duration =  endSec - beginSec;
+        if (beginSec != null && endSec != null && endSec != 0) {
+            double duration = endSec - beginSec;
             encodingAttributes.setDuration((float) duration);
             encodingAttributes.setOffset(beginSec.floatValue());
         }

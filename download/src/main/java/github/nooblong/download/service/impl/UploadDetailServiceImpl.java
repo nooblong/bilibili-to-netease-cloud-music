@@ -85,6 +85,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
 
     @Override
     public void logNow(Long uploadDetailId, String content) {
+        log.info(content);
         UploadDetail uploadDetail = getById(uploadDetailId);
         uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
                 DateUtil.now() + " " + content + "\n");

@@ -8,17 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class CollectionIteratorTest extends BaseTest {
-
-    @Autowired
-    BilibiliBatchIteratorFactory factory;
 
     @Test
     void next() {
         // collectionId: 1284839
-        Iterator<SimpleVideoInfo> upIterator = factory.createCollectionIterator("1284839", 9999,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.CHANGE, new HashMap<>(), -1);
+        Iterator<SimpleVideoInfo> upIterator = new CollectionIterator(bilibiliClient, 0,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW,
+                "1284839", CollectionVideoOrder.CHANGE,
+                new HashMap<>(), -1, "", new AtomicInteger());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
@@ -31,9 +31,11 @@ class CollectionIteratorTest extends BaseTest {
 
     @Test
     void nextOld() {
-        // collectionId: 1284839
-        Iterator<SimpleVideoInfo> upIterator = factory.createOldCollectionIterator("1869296", 9999,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, CollectionVideoOrder.DEFAULT, new HashMap<>(), -1);
+        // collectionId: 1869296
+        Iterator<SimpleVideoInfo> upIterator = new OldCollectionIterator(bilibiliClient, 0,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW,
+                "1869296", CollectionVideoOrder.DEFAULT,
+                new HashMap<>(), -1, "", new AtomicInteger());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
