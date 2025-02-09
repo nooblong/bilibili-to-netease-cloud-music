@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author lyl
@@ -68,12 +69,13 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
+        AtomicInteger counter = new AtomicInteger(0);
         try {
             Iterator<SimpleVideoInfo> iterator = switch (subscribe.getType()) {
                 case UP -> new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                         subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
                         UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
-                        availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds());
+                        availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), counter);
                 case FAVORITE -> new FavoriteIterator(subscribe.getUpId(), bilibiliClient,
                         subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
                         availableBilibiliCookie);
@@ -81,10 +83,14 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             };
             process(subscribe, iterator);
         } catch (Exception e) {
+            // todo: 待测试 last total index
+            log.error("订阅: {}处理失败, 但是遍历到了{}, 下次将从此开始", subscribe.getId(), counter.get());
             log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
             log.error(e.getMessage(), e);
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
                     " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了:" + counter.get() + "\n");
+            subscribe.setLastTotalIndex(counter.get());
             updateById(subscribe);
         }
     }

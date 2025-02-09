@@ -60,7 +60,6 @@ public class NetMusicClient {
                                 userService.updateNeteaseCookieByOkhttpCookie(userId, cookies);
                             }
                         }
-                        // todo: 避免测试时刷新正式cookie
                         if (cookieRefreshApi(url)) {
                             try {
                                 ObjectNode objectNode = CommonUtil.cookieListToObjectNode(cookies);

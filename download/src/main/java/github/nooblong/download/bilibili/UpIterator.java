@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 @Slf4j
@@ -18,8 +19,9 @@ public class UpIterator extends SimplePageIterator {
 
     public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec,
                       VideoOrder videoOrder, UserVideoOrder userVideoOrder, boolean checkPart,
-                      Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
-        super(bilibiliClient, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex, channelIds);
+                      Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
+                      AtomicInteger counter) {
+        super(bilibiliClient, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex, channelIds, counter);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;

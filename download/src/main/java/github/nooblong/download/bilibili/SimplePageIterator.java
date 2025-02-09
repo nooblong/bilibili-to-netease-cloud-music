@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
@@ -28,9 +29,11 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     List<SimpleVideoInfo> insidePartList = new ArrayList<>();
     Map<String, String> bilibiliCookie;
     String channelIds;
+    AtomicInteger counter;
 
     public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder
-            , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
+            , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
+                              AtomicInteger counter) {
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
         this.videoOrder = videoOrder;
@@ -40,6 +43,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
             this.totalIndex = lastTotalIndex;
         }
         this.channelIds = channelIds;
+        this.counter = counter;
     }
 
     @Override
@@ -80,6 +84,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 
     @Override
     public SimpleVideoInfo next() {
+        counter.getAndIncrement();
         if (!insidePartList.isEmpty()) {
             SimpleVideoInfo remove = insidePartList.remove(0);
             log.info("simple当前位置:多part内部: {}, cid: {}", remove.getTitle(), remove.getCid());
@@ -108,13 +113,13 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), bilibiliCookie);
 
                 if (StrUtil.isNotBlank(channelIds)) {
+                    // todo: 待测试 判断合集
                     // 判断是否在合集里
                     List<String> channelIdList = CommonUtil.toList(channelIds);
                     String seasonId = fullVideo.getSeasonId();
-                    if (seasonId != null && channelIdList.contains(seasonId)) {
-                        return result;
-                    } else {
+                    if (!(seasonId != null && channelIdList.contains(seasonId))) {
                         log.info("simple歌曲:{} 合集: {} 不属于合集: {}", result.getTitle(), seasonId, channelIds);
+                        return next();
                     }
                 }
 
