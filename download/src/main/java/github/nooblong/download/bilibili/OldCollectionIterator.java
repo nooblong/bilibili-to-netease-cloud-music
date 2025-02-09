@@ -6,6 +6,7 @@ import github.nooblong.download.entity.IteratorCollectionTotalList;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class OldCollectionIterator extends SimplePageIterator {
@@ -15,8 +16,9 @@ public class OldCollectionIterator extends SimplePageIterator {
 
     public OldCollectionIterator(BilibiliClient bilibiliClient, int limitSec,
                                  VideoOrder videoOrder, String collectionId, CollectionVideoOrder collectionVideoOrder,
-                                 Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds) {
-        super(bilibiliClient, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex, channelIds);
+                                 Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
+                                 AtomicInteger counter) {
+        super(bilibiliClient, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex, channelIds, counter);
         this.collectionId = collectionId;
         this.collectionVideoOrder = collectionVideoOrder;
     }
