@@ -201,4 +201,14 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @GetMapping("/delAllWait")
+    public Result<String> delAllWait(@RequestParam(name = "voicelistId") Long voiceListId) {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        uploadDetailService.remove(Wrappers.<UploadDetail>lambdaQuery()
+                .eq(UploadDetail::getUserId, sysUser.getId())
+                .eq(UploadDetail::getVoiceListId, voiceListId)
+                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.WAIT));
+        return Result.ok("ok");
+    }
+
 }
