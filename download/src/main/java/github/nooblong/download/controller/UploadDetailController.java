@@ -148,7 +148,7 @@ public class UploadDetailController {
         return Result.ok("ok", byId);
     }
 
-    @PostMapping("/delete")
+    @GetMapping("/delete")
     public Result<Boolean> delete(@RequestParam(name = "id") Long id) {
         Long userId = JwtUtil.verifierFromContext().getId();
         UploadDetail byId = uploadDetailService.getById(id);
@@ -188,7 +188,7 @@ public class UploadDetailController {
         return Result.ok("添加队列成功");
     }
 
-    @PostMapping("/restartJob")
+    @GetMapping("/restartJob")
     public Result<String> restartJob(@RequestParam(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
         UploadDetail byId = uploadDetailService.getById(id);

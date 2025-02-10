@@ -62,6 +62,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                 } catch (Exception e) {
                     item.setMusicStatus(MusicStatusEnum.UNKNOWN);
                 }
+                log.info("声音:{},状态:{}", item.getTitle(), auditStatus);
             } catch (Exception e) {
                 log.error("声音:{}获取状态失败:{}", item.getTitle(), e.getMessage());
                 item.setMusicRetryTimes(item.getMusicRetryTimes() + 1);
