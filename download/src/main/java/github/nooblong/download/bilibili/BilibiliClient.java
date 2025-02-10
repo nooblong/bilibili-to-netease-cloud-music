@@ -308,6 +308,12 @@ public class BilibiliClient {
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
         builder.addQueryParameter("uid", upId);
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        if (response == null || response.get("code").asInt() == -1) {
+            HttpUrl.Builder builder2 = HttpUrl.parse(Constant.BAU).newBuilder();
+            builder2.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
+            builder2.addQueryParameter("uid", upId);
+            response = OkUtil.getJsonResponse(OkUtil.get(builder2.build()), okHttpClient);
+        }
         Assert.notNull(response, "获取Up信息失败");
         Assert.isTrue(response.get("code").asInt() != -1, "获取Up信息失败");
         return response;

@@ -6,6 +6,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
@@ -23,10 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -77,6 +75,26 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 .eq(Subscribe::getUserId, userId).list();
         for (Subscribe subscribe : subscribeList) {
             checkSubscribe(subscribe, availableBilibiliCookie);
+        }
+    }
+
+    @Override
+    public void syncUpNameAndImage() {
+        List<Subscribe> subscribes = list();
+//        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        for (Subscribe subscribe : subscribes) {
+            String upId = subscribe.getUpId();
+            if (StrUtil.isNotBlank(upId) && StrUtil.isBlank(subscribe.getUpName())) {
+                try {
+                    JsonNode userInfo = bilibiliClient.getUserInfo(upId, new HashMap<>());
+                    subscribe.setUpImage(userInfo.get("data").get("face").asText());
+                    subscribe.setUpName(userInfo.get("data").get("name").asText());
+                    Db.updateById(subscribe);
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    log.error("err: ", e);
+                }
+            }
         }
     }
 

@@ -7,6 +7,8 @@ alter table upload_detail
 alter table upload_detail
     add upload_status varchar(64) default 'WAIT' not null;
 
+update upload_detail set upload_status = 'SUCCESS';
+
 create table user_voicelist
 (
     id              bigint auto_increment
@@ -32,20 +34,8 @@ alter table subscribe
 alter table subscribe
     add up_image varchar(512) default '' not null after up_name;
 
-alter table subscribe
-    drop key subscribe_pk;
-
-alter table subscribe
-    add constraint subscribe_pk
-        unique (user_id, up_id, voice_list_id);
-
 alter table upload_detail
     change status music_status varchar(64) default 'WAIT' not null;
-
-drop index upload_detail_status_index on upload_detail;
-
-create index upload_detail_music_status_index
-    on upload_detail (music_status);
 
 alter table upload_detail
     change retry_times music_retry_times int default 0 not null after music_status;
@@ -53,9 +43,5 @@ alter table upload_detail
 alter table upload_detail
     modify upload_retry_times int default 0 not null after upload_status;
 
-drop index upload_detail_retry_times_index on upload_detail;
-
-create index upload_detail_music_retry_times_index
-    on upload_detail (music_retry_times);
-
+update upload_detail set music_status = 'ONLINE'
 

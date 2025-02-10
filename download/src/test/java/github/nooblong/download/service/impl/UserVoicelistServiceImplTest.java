@@ -11,4 +11,9 @@ class UserVoicelistServiceImplTest extends BaseTest {
     void syncUserVoicelist() {
         userVoicelistService.syncUserVoicelist();
     }
+
+    @Test
+    void syncUpImage() {
+        subscribeService.syncUpNameAndImage();
+    }
 }
