@@ -71,7 +71,7 @@ public class UpIterator extends SimplePageIterator {
                 IteratorCollectionTotalList<SimpleVideoInfo> upVideoListFromBilibili = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,
                         (upVideosTotalNum / pageSize) + 1 - lastTotalIndexUp + 1,
                         userVideoOrder, keyWord, bilibiliCookie);
-                if (lastTotalIndexUp <= 2) {
+                if (lastTotalIndexUp == 2) {
                     this.totalIndex += upVideosTotalNum % pageSize;
                 } else {
                     this.totalIndex += (upVideosTotalNum % pageSize) + ((lastTotalIndexUp - 2) * pageSize);
