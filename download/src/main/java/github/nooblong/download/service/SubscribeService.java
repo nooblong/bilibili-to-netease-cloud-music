@@ -4,6 +4,8 @@ package github.nooblong.download.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import github.nooblong.download.entity.Subscribe;
 
+import java.util.Map;
+
 /**
  * @author lyl
  * @description 针对表【subscribe】的数据库操作Service
@@ -18,5 +20,7 @@ public interface SubscribeService extends IService<Subscribe> {
     void checkAndSave(Long userId, Long voiceListId);
 
     void syncUpNameAndImage();
+
+    void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie);
 
 }

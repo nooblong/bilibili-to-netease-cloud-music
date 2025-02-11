@@ -82,6 +82,11 @@ public class BilibiliFullVideo {
     }
 
     public String getSeasonId() {
-        return videoInfo.get("data").get("season_id").asText();
+        JsonNode seasonId = videoInfo.get("data").get("season_id");
+        if (seasonId != null) {
+            return seasonId.asText();
+        } else {
+            return null;
+        }
     }
 }

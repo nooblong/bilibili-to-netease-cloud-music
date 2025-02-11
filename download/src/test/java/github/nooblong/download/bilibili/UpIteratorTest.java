@@ -3,6 +3,7 @@ package github.nooblong.download.bilibili;
 import github.nooblong.download.BaseTest;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.VideoOrder;
+import github.nooblong.download.entity.Subscribe;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,5 +28,12 @@ class UpIteratorTest extends BaseTest {
                 break;
             }
         }
+    }
+
+    @Test
+    void nextFromSubscribe() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Subscribe subscribe = subscribeService.getById(666);
+        subscribeService.checkSubscribe(subscribe, availableBilibiliCookie);
     }
 }

@@ -98,7 +98,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         }
     }
 
-    private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
+    public void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
         AtomicInteger counter;
         if (subscribe.getLastTotalIndex() < 0) {
             counter = new AtomicInteger(1);
