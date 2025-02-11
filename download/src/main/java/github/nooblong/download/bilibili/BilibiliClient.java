@@ -71,12 +71,18 @@ public class BilibiliClient {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
-        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
         builder.addQueryParameter("bvid", video.getBvid());
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        if (response.get("code").asInt() != 0) {
+            HttpUrl.Builder builder2 = CommonUtil.getUrlBuilder();
+            cred.forEach(builder::addQueryParameter);
+            builder2.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
+            builder2.addQueryParameter("bvid", video.getBvid());
+            response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        }
         Assert.notNull(response, "请求视频信息错误");
-        Assert.isTrue(response.get("code").asInt() != -1, "请求视频信息错误");
+        Assert.isTrue(response.get("code").asInt() == 0, "请求视频信息错误");
         BilibiliFullVideo bilibiliFullVideo = new BilibiliFullVideo();
         bilibiliFullVideo.setVideoInfo(response);
         bilibiliFullVideo.setSelectCid(video.getCid());
