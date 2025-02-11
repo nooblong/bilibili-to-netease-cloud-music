@@ -94,12 +94,14 @@ public class UploadDetailController {
             if (!list.isEmpty()) {
                 wrapper.eq(UploadDetail::getUserId,
                         list.get(0).getId());
-                List<Subscribe> subscribes = Db.list(Wrappers.lambdaQuery(Subscribe.class)
-                        .eq(Subscribe::getUserId, list.get(0).getId())
-                        .select(Subscribe::getUpName, Subscribe::getId));
-                subscribeMap = SimpleQuery.list2Map(subscribes, Subscribe::getId, i -> i);
             }
         }
+        List<Subscribe> subscribes = Db.list(Wrappers.lambdaQuery(Subscribe.class)
+                .select(Subscribe::getUpName, Subscribe::getId));
+        if (!subscribes.isEmpty()) {
+            subscribeMap = SimpleQuery.list2Map(subscribes, Subscribe::getId, i -> i);
+        }
+
         wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getUploadStatus, status);
         wrapper.eq(StrUtil.isNotBlank(voiceListId), UploadDetail::getVoiceListId, voiceListId);
 
