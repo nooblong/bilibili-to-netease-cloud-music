@@ -13,9 +13,12 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.SubscribeReg;
+import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
+import github.nooblong.download.netmusic.module.weapi.VoiceList;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.service.UserVoicelistService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -33,15 +36,18 @@ public class SubscribeController {
     final NetMusicClient netMusicClient;
     final UploadDetailService uploadDetailService;
     final SubscribeService subscribeService;
+    final UserVoicelistService userVoicelistService;
 
     public SubscribeController(BilibiliClient bilibiliClient,
                                NetMusicClient netMusicClient,
                                UploadDetailService uploadDetailService,
-                               SubscribeService subscribeService) {
+                               SubscribeService subscribeService,
+                               UserVoicelistService userVoicelistService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = subscribeService;
+        this.userVoicelistService = userVoicelistService;
     }
 
     @PostMapping("/edit")
@@ -65,6 +71,12 @@ public class SubscribeController {
     @PostMapping("/add")
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
+        Long voiceListId = subscribe.getVoiceListId();
+        Assert.notNull(voiceListId, "fail: voiceListId is null");
+        List<UserVoicelist> list = userVoicelistService.lambdaQuery()
+                .eq(UserVoicelist::getUserId, user.getId())
+                .eq(UserVoicelist::getVoicelistId, voiceListId).list();
+        Assert.isTrue(!list.isEmpty(), "fail: not owner");
         subscribe.setUserId(user.getId());
         if (subscribe.getCrack() > 0) {
             if (user.getIsAdmin() != 1) {
@@ -72,7 +84,8 @@ public class SubscribeController {
             }
         }
         subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
-        JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(), bilibiliClient.getAvailableBilibiliCookie());
+        JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(),
+                bilibiliClient.getAvailableBilibiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
