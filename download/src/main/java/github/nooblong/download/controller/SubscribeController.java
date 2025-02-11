@@ -126,7 +126,7 @@ public class SubscribeController {
             });
             subscribe.setTypeDesc(subscribe.getType().getDesc());
             subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
-            subscribe.setLog(CommonUtil.limitString(subscribe.getLog(), 10));
+            subscribe.setLog(subscribe.getLog());
         });
         response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
         return Result.ok("ok", list);

@@ -47,27 +47,27 @@ public class SystemController {
     @GetMapping("/sysInfo")
     public Result<SysInfo> sysInfo() {
         SysInfo sysInfo = new SysInfo();
-        try {
-            sysInfo.setReady(bilibiliClient.getAvailableBilibiliCookie() != null);
-        } catch (RuntimeException e) {
-            sysInfo.setReady(false);
-        }
-        try {
-            SysUser sysUser = JwtUtil.verifierFromContext();
-            boolean b = netMusicClient.checkLogin(sysUser.getId());
-            sysInfo.setNetCookieStatus(b);
-
-            if (StrUtil.isNotBlank(sysUser.getBiliCookies())) {
-                Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
-                boolean c = bilibiliClient.isLogin(userCredMap);
-                sysInfo.setBilibiliCookieStatus(c);
-            } else {
-                sysInfo.setBilibiliCookieStatus(false);
-            }
-        } catch (Exception e) {
-            sysInfo.setNetCookieStatus(false);
-            sysInfo.setBilibiliCookieStatus(false);
-        }
+//        try {
+//            sysInfo.setReady(bilibiliClient.getAvailableBilibiliCookie() != null);
+//        } catch (RuntimeException e) {
+//            sysInfo.setReady(false);
+//        }
+//        try {
+//            SysUser sysUser = JwtUtil.verifierFromContext();
+//            boolean b = netMusicClient.checkLogin(sysUser.getId());
+//            sysInfo.setNetCookieStatus(b);
+//
+//            if (StrUtil.isNotBlank(sysUser.getBiliCookies())) {
+//                Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
+//                boolean c = bilibiliClient.isLogin(userCredMap);
+//                sysInfo.setBilibiliCookieStatus(c);
+//            } else {
+//                sysInfo.setBilibiliCookieStatus(false);
+//            }
+//        } catch (Exception e) {
+//            sysInfo.setNetCookieStatus(false);
+//            sysInfo.setBilibiliCookieStatus(false);
+//        }
         long count = userService.count();
         sysInfo.setRegNum((int) count);
 
