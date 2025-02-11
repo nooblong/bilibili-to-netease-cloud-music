@@ -4,7 +4,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.VideoOrder;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.RoundingMode;

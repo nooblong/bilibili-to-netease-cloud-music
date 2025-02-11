@@ -32,6 +32,10 @@ public class NetMusicClient {
     private final OkHttpClient templateClient;
     private final ModuleFactory moduleFactory;
     private final IUserService userService;
+    final LoginQrCheck loginQrCheck;
+    final LoginRefresh loginRefresh;
+    final Login login;
+    final LoginCellphone loginCellphone;
 
     public NetMusicClient(ModuleFactory moduleFactory, IUserService userService,
                           LoginQrCheck loginQrCheck,
@@ -125,11 +129,6 @@ public class NetMusicClient {
         return null;
     }
 
-    final LoginQrCheck loginQrCheck;
-    final LoginRefresh loginRefresh;
-    final Login login;
-    final LoginCellphone loginCellphone;
-
     private boolean cookieLoginApi(HttpUrl url) {
         return url != null && (
                 url.toString().equals(loginQrCheck.getUrl()) ||
@@ -145,6 +144,16 @@ public class NetMusicClient {
         )
                 ;
     }
+
+    public boolean checkLogin(Long userId) {
+        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "loginstatus", userId);
+        return loginstatus.has("account") &&
+                loginstatus.get("account").get("id") != null &&
+                loginstatus.get("profile") != null &&
+                loginstatus.get("profile").get("userId") != null;
+    }
+
+    // -------------------------------Common Api--------------------------------------
 
     public JsonNode getUserVoiceList(Long userId) {
         Map<String, Object> queryMap = new HashMap<>();
@@ -171,14 +180,6 @@ public class NetMusicClient {
         params.put("voiceListId", voiceListId);
         // 获取歌单信息
         return this.getMusicDataByUserId(params, "voiceListDetail", userId).get("data");
-    }
-
-    public boolean checkLogin(Long userId) {
-        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "loginstatus", userId);
-        return loginstatus.has("account") &&
-                loginstatus.get("account").get("id") != null &&
-                loginstatus.get("profile") != null &&
-                loginstatus.get("profile").get("userId") != null;
     }
 
 }

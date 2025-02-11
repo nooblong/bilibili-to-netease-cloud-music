@@ -1,4 +1,4 @@
-package github.nooblong.download.utils;
+package github.nooblong.common.util;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 public class Constant {
     @Value("${bilibiliApiUrl}")
     public String bau;
+
     public static String BAU = "";
     public static final String FFMPEG_FORMAT_MP3 = "mp3";
     public static final String FFMPEG_FORMAT_FLAC = "flac";

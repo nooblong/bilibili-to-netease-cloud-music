@@ -11,7 +11,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
 
     private final String favoriteId;
     private final BilibiliClient bilibiliClient;
-    private int limitSec;
+    private final int limitSec;
     private int index;
     private SimpleVideoInfo[] videos;
     private int page = 1;

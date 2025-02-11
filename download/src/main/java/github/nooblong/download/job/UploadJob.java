@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
@@ -21,11 +22,10 @@ import github.nooblong.download.service.FfmpegService;
 import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import ws.schild.jave.info.MultimediaInfo;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -187,7 +187,7 @@ public class UploadJob {
 
     private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset) {
         Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset);
-        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
+        String ext = CommonUtil.getFileExt(context.musicPath.getFileName().toString());
         context.musicPath = targetPath;
         String s1 = "编码:" + ext;
         try {
@@ -215,7 +215,7 @@ public class UploadJob {
             uploadName = uploadName.substring(0, 40);
         }
 
-        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
+        String ext = CommonUtil.getFileExt(context.musicPath.getFileName().toString());
         JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
         String categoryId = voiceListDetail.get("categoryId").asText();
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();

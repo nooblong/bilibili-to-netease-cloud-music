@@ -2,22 +2,20 @@ package github.nooblong.download.bilibili;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import github.nooblong.download.utils.OkUtil;
-import jakarta.annotation.Nonnull;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -54,7 +52,8 @@ public class BilibiliClient {
 
     public Map<String, String> getAvailableBilibiliCookie() throws RuntimeException {
         log.info("获取可用b站cookie...");
-        List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
+        List<SysUser> list =
+                Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
             throw new RuntimeException("没有可用b站cookie");
         }
@@ -68,6 +67,91 @@ public class BilibiliClient {
         throw new RuntimeException("没有可用b站cookie");
     }
 
+    public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
+        Assert.notNull(video.getBvid(), "bvid为空");
+        Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
+        builder.addQueryParameter("bvid", video.getBvid());
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        if (response.get("code").asInt() != 0) {
+            HttpUrl.Builder builder2 = CommonUtil.getUrlBuilder();
+            cred.forEach(builder::addQueryParameter);
+            builder2.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
+            builder2.addQueryParameter("bvid", video.getBvid());
+            response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        }
+        Assert.notNull(response, "请求视频信息错误");
+        Assert.isTrue(response.get("code").asInt() == 0, "请求视频信息错误");
+        BilibiliFullVideo bilibiliFullVideo = new BilibiliFullVideo();
+        bilibiliFullVideo.setVideoInfo(response);
+        bilibiliFullVideo.setSelectCid(video.getCid());
+        return bilibiliFullVideo;
+    }
+
+    public boolean isLogin(Map<String, String> credMap) {
+        try {
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
+                    + "/user/get_self_info", credMap), okHttpClient);
+            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
+        SimpleVideoInfo byUrl = createByUrl(bvid);
+        return init(byUrl, bilibiliCookie);
+    }
+
+    public SimpleVideoInfo createByUrl(String url) {
+        if (url.startsWith("http") ||
+                url.startsWith("www.") ||
+                url.startsWith("b23.tv") ||
+                url.startsWith("bilibili")) {
+            String bvid = getUrlBvid(url);
+            return new SimpleVideoInfo().setBvid(bvid);
+        } else if (url.toLowerCase().startsWith("bv")) {
+            return new SimpleVideoInfo().setBvid(url);
+        } else {
+            throw new RuntimeException("未知的输入");
+        }
+    }
+
+    private String getUrlBvid(String url) {
+        if (!url.startsWith("http")) {
+            url = "https://" + url;
+        }
+        HttpUrl parse = HttpUrl.parse(url);
+        assert parse != null;
+        String topPrivateDomain = parse.topPrivateDomain();
+        assert topPrivateDomain != null;
+        if (topPrivateDomain.equals("b23.tv")) {
+            Request request = new Request.Builder().url(url)
+                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
+            try (Response response = okHttpClient.newCall(request).execute()) {
+                HttpUrl httpUrl = response.request().url();
+                String topPrivateDomain1 = httpUrl.topPrivateDomain();
+                assert topPrivateDomain1 != null;
+                Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
+                String s = httpUrl.pathSegments().get(1);
+                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+                return s;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (topPrivateDomain.equals("bilibili.com")) {
+            String s = parse.pathSegments().get(1);
+            Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+            return s;
+        } else {
+            throw new RuntimeException("错误url");
+        }
+    }
+
+//    ------------------------------Common Api----------------------------
+
     public JsonNode checkRefresh(Map<String, String> cred) {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                 + "/Credential/check_refresh", cred), okHttpClient);
@@ -79,19 +163,20 @@ public class BilibiliClient {
     }
 
     public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
         builder.addQueryParameter("bvid", bilibiliFullVideo.getBvid());
         builder.addQueryParameter("cid", bilibiliFullVideo.getCid());
-        builder.addQueryParameter("audio_max_quality", "video.AudioQuality(" + this.expectQuality.getCode() + "):parse");
+        builder.addQueryParameter("audio_max_quality", "video.AudioQuality(" + this.expectQuality.getCode() + ")" +
+                ":parse");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取最好的流链接失败");
         return response;
     }
 
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list");
         builder.addQueryParameter("uid", uid);
@@ -178,19 +263,10 @@ public class BilibiliClient {
         }
     }
 
-    public boolean isLogin(Map<String, String> credMap) {
-        try {
-            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
-                    + "/user/get_self_info", credMap), okHttpClient);
-            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+    public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn,
+                                                       CollectionVideoOrder collectionVideoOrder,
+                                                       Map<String, String> cred) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -209,8 +285,10 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("total").asInt());
     }
 
-    public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn, CollectionVideoOrder collectionVideoOrder, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+    public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn,
+                                                          CollectionVideoOrder collectionVideoOrder, Map<String,
+            String> cred) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -230,7 +308,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list_content");
         builder.addQueryParameter("page", String.valueOf(page));
@@ -243,7 +321,7 @@ public class BilibiliClient {
 
 
     public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -252,7 +330,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getOldSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -260,8 +338,9 @@ public class BilibiliClient {
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 
-    public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder, String keyWord, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+    public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder,
+                                               String keyWord, Map<String, String> cred) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -280,7 +359,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUpChannels(String upId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_channels");
         builder.addQueryParameter("ps", "1");
@@ -293,7 +372,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getSelfInfo(Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("get_self_info");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
@@ -303,7 +382,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUserInfo(String upId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
         builder.addQueryParameter("uid", upId);
@@ -319,102 +398,6 @@ public class BilibiliClient {
         return response;
     }
 
-    public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
-        Assert.notNull(video.getBvid(), "bvid为空");
-        Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
-        cred.forEach(builder::addQueryParameter);
-        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
-        builder.addQueryParameter("bvid", video.getBvid());
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
-        Assert.notNull(response, "请求视频信息错误");
-        Assert.isTrue(response.get("code").asInt() != -1, "请求视频信息错误");
-        BilibiliFullVideo bilibiliFullVideo = new BilibiliFullVideo();
-        bilibiliFullVideo.setVideoInfo(response);
-        bilibiliFullVideo.setSelectCid(video.getCid());
-        return bilibiliFullVideo;
-    }
-
-    public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
-        SimpleVideoInfo byUrl = createByUrl(bvid);
-        return init(byUrl, bilibiliCookie);
-    }
-
-    public static String getFileExt(String fileName) {
-        String fileExtension = "";
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0) {
-            fileExtension = fileName.substring(dotIndex + 1);
-        }
-        return fileExtension;
-    }
-
-    public static int parseStrTime(String strTime) {
-        // 00:23  01:26
-        // 拆分时分秒
-        String[] timeParts = strTime.split(":");
-        int hours = 0;
-        int minutes = 0;
-        int seconds = 0;
-
-        if (timeParts.length == 2) {
-            minutes = Integer.parseInt(timeParts[0]);
-            seconds = Integer.parseInt(timeParts[1]);
-        } else if (timeParts.length == 3) {
-            hours = Integer.parseInt(timeParts[0]);
-            minutes = Integer.parseInt(timeParts[1]);
-            seconds = Integer.parseInt(timeParts[2]);
-        }
-
-        // 计算总秒数
-        return (hours * 60 * 60) + (minutes * 60) + seconds;
-    }
-
-    public SimpleVideoInfo createByUrl(String url) {
-        if (url.startsWith("http") ||
-                url.startsWith("www.") ||
-                url.startsWith("b23.tv") ||
-                url.startsWith("bilibili")) {
-            String bvid = getUrlBvid(url);
-            return new SimpleVideoInfo().setBvid(bvid);
-        } else if (url.toLowerCase().startsWith("bv")) {
-            return new SimpleVideoInfo().setBvid(url);
-        } else {
-            throw new RuntimeException("未知的输入");
-        }
-    }
-
-    private String getUrlBvid(String url) {
-        if (!url.startsWith("http")) {
-            url = "https://" + url;
-        }
-        HttpUrl parse = HttpUrl.parse(url);
-        assert parse != null;
-        String topPrivateDomain = parse.topPrivateDomain();
-        assert topPrivateDomain != null;
-        if (topPrivateDomain.equals("b23.tv")) {
-            Request request = new Request.Builder().url(url)
-                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
-            try (Response response = okHttpClient.newCall(request).execute()) {
-                HttpUrl httpUrl = response.request().url();
-                String topPrivateDomain1 = httpUrl.topPrivateDomain();
-                assert topPrivateDomain1 != null;
-                Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
-                String s = httpUrl.pathSegments().get(1);
-                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-                return s;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (topPrivateDomain.equals("bilibili.com")) {
-            String s = parse.pathSegments().get(1);
-            Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-            return s;
-        } else {
-            throw new RuntimeException("错误url");
-        }
-    }
-
     public JsonNode getSpiBuvidSync() {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/get_spi_buvid_sync"), okHttpClient);
     }
@@ -425,7 +408,8 @@ public class BilibiliClient {
 
     public JsonNode loginWithKey(String key, SysUser user) {
         // 查询到成功就保存到用户cookie
-        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/check_state?key=" + key),
+        JsonNode response =
+                OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/check_state?key=" + key),
                 okHttpClient);
         if (response.get("data").get("code").asInt() == 0) {
             JsonNode data = response.get("data");
@@ -456,13 +440,14 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn,
-                                                                                   UserVideoOrder userVideoOrder, String keyWord,
+                                                                                   UserVideoOrder userVideoOrder,
+                                                                                   String keyWord,
                                                                                    Map<String, String> bilibiliCookie) {
         IteratorCollectionTotal collectionTotal = getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         collectionTotal.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
-                    .setDuration(BilibiliClient.parseStrTime(jsonNode.get("length").asText()))
+                    .setDuration(CommonUtil.parseStrTime(jsonNode.get("length").asText()))
                     .setBvid(jsonNode.get("bvid").asText())
                     .setCreateTime(jsonNode.get("created").asLong())
                     .setTitle(jsonNode.get("title").asText());
@@ -492,7 +477,8 @@ public class BilibiliClient {
         return result;
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
+    public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId,
+                                                                                           int ps, int pn,
                                                                                            CollectionVideoOrder collectionVideoOrder,
                                                                                            Map<String, String> bilibiliCookie) {
         IteratorCollectionTotal collectionVideos = null;
@@ -516,7 +502,8 @@ public class BilibiliClient {
         return result;
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId, int ps, int pn,
+    public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId,
+                                                                                              int ps, int pn,
                                                                                               CollectionVideoOrder collectionVideoOrder,
                                                                                               Map<String, String> bilibiliCookie) {
         IteratorCollectionTotal collectionVideos = null;
@@ -540,8 +527,9 @@ public class BilibiliClient {
         return result;
     }
 
-    public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page, Map<String, String> bilibiliCookie) {
-        IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page,bilibiliCookie);
+    public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page,
+                                                                                         Map<String, String> bilibiliCookie) {
+        IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page, bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         favoriteVideos.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
