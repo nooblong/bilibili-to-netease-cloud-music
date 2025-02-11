@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
@@ -187,7 +188,7 @@ public class UploadJob {
 
     private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset) {
         Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset);
-        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
+        String ext = CommonUtil.getFileExt(context.musicPath.getFileName().toString());
         context.musicPath = targetPath;
         String s1 = "编码:" + ext;
         try {
@@ -215,7 +216,7 @@ public class UploadJob {
             uploadName = uploadName.substring(0, 40);
         }
 
-        String ext = BilibiliClient.getFileExt(context.musicPath.getFileName().toString());
+        String ext = CommonUtil.getFileExt(context.musicPath.getFileName().toString());
         JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
         String categoryId = voiceListDetail.get("categoryId").asText();
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();

@@ -104,4 +104,34 @@ public class CommonUtil {
             return new HashMap<>();
         }
     }
+
+    public static String getFileExt(String fileName) {
+        String fileExtension = "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            fileExtension = fileName.substring(dotIndex + 1);
+        }
+        return fileExtension;
+    }
+
+    public static int parseStrTime(String strTime) {
+        // 00:23  01:26
+        // 拆分时分秒
+        String[] timeParts = strTime.split(":");
+        int hours = 0;
+        int minutes = 0;
+        int seconds = 0;
+
+        if (timeParts.length == 2) {
+            minutes = Integer.parseInt(timeParts[0]);
+            seconds = Integer.parseInt(timeParts[1]);
+        } else if (timeParts.length == 3) {
+            hours = Integer.parseInt(timeParts[0]);
+            minutes = Integer.parseInt(timeParts[1]);
+            seconds = Integer.parseInt(timeParts[2]);
+        }
+
+        // 计算总秒数
+        return (hours * 60 * 60) + (minutes * 60) + seconds;
+    }
 }
