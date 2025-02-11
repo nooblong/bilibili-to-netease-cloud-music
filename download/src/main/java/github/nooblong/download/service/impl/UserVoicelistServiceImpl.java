@@ -77,6 +77,9 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
             } catch (Exception e) {
                 log.error("用户播客列表查询失败: {}", e.getMessage());
             }
+        } else {
+            Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
+                    .eq(UserVoicelist::getUserId, user.getId()));
         }
     }
 }

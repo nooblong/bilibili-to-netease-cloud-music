@@ -7,6 +7,7 @@ enableUploadJob: 1
 enableRefreshNetCookie: 1
 enableRestartJob: 1
 enableRefreshBiliCookie: 1
+enableRefreshUserVoiceList: 1
 
 server:
   port: 25565

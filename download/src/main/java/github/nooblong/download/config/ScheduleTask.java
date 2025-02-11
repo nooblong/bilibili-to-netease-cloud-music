@@ -15,6 +15,7 @@ import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.common.util.Constant;
+import github.nooblong.download.service.UserVoicelistService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,13 +44,15 @@ public class ScheduleTask {
     final IUserService userService;
     final GetUpJob getUpJob;
     final UploadJob uploadJob;
+    final UserVoicelistService userVoicelistService;
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
                         SubscribeService service, BilibiliClient bilibiliClient,
                         IUserService userService,
                         GetUpJob getUpJob,
-                        UploadJob uploadJob) {
+                        UploadJob uploadJob,
+                        UserVoicelistService userVoicelistService) {
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
@@ -57,6 +60,7 @@ public class ScheduleTask {
         this.userService = userService;
         this.getUpJob = getUpJob;
         this.uploadJob = uploadJob;
+        this.userVoicelistService = userVoicelistService;
     }
 
     @Value("${enableUploadJob}")
@@ -71,6 +75,8 @@ public class ScheduleTask {
     private int enableRefreshNetCookie;
     @Value("${enableRefreshBiliCookie}")
     private int enableRefreshBiliCookie;
+    @Value("${enableRefreshUserVoiceList}")
+    private int enableRefreshUserVoiceList;
 
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getAuditStatus() {
@@ -78,6 +84,14 @@ public class ScheduleTask {
             return;
         }
         uploadDetailService.checkAllAuditStatus();
+    }
+
+    @Scheduled(fixedDelay = 86400, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void refreshUserVoiceList() {
+        if (enableRefreshUserVoiceList <= 0) {
+            return;
+        }
+        userVoicelistService.syncUserVoicelist();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
