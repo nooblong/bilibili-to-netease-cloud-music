@@ -99,7 +99,12 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     private void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
-        AtomicInteger counter = new AtomicInteger(0);
+        AtomicInteger counter;
+        if (subscribe.getLastTotalIndex() < 0) {
+            counter = new AtomicInteger(1);
+        } else {
+            counter = new AtomicInteger(subscribe.getLastTotalIndex());
+        }
         try {
             if (subscribe.getType() == SubscribeTypeEnum.UP) {
                 UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
@@ -108,6 +113,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                         availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), counter);
                 process(subscribe, upIterator);
                 subscribe.setProcessTime(new Date());
+                subscribe.setLastTotalIndex(-1);
                 updateById(subscribe);
             }
             if (subscribe.getType() == SubscribeTypeEnum.FAVORITE) {
@@ -120,19 +126,19 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     process(subscribe, favIterator);
                 }
                 subscribe.setProcessTime(new Date());
+                subscribe.setLastTotalIndex(-1);
                 updateById(subscribe);
             }
         } catch (Exception e) {
-            // todo: 待测试 last total index
             if (counter.get() > 0) {
-                log.error("订阅: {}处理失败, 但是遍历到了{}, 下次将从此开始", subscribe.getId(), counter.get());
+                log.error("订阅: {}处理失败, 但是遍历到了第{}页, 下次将从此开始", subscribe.getId(), counter.get());
                 subscribe.setLastTotalIndex(counter.get());
             }
             log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
             log.error(e.getMessage(), e);
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
                     " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
-            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了:" + counter.get() + "\n");
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了第" + counter.get() + "页\n");
             updateById(subscribe);
         }
     }

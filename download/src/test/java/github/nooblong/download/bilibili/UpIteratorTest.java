@@ -15,14 +15,15 @@ class UpIteratorTest extends BaseTest {
     @Test
     void next() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
-        Iterator<SimpleVideoInfo> upIterator = new UpIterator(bilibiliClient, "349032426", "", 300,
-                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, true,
-                availableBilibiliCookie, -1, "", new AtomicInteger());
+        AtomicInteger counter = new AtomicInteger(3);
+        Iterator<SimpleVideoInfo> upIterator = new UpIterator(bilibiliClient, "6906052", "", 99999,
+                VideoOrder.PUB_OLD_FIRST_THEN_NEW, UserVideoOrder.PUBDATE, false,
+                availableBilibiliCookie, 3, "", counter);
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();
-            System.out.println(">>>>>" + next.getTitle() + "---->" + next.getPartName());
-            if (++times >= 100) {
+            System.out.println(counter + ">>>>>" + next.getTitle() + "---->" + next.getPartName());
+            if (++times >= 1100) {
                 break;
             }
         }

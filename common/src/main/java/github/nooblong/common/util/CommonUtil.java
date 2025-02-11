@@ -48,7 +48,7 @@ public class CommonUtil {
         if (input == null) {
             return "";
         }
-        return input.length() > 20 ? input.substring(0, 20) : input;
+        return input.length() > 30 ? input.substring(0, 30) : input;
     }
 
     public static String limitString(String input, Integer num) {
