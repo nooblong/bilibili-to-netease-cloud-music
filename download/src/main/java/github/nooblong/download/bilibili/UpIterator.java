@@ -15,6 +15,8 @@ public class UpIterator extends SimplePageIterator {
     private final String keyWord;
     private final UserVideoOrder userVideoOrder;
     String upId;
+    // 从第几页的第1/最后开始遍历
+    int lastTotalIndexUp = 1;
 
 
     public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec,
@@ -25,6 +27,9 @@ public class UpIterator extends SimplePageIterator {
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;
+        if (lastTotalIndex > 0) {
+            this.lastTotalIndexUp = lastTotalIndex;
+        }
         Assert.isTrue(videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ||
                 videoOrder == VideoOrder.PUB_OLD_FIRST_THEN_NEW, "Up主迭代器不支持该排序类型");
     }
@@ -48,10 +53,13 @@ public class UpIterator extends SimplePageIterator {
             // 先查总数
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
                 IteratorCollectionTotalList<SimpleVideoInfo> upVideoListFromBilibili = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,
-                        1,
+                        lastTotalIndexUp,
                         userVideoOrder, keyWord, bilibiliCookie);
                 videos = upVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
                 upVideosTotalNum = upVideoListFromBilibili.getTotalNum();
+                this.totalIndex += (lastTotalIndexUp - 1) * pageSize;
+                this.currentPageNo = lastTotalIndexUp;
+                log.info("up获取总数和第一页: {}", upVideoListFromBilibili.getTotalNum());
             } else {
                 if (upVideosTotalNum == 0) {
                     IteratorCollectionTotalList<SimpleVideoInfo> toGetCount = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,
@@ -61,8 +69,14 @@ public class UpIterator extends SimplePageIterator {
                     upVideosTotalNum = toGetCount.getTotalNum();
                 }
                 IteratorCollectionTotalList<SimpleVideoInfo> upVideoListFromBilibili = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,
-                        videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ? 1 : (upVideosTotalNum / pageSize) + 1,
+                        (upVideosTotalNum / pageSize) + 1 - lastTotalIndexUp + 1,
                         userVideoOrder, keyWord, bilibiliCookie);
+                if (lastTotalIndexUp <= 2) {
+                    this.totalIndex += upVideosTotalNum % pageSize;
+                } else {
+                    this.totalIndex += (upVideosTotalNum % pageSize) + ((lastTotalIndexUp - 2) * pageSize);
+                }
+                this.currentPageNo = (upVideosTotalNum / pageSize) + 1 - lastTotalIndexUp + 1;
                 videos = upVideoListFromBilibili.getData().toArray(new SimpleVideoInfo[0]);
                 upVideosTotalNum = upVideoListFromBilibili.getTotalNum();
             }

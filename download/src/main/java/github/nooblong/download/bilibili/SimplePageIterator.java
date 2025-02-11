@@ -30,6 +30,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     Map<String, String> bilibiliCookie;
     String channelIds;
     AtomicInteger counter;
+    int currentPageNo = 1;
 
     public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder
             , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
@@ -39,9 +40,6 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
         this.videoOrder = videoOrder;
         this.checkPart = checkPart;
         this.bilibiliCookie = bilibiliCookie;
-        if (lastTotalIndex > 0) {
-            this.totalIndex = lastTotalIndex;
-        }
         this.channelIds = channelIds;
         this.counter = counter;
     }
@@ -50,27 +48,29 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     public boolean hasNext() {
         lazyInit();
         if (!insidePartList.isEmpty()) {
+            log.info("inside part退出");
             return true;
         }
         if (totalIndex + 1 > upVideosTotalNum) {
+            log.info("total index退出");
             // 就这么多视频
             return false;
         }
         if (index == videos.length) {
             // 检查下一页/上一页
-            int currentPn;
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
                 // 当前页数
-                currentPn = (int) NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP);
-                log.info("simple当前第{}页已遍历完，查找下一页:{}", currentPn, currentPn + 1);
+                log.info("simple当前第{}页已遍历完，查找下一页:{}", currentPageNo, currentPageNo + 1);
                 // 检查下一页
-                videos = getNextPage(currentPn, pageSize);
+                videos = getNextPage(currentPageNo, pageSize);
+                currentPageNo += 1;
+                counter.getAndIncrement();
             } else {
-                currentPn = ((int) NumberUtil.div(upVideosTotalNum, pageSize, 0, RoundingMode.UP) -
-                        (int) (NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP))) + 1;
-                log.info("simple当前第{}页已遍历完，查找上一页:{}", currentPn, currentPn - 1);
+                log.info("simple当前第{}页已遍历完，查找上一页:{}", currentPageNo, currentPageNo - 1);
                 // 检查上一页
-                videos = getPreviousPage(currentPn, pageSize);
+                videos = getPreviousPage(currentPageNo, pageSize);
+                currentPageNo -= 1;
+                counter.getAndIncrement();
             }
             index = 0;
             return true;
@@ -84,17 +84,12 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 
     @Override
     public SimpleVideoInfo next() {
-        counter.getAndIncrement();
         if (!insidePartList.isEmpty()) {
             SimpleVideoInfo remove = insidePartList.remove(0);
             log.info("simple当前位置:多part内部: {}, cid: {}", remove.getTitle(), remove.getCid());
             return remove;
         }
-        int currentRealPageNo = videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD ?
-                (int) NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP)
-                : ((int) NumberUtil.div(upVideosTotalNum, pageSize, 0, RoundingMode.UP) -
-                (int) (NumberUtil.div(totalIndex, pageSize, 0, RoundingMode.UP))) + 1;
-        log.info("simple当前位置: {}, 第{}页, 总数:{}, 总位置:{}", index, currentRealPageNo, upVideosTotalNum, totalIndex);
+        log.info("simple当前位置: {}, 第{}页, 总数:{}, 总位置:{}", index, currentPageNo, upVideosTotalNum, totalIndex);
         SimpleVideoInfo result;
         if (hasNext()) {
             if (videoOrder == VideoOrder.PUB_NEW_FIRST_THEN_OLD) {
@@ -113,7 +108,6 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), bilibiliCookie);
 
                 if (StrUtil.isNotBlank(channelIds)) {
-                    // todo: 待测试 判断合集
                     // 判断是否在合集里
                     List<String> channelIdList = CommonUtil.toList(channelIds);
                     String seasonId = fullVideo.getSeasonId();

@@ -351,8 +351,20 @@ public class BilibiliClient {
         }
         builder.addQueryParameter("order", "user.VideoOrder(\"" + userVideoOrder.getValue() + "\"):parse");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        if (response.get("code").asInt() != 0) {
+            HttpUrl.Builder builder2 = CommonUtil.getUrlBuilder();
+            builder2.addPathSegment("user").addPathSegment("User").addPathSegment("get_videos");
+            builder2.addQueryParameter("ps", String.valueOf(ps));
+            builder2.addQueryParameter("pn", String.valueOf(pn));
+            builder2.addQueryParameter("uid", upId);
+            if (StrUtil.isNotEmpty(keyWord)) {
+                builder2.addQueryParameter("keyword", keyWord);
+            }
+            builder2.addQueryParameter("order", "user.VideoOrder(\"" + userVideoOrder.getValue() + "\"):parse");
+            response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        }
         Assert.notNull(response, "获取Up视频失败");
-        Assert.isTrue(response.get("code").asInt() != -1, "获取Up视频失败");
+        Assert.isTrue(response.get("code").asInt() == 0, "获取Up视频失败");
         return new IteratorCollectionTotal()
                 .setData((ArrayNode) response.get("data").get("list").get("vlist"))
                 .setTotalNum(response.get("data").get("page").get("count").asInt());
