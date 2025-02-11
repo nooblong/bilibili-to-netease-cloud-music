@@ -36,6 +36,7 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
         for (SysUser user : userList) {
             syncVoicelistByUser(user);
+            log.info("{}刷新成功", user.getUsername());
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -56,14 +57,14 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                 JsonNode userVoiceList = netMusicClient.getUserVoiceList(user.getId());
                 if (userVoiceList != null && userVoiceList.get("total") != null &&
                         userVoiceList.get("total").asInt() > 0) {
+                    Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
+                            .eq(UserVoicelist::getUserId, user.getId()));
                     List<UserVoicelist> toAdd = new ArrayList<>();
                     ArrayNode list = (ArrayNode) userVoiceList.get("list");
                     for (JsonNode jsonNode : list) {
                         String coverUrl = jsonNode.get("coverUrl").asText();
                         Long voiceListId = jsonNode.get("voiceListId").asLong();
                         String voiceListName = jsonNode.get("voiceListName").asText();
-                        Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
-                                .eq(UserVoicelist::getUserId, user.getId()));
                         UserVoicelist userVoicelist = new UserVoicelist();
                         userVoicelist.setUserId(user.getId());
                         userVoicelist.setVoicelistId(voiceListId);
