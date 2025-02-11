@@ -114,6 +114,9 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 process(subscribe, upIterator);
                 subscribe.setProcessTime(new Date());
                 subscribe.setLastTotalIndex(-1);
+                if (subscribe.getPriority() <= 0) {
+                    subscribe.setPriority(1);
+                }
                 updateById(subscribe);
             }
             if (subscribe.getType() == SubscribeTypeEnum.FAVORITE) {
@@ -127,18 +130,21 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 }
                 subscribe.setProcessTime(new Date());
                 subscribe.setLastTotalIndex(-1);
+                if (subscribe.getPriority() <= 0) {
+                    subscribe.setPriority(1);
+                }
                 updateById(subscribe);
             }
         } catch (Exception e) {
             if (counter.get() > 0) {
                 log.error("订阅: {}处理失败, 但是遍历到了第{}页, 下次将从此开始", subscribe.getId(), counter.get());
                 subscribe.setLastTotalIndex(counter.get());
+                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了第" + counter.get() + "页\n");
             }
             log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
             log.error(e.getMessage(), e);
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
                     " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
-            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了第" + counter.get() + "页\n");
             updateById(subscribe);
         }
     }
