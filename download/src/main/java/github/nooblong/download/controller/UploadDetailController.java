@@ -163,9 +163,15 @@ public class UploadDetailController {
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
                 .eq(SysUser::getId, userId), i -> i);
         boolean isAdmin = !userList.isEmpty() && userList.get(0).getIsAdmin() == 1;
+        List<UserVoicelist> userVoicelistList = userVoicelistService.lambdaQuery()
+                .eq(UserVoicelist::getUserId, userId)
+                .list();
+        Map<Long, UserVoicelist> userVoicelistMap =
+                SimpleQuery.list2Map(userVoicelistList, UserVoicelist::getVoicelistId, i -> i);
         for (UploadDetail req : reqs.getUploadDetails()) {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
+            Assert.notNull(userVoicelistMap.get(req.getVoiceListId()), "not owner");
             SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
