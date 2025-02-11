@@ -12,8 +12,4 @@
             <result property="voicelistName" column="voicelist_name" jdbcType="VARCHAR"/>
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,user_id,voicelist_id,
-        voicelist_image,voicelist_name
-    </sql>
 </mapper>

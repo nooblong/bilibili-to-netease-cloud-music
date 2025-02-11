@@ -2,7 +2,7 @@ package github.nooblong.download.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import github.nooblong.download.service.FfmpegService;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;

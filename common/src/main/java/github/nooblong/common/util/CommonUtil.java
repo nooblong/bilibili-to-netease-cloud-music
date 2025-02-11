@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Cookie;
+import okhttp3.HttpUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,5 +134,14 @@ public class CommonUtil {
 
         // 计算总秒数
         return (hours * 60 * 60) + (minutes * 60) + seconds;
+    }
+
+    public static HttpUrl.Builder getUrlBuilder() {
+        HttpUrl parse = HttpUrl.parse(Constant.BAU);
+        if (parse != null) {
+            return parse.newBuilder();
+        } else {
+            throw new RuntimeException("错误的bilibili-api链接");
+        }
     }
 }

@@ -2,7 +2,6 @@ package github.nooblong.download.bilibili;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,10 +14,8 @@ import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import github.nooblong.download.utils.OkUtil;
-import jakarta.annotation.Nonnull;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -73,7 +70,7 @@ public class BilibiliClient {
     public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_info");
         builder.addQueryParameter("bvid", video.getBvid());
@@ -160,7 +157,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
         builder.addQueryParameter("bvid", bilibiliFullVideo.getBvid());
@@ -173,7 +170,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list");
         builder.addQueryParameter("uid", uid);
@@ -263,7 +260,7 @@ public class BilibiliClient {
     public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn,
                                                        CollectionVideoOrder collectionVideoOrder,
                                                        Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -285,7 +282,7 @@ public class BilibiliClient {
     public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn,
                                                           CollectionVideoOrder collectionVideoOrder, Map<String,
             String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -305,7 +302,7 @@ public class BilibiliClient {
     }
 
     public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("favorite_list").addPathSegment("get_video_favorite_list_content");
         builder.addQueryParameter("page", String.valueOf(page));
@@ -318,7 +315,7 @@ public class BilibiliClient {
 
 
     public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -327,7 +324,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getOldSeriesMeta(String seriesId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_meta");
         builder.addQueryParameter("id_", seriesId);
@@ -337,7 +334,7 @@ public class BilibiliClient {
 
     public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrder userVideoOrder,
                                                String keyWord, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_videos");
         builder.addQueryParameter("ps", String.valueOf(ps));
@@ -356,7 +353,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUpChannels(String upId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_channels");
         builder.addQueryParameter("ps", "1");
@@ -369,7 +366,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getSelfInfo(Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("get_self_info");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
@@ -379,7 +376,7 @@ public class BilibiliClient {
     }
 
     public JsonNode getUserInfo(String upId, Map<String, String> cred) {
-        HttpUrl.Builder builder = HttpUrl.parse(Constant.BAU).newBuilder();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
         builder.addQueryParameter("uid", upId);

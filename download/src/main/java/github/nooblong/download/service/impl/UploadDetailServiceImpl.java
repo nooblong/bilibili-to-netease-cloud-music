@@ -13,7 +13,7 @@ import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.UploadDetailMapper;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
-import github.nooblong.download.utils.Constant;
+import github.nooblong.common.util.Constant;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
