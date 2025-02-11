@@ -73,7 +73,7 @@ public class UpIterator extends SimplePageIterator {
                         userVideoOrder, keyWord, bilibiliCookie);
                 if (lastTotalIndexUp == 2) {
                     this.totalIndex += upVideosTotalNum % pageSize;
-                } else {
+                } else if (lastTotalIndexUp > 2) {
                     this.totalIndex += (upVideosTotalNum % pageSize) + ((lastTotalIndexUp - 2) * pageSize);
                 }
                 this.currentPageNo = (upVideosTotalNum / pageSize) + 1 - lastTotalIndexUp + 1;
