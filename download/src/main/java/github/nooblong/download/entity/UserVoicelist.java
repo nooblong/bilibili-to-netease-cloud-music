@@ -1,6 +1,9 @@
 package github.nooblong.download.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;
 
@@ -17,5 +20,10 @@ public class UserVoicelist implements Serializable {
 
     private String voicelistName;
 
-    private static final long serialVersionUID = 1L;
+    @TableField(exist = false)
+    private int subscribeNum;
+
+    @TableField(exist = false)
+    private int uploadCount;
+
 }

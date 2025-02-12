@@ -20,6 +20,8 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,14 +44,18 @@ public class UploadDetailController {
 
     final UserVoicelistService userVoicelistService;
 
+    final StringRedisTemplate redisTemplate;
+
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
                                   BilibiliClient bilibiliClient,
-                                  UserVoicelistService userVoicelistService) {
+                                  UserVoicelistService userVoicelistService,
+                                  StringRedisTemplate redisTemplate) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
         this.userVoicelistService = userVoicelistService;
+        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping("/listVoicelist")
@@ -60,6 +67,28 @@ public class UploadDetailController {
         }
         List<UserVoicelist> list = Db.list(Wrappers.lambdaQuery(UserVoicelist.class)
                 .in(UserVoicelist::getUserId, userList.stream().map(SysUser::getId).collect(Collectors.toList())));
+        for (UserVoicelist userVoicelist : list) {
+            String voiceNumKey = userVoicelist.getVoicelistId() + ":voiceNum";
+            String subscribeNumKey = userVoicelist.getVoicelistId() + ":subscribeNum";
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(voiceNumKey))) {
+                String s = redisTemplate.opsForValue().get(voiceNumKey);
+                userVoicelist.setUploadCount(s == null ? 0 : Integer.parseInt(s));
+            } else {
+                long count = Db.count(Wrappers.lambdaQuery(UploadDetail.class)
+                        .eq(UploadDetail::getVoiceListId, userVoicelist.getVoicelistId()));
+                userVoicelist.setUploadCount((int) count);
+                redisTemplate.opsForValue().set(voiceNumKey, String.valueOf(count), 1, TimeUnit.MINUTES);
+            }
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(subscribeNumKey))) {
+                String s = redisTemplate.opsForValue().get(subscribeNumKey);
+                userVoicelist.setSubscribeNum(s == null ? 0 : Integer.parseInt(s));
+            } else {
+                long count = Db.count(Wrappers.lambdaQuery(Subscribe.class)
+                        .eq(Subscribe::getVoiceListId, userVoicelist.getVoicelistId()));
+                userVoicelist.setSubscribeNum((int) count);
+                redisTemplate.opsForValue().set(subscribeNumKey, String.valueOf(count), 1, TimeUnit.MINUTES);
+            }
+        }
         return Result.ok("ok", list);
     }
 
