@@ -55,20 +55,21 @@ public class BilibiliController {
         simpleVideoInfo.setCid(cid);
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
-        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
-        StringBuilder sb = new StringBuilder();
-        videoStreamUrl.forEach(audio -> {
-            if (audio.has("audio_quality")) {
-                sb.append(AudioQuality.descMap.get(videoStreamUrl.get("audio_quality").asInt()));
-            }
-        });
+//        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
+//        StringBuilder sb = new StringBuilder();
+//        videoStreamUrl.forEach(audio -> {
+//            if (audio.has("audio_quality")) {
+//                sb.append(AudioQuality.descMap.get(videoStreamUrl.get("audio_quality").asInt()));
+//            }
+//        });
         VideoInfoResponse videoInfoResponse = new VideoInfoResponse()
                 .setImage(bilibiliFullVideo.getVideoInfo().get("data").get("pic").asText())
                 .setTitle(bilibiliFullVideo.getTitle())
                 .setPages(bilibiliFullVideo.getVideoInfo().get("data").get("pages"))
                 .setAuthor(bilibiliFullVideo.getAuthor())
                 .setUid(bilibiliFullVideo.getUserId())
-                .setQuality(sb.toString());
+//                .setQuality(sb.toString())
+                ;
         return Result.ok("查询成功", videoInfoResponse);
     }
 
