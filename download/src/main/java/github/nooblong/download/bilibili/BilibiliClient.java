@@ -55,12 +55,14 @@ public class BilibiliClient {
         List<SysUser> list =
                 Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
-            throw new RuntimeException("没有可用b站cookie");
+            throw new RuntimeException("没有用户存在b站cookie");
         }
         for (SysUser sysUser : list) {
             Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
             boolean login3 = isLogin(userCredMap);
+            log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
+                log.info("使用用户cookie:{}", sysUser.getUsername());
                 return userCredMap;
             }
         }
@@ -96,6 +98,7 @@ public class BilibiliClient {
             Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
             return true;
         } catch (Exception e) {
+            log.error("isLogin错误", e);
             return false;
         }
     }
