@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class OkUtil {
 
-    private static final Boolean LOG_REQUEST = false;
+    private static final Boolean LOG_REQUEST = true;
 
     public static String anonymousToken = "1f5fa7b6a6a9f81a11886e5186fde7fb74afecc68539838b34fd4c1fc57b40cc4b7f5273fc3921d1f66807bb86d2c6cb1366ed0860abc362e189299846f5e4182c0190c476579d923324751bcc9aaf44c3061cd18d77b7a0";
     public static final String MOBILE_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1";

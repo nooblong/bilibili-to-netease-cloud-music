@@ -136,7 +136,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 updateById(subscribe);
             }
         } catch (Exception e) {
-            if (counter.get() > 0) {
+            if (counter.get() > 1) {
                 log.error("订阅: {}处理失败, 但是遍历到了第{}页, 下次将从此开始", subscribe.getId(), counter.get());
                 subscribe.setLastTotalIndex(counter.get());
                 subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了第" + counter.get() + "页\n");
