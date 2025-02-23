@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
@@ -48,6 +49,8 @@ public class BaseTest {
     public UserVoicelistService userVoicelistService;
     @Autowired
     public SubscribeService subscribeService;
+    @Autowired
+    public UploadJob uploadJob;
 
     @Test
     void time() throws InterruptedException {

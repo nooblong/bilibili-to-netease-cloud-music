@@ -12,7 +12,6 @@ import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.Subscribe;
-import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.netmusic.module.weapi.VoiceList;
@@ -60,10 +59,6 @@ public class SubscribeController {
             }
         }
         Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
-        Db.remove(Wrappers.lambdaQuery(SubscribeReg.class).eq(SubscribeReg::getSubscribeId, byId.getId()));
-        List<SubscribeReg> subscribeRegs = subscribe.getSubscribeRegs();
-        subscribeRegs.forEach(subscribeReg -> subscribeReg.setSubscribeId(byId.getId()));
-        Db.saveBatch(subscribeRegs);
         Db.updateById(subscribe);
         return Result.ok("ok", subscribe);
     }
@@ -89,8 +84,6 @@ public class SubscribeController {
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
-        subscribe.getSubscribeRegs().forEach(subscribeReg -> subscribeReg.setSubscribeId(subscribe.getId()));
-        Db.saveBatch(subscribe.getSubscribeRegs());
         return Result.ok("ok", subscribe);
     }
 
@@ -100,7 +93,6 @@ public class SubscribeController {
         Subscribe byId = Db.getById(id, Subscribe.class);
         Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
         Db.removeById(byId);
-        Db.remove(Wrappers.lambdaQuery(SubscribeReg.class).eq(SubscribeReg::getSubscribeId, byId.getId()));
         return Result.ok("ok", byId);
     }
 
@@ -125,18 +117,9 @@ public class SubscribeController {
         if (list.isEmpty()) {
             return Result.ok("ok", list);
         }
-        LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
-                .in(SubscribeReg::getSubscribeId,
-                        list.stream().map(Subscribe::getId).collect(Collectors.toList()));
-        List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
         list.forEach(subscribe -> {
-            subscribeRegs.forEach(subscribeReg -> {
-                if (subscribeReg.getSubscribeId().equals(subscribe.getId())) {
-                    subscribe.getSubscribeRegs().add(subscribeReg);
-                }
-            });
             subscribe.setTypeDesc(subscribe.getType().getDesc());
             subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
             subscribe.setLog(subscribe.getLog());
@@ -148,10 +131,6 @@ public class SubscribeController {
     @GetMapping("/detail")
     public Result<Subscribe> subscribeList(@RequestParam(name = "id") Long id) {
         Subscribe byId = Db.getById(id, Subscribe.class);
-        LambdaQueryWrapper<SubscribeReg> regLambdaQueryWrapper = Wrappers.lambdaQuery(SubscribeReg.class)
-                .eq(SubscribeReg::getSubscribeId, byId.getId());
-        List<SubscribeReg> subscribeRegs = Db.list(regLambdaQueryWrapper);
-        byId.setSubscribeRegs(subscribeRegs);
         return Result.ok("ok", byId);
     }
 

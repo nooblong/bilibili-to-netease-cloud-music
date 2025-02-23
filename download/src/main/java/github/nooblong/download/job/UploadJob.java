@@ -15,11 +15,9 @@ import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
-import github.nooblong.download.entity.SubscribeReg;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.FfmpegService;
-import github.nooblong.download.service.SubscribeRegService;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.common.util.Constant;
@@ -45,20 +43,17 @@ public class UploadJob {
     final BilibiliClient bilibiliClient;
     final NetMusicClient netMusicClient;
     final FfmpegService ffmpegService;
-    final SubscribeRegService subscribeRegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
-                     SubscribeRegService subscribeRegService,
                      SubscribeService subscribeService,
                      UploadDetailService uploadDetailService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.ffmpegService = ffmpegService;
-        this.subscribeRegService = subscribeRegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
     }
@@ -86,7 +81,7 @@ public class UploadJob {
         this.process(uploadDetailList.get(0).getId(), availableBilibiliCookie);
     }
 
-    private static class Context {
+    public static class Context {
         Path musicPath;
         String desc = "";
         String netImageId;
@@ -309,68 +304,28 @@ public class UploadJob {
         }
     }
 
-    private String handleUploadName(Context context, UploadDetail uploadDetail) {
-        // 有自定义，一般为单曲上传
+    public String handleUploadName(Context context, UploadDetail uploadDetail) {
         if (StrUtil.isNotBlank(uploadDetail.getUploadName())) {
             return uploadDetail.getUploadName();
         }
-        // 检查是否有正则要求
-        List<SubscribeReg> subscribeRegs = subscribeRegService
-                .lambdaQuery().eq(SubscribeReg::getSubscribeId, uploadDetail.getSubscribeId()).list();
-        if (!subscribeRegs.isEmpty()) {
-            // 有正则
-            uploadDetailService.logNow(context.uploadDetailId, ">>> 需要进行正则匹配");
+        if (uploadDetail.getSubscribeId() != null && uploadDetail.getSubscribeId() != 0) {
             Subscribe subscribe = subscribeService.getById(uploadDetail.getSubscribeId());
             String regName = subscribe.getRegName();
-            // 对于多p视频要处理part name
-            String toRegTitle = context.bilibiliFullVideo.getHasMultiPart()
-                    ? context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle()
-                    : context.bilibiliFullVideo.getTitle();
-            if (regName != null) {
-                Map<Integer, String> replaceMap = new HashMap<>();
-                for (SubscribeReg subscribeReg : subscribeRegs) {
-                    // 先读取了原标题的reg生成map
-                    try {
-                        String s1 = ReUtil.extractMulti(subscribeReg.getRegex(), toRegTitle, "$1");
-                        if (s1 != null) {
-                            replaceMap.put(subscribeReg.getPos(), s1);
-                        }
-                    } catch (Exception e) {
-                        uploadDetailService.logNow(context.uploadDetailId, ">>> " + e.getMessage());
-                    }
-                }
-                // 利用map替换subscribe的Name
-                String result = ReUtil.replaceAll(regName, "\\{(.*?)}", match -> {
-                    String content = match.group(0);
-                    content = content.substring(1, content.length() - 1);
-                    if (content.equals("pubdate")) {
-                        Date videoCreateTime = context.bilibiliFullVideo.getVideoCreateTime();
-                        return DateUtil.format(videoCreateTime, "yyyy.MM.dd");
-                    } else if (content.equals("title")) {
-                        return uploadDetail.getTitle();
-                    } else if (NumberUtil.isNumber(content)) {
-                        if (replaceMap.containsKey(Integer.valueOf(content))) {
-                            return replaceMap.getOrDefault(Integer.valueOf(content), "");
-                        }
-                    } else {
-                        return content;
-                    }
-                    return content;
-                });
-                uploadDetailService.logNow(context.uploadDetailId, ">>> 正则匹配后的名字: " + result);
-                return result;
-            } else {
-                // 有正则，但是没填regName
-                return context.bilibiliFullVideo.getTitle();
+            if (StrUtil.isNotBlank(regName)) {
+                String title = context.bilibiliFullVideo.getTitle();
+                String partName = context.bilibiliFullVideo.getPartName() == null ?
+                        "" : context.bilibiliFullVideo.getPartName();
+                Date videoCreateTime = context.bilibiliFullVideo.getVideoCreateTime();
+                regName = regName.replaceAll("\\{pubdate}", DateUtil.format(videoCreateTime, "yyyy.MM.dd"));
+                regName = regName.replaceAll("\\{title}", title);
+                regName = regName.replaceAll("\\{partname}", partName);
+                return regName;
             }
+        }
+        if (context.bilibiliFullVideo.getHasMultiPart()) {
+            return context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle();
         } else {
-            uploadDetailService.logNow(context.uploadDetailId, ">>> 不用进行正则匹配");
-            // 无正则，uploadName就使用 视频名-分p名 或 视频名
-            if (context.bilibiliFullVideo.getHasMultiPart()) {
-                return context.bilibiliFullVideo.getPartName() + "-" + context.bilibiliFullVideo.getTitle();
-            } else {
-                return context.bilibiliFullVideo.getTitle();
-            }
+            return context.bilibiliFullVideo.getTitle();
         }
     }
 }

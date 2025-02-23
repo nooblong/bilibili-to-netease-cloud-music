@@ -52,8 +52,6 @@ public class Subscribe implements Serializable {
     private Integer lastTotalIndex;
 
     @TableField(exist = false)
-    private List<SubscribeReg> subscribeRegs = new ArrayList<>();
-    @TableField(exist = false)
     private String typeDesc;
     @TableField(exist = false)
     private String userName;
