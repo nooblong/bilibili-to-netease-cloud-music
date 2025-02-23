@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.download.BaseTest;
+import github.nooblong.download.entity.IteratorCollectionTotalList;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,6 +22,12 @@ class BilibiliClientTest extends BaseTest {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         JsonNode upChannels = bilibiliClient.getUpChannels("631070414", availableBilibiliCookie);
         System.out.println(upChannels.toPrettyString());
+    }
+
+    @Test
+    void getPart() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        bilibiliClient.getPartVideosFromBilibili("BV1vhADevEgB", availableBilibiliCookie);
     }
 
     @Test

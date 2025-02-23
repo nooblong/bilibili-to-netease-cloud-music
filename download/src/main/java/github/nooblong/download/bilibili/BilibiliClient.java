@@ -484,7 +484,7 @@ public class BilibiliClient {
                     .setBvid(bvid)
                     .setCid(jsonNode.get("cid").asText())
                     .setPartName(jsonNode.get("part").asText())
-                    .setTitle(jsonNode.get("part").asText());
+                    .setTitle(bilibiliFullVideo.getTitle());
             data.add(simpleVideoInfo);
         });
         IteratorCollectionTotalList<SimpleVideoInfo> result = new IteratorCollectionTotalList<>();
