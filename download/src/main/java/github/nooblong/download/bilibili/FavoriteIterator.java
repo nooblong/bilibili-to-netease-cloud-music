@@ -71,7 +71,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
                 return next();
             }
             if (checkPart) {
-                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), new HashMap<>());
+                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideoByBvidOrUrl(result.getBvid(), new HashMap<>());
                 if (fullVideo.getHasMultiPart()) {
                     log.info("simple检测到多p视频: {}", fullVideo.getTitle());
                     // 多p视频不要直接返回，从p1开始返回

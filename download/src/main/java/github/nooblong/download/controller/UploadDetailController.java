@@ -20,7 +20,6 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -203,7 +202,7 @@ public class UploadDetailController {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
             Assert.notNull(userVoicelistMap.get(req.getVoiceListId()), "not owner");
-            SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
+            SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
             uploadDetail.setCid(req.getCid());

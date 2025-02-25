@@ -1,13 +1,11 @@
 package github.nooblong.download.bilibili;
 
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.VideoOrder;
 import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -105,7 +103,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                 return next();
             }
             if (checkPart || StrUtil.isNotBlank(channelIds)) {
-                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideo(result.getBvid(), bilibiliCookie);
+                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideoByBvidOrUrl(result.getBvid(), bilibiliCookie);
 
                 if (StrUtil.isNotBlank(channelIds)) {
                     // 判断是否在合集里

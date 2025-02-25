@@ -24,7 +24,6 @@ import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -79,7 +78,12 @@ public class BilibiliClient {
         throw new RuntimeException("没有可用b站cookie");
     }
 
-    public BilibiliFullVideo init(SimpleVideoInfo video, Map<String, String> cred) {
+    public BilibiliFullVideo getFullVideoByBvidOrUrl(String bvid, Map<String, String> bilibiliCookie) {
+        SimpleVideoInfo byUrl = getSimpleVideoInfoByBvidOrUrl(bvid);
+        return getFullVideoBySimpleVideo(byUrl, bilibiliCookie);
+    }
+
+    public BilibiliFullVideo getFullVideoBySimpleVideo(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
@@ -101,6 +105,48 @@ public class BilibiliClient {
         return bilibiliFullVideo;
     }
 
+    public SimpleVideoInfo getSimpleVideoInfoByBvidOrUrl(String url) {
+        if (url.startsWith("http") ||
+                url.startsWith("www.") ||
+                url.startsWith("b23.tv") ||
+                url.startsWith("bilibili")) {
+            String bvid;
+            if (!url.startsWith("http")) {
+                url = "https://" + url;
+            }
+            HttpUrl parse = HttpUrl.parse(url);
+            assert parse != null;
+            String topPrivateDomain = parse.topPrivateDomain();
+            assert topPrivateDomain != null;
+            if (topPrivateDomain.equals("b23.tv")) {
+                Request request = new Request.Builder().url(url)
+                        .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
+                try (Response response = okHttpClient.newCall(request).execute()) {
+                    HttpUrl httpUrl = response.request().url();
+                    String topPrivateDomain1 = httpUrl.topPrivateDomain();
+                    assert topPrivateDomain1 != null;
+                    Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
+                    String s = httpUrl.pathSegments().get(1);
+                    Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+                    bvid = s;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else if (topPrivateDomain.equals("bilibili.com")) {
+                String s = parse.pathSegments().get(1);
+                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
+                bvid = s;
+            } else {
+                throw new RuntimeException("错误url");
+            }
+            return new SimpleVideoInfo().setBvid(bvid);
+        } else if (url.toLowerCase().startsWith("bv")) {
+            return new SimpleVideoInfo().setBvid(url);
+        } else {
+            throw new RuntimeException("未知的输入");
+        }
+    }
+
     public boolean isLogin(Map<String, String> credMap) {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
@@ -110,56 +156,6 @@ public class BilibiliClient {
         } catch (Exception e) {
             log.error("isLogin错误", e);
             return false;
-        }
-    }
-
-    public BilibiliFullVideo getFullVideo(String bvid, Map<String, String> bilibiliCookie) {
-        SimpleVideoInfo byUrl = createByUrl(bvid);
-        return init(byUrl, bilibiliCookie);
-    }
-
-    public SimpleVideoInfo createByUrl(String url) {
-        if (url.startsWith("http") ||
-                url.startsWith("www.") ||
-                url.startsWith("b23.tv") ||
-                url.startsWith("bilibili")) {
-            String bvid = getUrlBvid(url);
-            return new SimpleVideoInfo().setBvid(bvid);
-        } else if (url.toLowerCase().startsWith("bv")) {
-            return new SimpleVideoInfo().setBvid(url);
-        } else {
-            throw new RuntimeException("未知的输入");
-        }
-    }
-
-    private String getUrlBvid(String url) {
-        if (!url.startsWith("http")) {
-            url = "https://" + url;
-        }
-        HttpUrl parse = HttpUrl.parse(url);
-        assert parse != null;
-        String topPrivateDomain = parse.topPrivateDomain();
-        assert topPrivateDomain != null;
-        if (topPrivateDomain.equals("b23.tv")) {
-            Request request = new Request.Builder().url(url)
-                    .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
-            try (Response response = okHttpClient.newCall(request).execute()) {
-                HttpUrl httpUrl = response.request().url();
-                String topPrivateDomain1 = httpUrl.topPrivateDomain();
-                assert topPrivateDomain1 != null;
-                Assert.isTrue(topPrivateDomain1.equals("bilibili.com"), "解析错误");
-                String s = httpUrl.pathSegments().get(1);
-                Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-                return s;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else if (topPrivateDomain.equals("bilibili.com")) {
-            String s = parse.pathSegments().get(1);
-            Assert.isTrue(s.toUpperCase().startsWith("BV"), "解析错误");
-            return s;
-        } else {
-            throw new RuntimeException("错误url");
         }
     }
 
@@ -435,7 +431,7 @@ public class BilibiliClient {
         // 查询到成功就保存到用户cookie
         JsonNode response =
                 OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/check_state?key=" + key),
-                okHttpClient);
+                        okHttpClient);
         if (response.get("data").get("code").asInt() == 0) {
             JsonNode data = response.get("data");
             String url = data.get("url").asText();
@@ -485,8 +481,8 @@ public class BilibiliClient {
 
     public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid,
                                                                                   Map<String, String> bilibiliCookie) {
-        SimpleVideoInfo video = createByUrl(bvid);
-        BilibiliFullVideo bilibiliFullVideo = init(video, bilibiliCookie);
+        SimpleVideoInfo video = getSimpleVideoInfoByBvidOrUrl(bvid);
+        BilibiliFullVideo bilibiliFullVideo = getFullVideoBySimpleVideo(video, bilibiliCookie);
         List<SimpleVideoInfo> data = new ArrayList<>();
         bilibiliFullVideo.getPartVideos().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()

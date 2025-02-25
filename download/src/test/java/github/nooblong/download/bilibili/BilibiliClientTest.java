@@ -40,7 +40,7 @@ class BilibiliClientTest extends BaseTest {
     void getBestStreamUrl1() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         System.out.println(bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie).toPrettyString());
         System.out.println(bilibiliFullVideo.getHasMultiPart());
         System.out.println(bilibiliFullVideo.getHasSeries());
@@ -50,7 +50,7 @@ class BilibiliClientTest extends BaseTest {
     void getSeriesMeta1() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         System.out.println(bilibiliClient.getSeriesMeta(bilibiliFullVideo.getMySeriesId(), availableBilibiliCookie).toPrettyString());
     }
 

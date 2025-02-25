@@ -36,7 +36,7 @@ class SubscribeServiceImplTest extends BaseTest {
         SimpleVideoInfo video = new SimpleVideoInfo();
         video.setBvid("BV1vhADevEgB");
         Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
-        context.bilibiliFullVideo = bilibiliClient.init(video, cookie);
+        context.bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, cookie);
         UploadDetail uploadDetail = new UploadDetail();
         uploadDetail.setSubscribeId(0L);
 

@@ -131,11 +131,11 @@ public class UploadJob {
                          Map<String, String> availableBilibiliCookie) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
-        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             simpleVideoInfo.setCid(cid);
         }
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         context.bilibiliFullVideo = bilibiliFullVideo;
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
         if (useVideoCover) {
@@ -375,7 +375,7 @@ public class UploadJob {
                 SimpleVideoInfo video = new SimpleVideoInfo();
                 video.setBvid(uploadDetail.getBvid());
                 video.setCid(uploadDetail.getCid());
-                context.bilibiliFullVideo = bilibiliClient.init(video, cookie);
+                context.bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, cookie);
                 String s = handleUploadName(context, uploadDetail);
                 result.add(s);
             }

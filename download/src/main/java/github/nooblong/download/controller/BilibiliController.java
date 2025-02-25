@@ -50,10 +50,10 @@ public class BilibiliController {
     @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
-        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         simpleVideoInfo.setCid(cid);
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
 //        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
 //        StringBuilder sb = new StringBuilder();
 //        videoStreamUrl.forEach(audio -> {
@@ -107,8 +107,8 @@ public class BilibiliController {
 
     @GetMapping("/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
-        SimpleVideoInfo video = bilibiliClient.createByUrl(url);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getAndSetBiliCookie());
+        SimpleVideoInfo video = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(url);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, bilibiliClient.getAndSetBiliCookie());
         if (!bilibiliFullVideo.getHasSeries()) {
             return Result.fail("视频没有合集");
         }
