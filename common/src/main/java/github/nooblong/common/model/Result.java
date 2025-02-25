@@ -3,9 +3,11 @@ package github.nooblong.common.model;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 @Data
 @Accessors(chain = true)
-public class Result<T> {
+public class Result<T> implements Serializable {
 
     private Integer code;
     private String message;

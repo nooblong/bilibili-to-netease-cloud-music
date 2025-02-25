@@ -15,6 +15,7 @@ import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.utils.OkUtil;
 import okhttp3.OkHttpClient;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
@@ -47,6 +48,7 @@ public class BilibiliController {
         return Result.ok("ok", upChannels);
     }
 
+    @Cacheable(value = "getVideoInfo")
     @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {

@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.io.Serializable;
+
 @Data
 @Accessors(chain = true)
-public class VideoInfoResponse {
+public class VideoInfoResponse implements Serializable {
     private String title;
     private String image;
     private String quality;
