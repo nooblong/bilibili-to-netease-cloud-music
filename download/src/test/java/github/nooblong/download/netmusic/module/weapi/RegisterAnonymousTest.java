@@ -17,11 +17,4 @@ class RegisterAnonymousTest extends BaseTest {
         System.out.println(registeranonymous.toPrettyString());
     }
 
-    @Test
-    public void testConvert() {
-        String input = "a";
-        byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-        System.out.println(Arrays.toString(bytes));
-    }
-
 }

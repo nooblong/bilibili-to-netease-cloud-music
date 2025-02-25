@@ -82,11 +82,11 @@ public class UploadJob {
     }
 
     public static class Context {
-        Path musicPath;
-        String desc = "";
-        String netImageId;
-        BilibiliFullVideo bilibiliFullVideo;
-        Long uploadDetailId;
+        public Path musicPath;
+        public String desc = "";
+        public String netImageId;
+        public BilibiliFullVideo bilibiliFullVideo;
+        public Long uploadDetailId;
     }
 
     public void process(Long uploadDetailId, Map<String, String> availableBilibiliCookie) {

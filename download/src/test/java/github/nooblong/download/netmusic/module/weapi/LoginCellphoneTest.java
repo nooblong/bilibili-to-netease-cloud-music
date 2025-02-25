@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 
 class LoginCellphoneTest extends BaseTest {
+
     @Test
     public void test() {
         HashMap<String, Object> hashMap = new HashMap<>();

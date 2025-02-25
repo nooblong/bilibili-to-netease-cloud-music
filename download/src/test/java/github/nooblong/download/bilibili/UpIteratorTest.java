@@ -30,10 +30,4 @@ class UpIteratorTest extends BaseTest {
         }
     }
 
-    @Test
-    void nextFromSubscribe() {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
-        Subscribe subscribe = subscribeService.getById(666);
-        subscribeService.checkSubscribe(subscribe, availableBilibiliCookie);
-    }
 }
