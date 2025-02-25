@@ -1,7 +1,6 @@
 package github.nooblong.download.job;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -74,7 +73,7 @@ public class UploadJob {
         log.info("处理: {}", uploadDetailList.get(0).getTitle());
         Map<String, String> availableBilibiliCookie;
         try {
-            availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+            availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         } catch (RuntimeException e) {
             log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
             return;
@@ -350,7 +349,7 @@ public class UploadJob {
         Subscribe subscribe = Db.getById(subscribeId, Subscribe.class);
         List<UploadDetail> uploadDetails = new ArrayList<>();
         List<String> result = new ArrayList<>();
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         if (subscribe.getType() == SubscribeTypeEnum.UP) {
             UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                     subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
@@ -370,7 +369,7 @@ public class UploadJob {
             }
         }
         if (!uploadDetails.isEmpty()) {
-            Map<String, String> cookie = bilibiliClient.getAvailableBilibiliCookie();
+            Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
             for (UploadDetail uploadDetail : uploadDetails) {
                 UploadJob.Context context = new UploadJob.Context();
                 SimpleVideoInfo video = new SimpleVideoInfo();

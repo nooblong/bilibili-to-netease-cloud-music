@@ -13,7 +13,6 @@ import github.nooblong.download.api.VideoInfoResponse;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
-import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.utils.OkUtil;
 import okhttp3.OkHttpClient;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +52,7 @@ public class BilibiliController {
                                                   @RequestParam(required = false, name = "cid") String cid) {
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
         simpleVideoInfo.setCid(cid);
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
 //        JsonNode videoStreamUrl = bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie);
 //        StringBuilder sb = new StringBuilder();
@@ -90,26 +89,26 @@ public class BilibiliController {
 
     @GetMapping("/getSeriesInfo")
     public Result<JsonNode> getSeriesInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
+        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAndSetBiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
     @GetMapping("/getOldSeriesInfo")
     public Result<JsonNode> getOldSeriesInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliClient.getOldSeriesMeta(id, bilibiliClient.getAvailableBilibiliCookie());
+        JsonNode seriesMeta1 = bilibiliClient.getOldSeriesMeta(id, bilibiliClient.getAndSetBiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
     @GetMapping("/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
-        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getAvailableBilibiliCookie());
+        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getAndSetBiliCookie());
         return Result.ok("查询成功", favoriteList);
     }
 
     @GetMapping("/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
         SimpleVideoInfo video = bilibiliClient.createByUrl(url);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getAvailableBilibiliCookie());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(video, bilibiliClient.getAndSetBiliCookie());
         if (!bilibiliFullVideo.getHasSeries()) {
             return Result.fail("视频没有合集");
         }

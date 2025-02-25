@@ -23,6 +23,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -43,15 +44,19 @@ public class BilibiliClient {
 
     final OkHttpClient okHttpClient;
     final IUserService userService;
+    final StringRedisTemplate stringRedisTemplate;
 
-    public BilibiliClient(IUserService userService) {
+    public BilibiliClient(IUserService userService,
+                          StringRedisTemplate stringRedisTemplate) {
         this.userService = userService;
+        this.stringRedisTemplate = stringRedisTemplate;
         this.okHttpClient = new OkHttpClient.Builder()
                 .build();
     }
 
-    public Map<String, String> getAvailableBilibiliCookie() throws RuntimeException {
+    public Map<String, String> getAndSetBiliCookie() throws RuntimeException {
         log.info("获取可用b站cookie...");
+//        stringRedisTemplate.opsForValue().get("bilibili-cookie")
         List<SysUser> list =
                 Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {

@@ -50,7 +50,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     @Async
     @Override
     public void checkAndSave() {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
         for (Subscribe subscribe : subscribeList) {
             checkSubscribe(subscribe, availableBilibiliCookie);
@@ -59,7 +59,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
     @Override
     public void checkAndSave(Long userId) {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1)
                 .eq(Subscribe::getUserId, userId).list();
         for (Subscribe subscribe : subscribeList) {
@@ -69,7 +69,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
     @Override
     public void checkAndSave(Long userId, Long voiceListId) {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1)
                 .eq(Subscribe::getVoiceListId, voiceListId)
                 .eq(Subscribe::getUserId, userId).list();

@@ -1,7 +1,6 @@
 package github.nooblong.download.controller;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
@@ -15,7 +14,6 @@ import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
-import github.nooblong.download.netmusic.module.weapi.VoiceList;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
@@ -26,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/subscribe")
@@ -84,7 +81,7 @@ public class SubscribeController {
         }
         subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
         JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(),
-                bilibiliClient.getAvailableBilibiliCookie());
+                bilibiliClient.getAndSetBiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
