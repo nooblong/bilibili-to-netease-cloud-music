@@ -8,3 +8,22 @@
 4. 填写application.yml
 5. 启动system包下的SystemStart.java
 6. 启动前端 https://github.com/nooblong/bilibili-to-netease-cloud-music-ui
+
+![img.png](img/img1.png)
+
+![img.png](img/img2.png)
+
+![img.png](img/img3.png)
+
+![img.png](img/img4.png)
+
+![img.png](img/img5.png)
+
+![img.png](img/img6.png)
+
+![img.png](img/img7.png)
+
+![img.png](img/img8.png)
+
+
+
