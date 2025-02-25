@@ -2,8 +2,12 @@ package github.nooblong.download.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.Subscribe;
+import github.nooblong.download.entity.UploadDetail;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,4 +27,5 @@ public interface SubscribeService extends IService<Subscribe> {
 
     void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie);
 
+    List<UploadDetail> testProcess(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator, int times);
 }

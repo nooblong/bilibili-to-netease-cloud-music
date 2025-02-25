@@ -149,6 +149,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         }
     }
 
+
+
     private void process(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator) {
         boolean isProcess = false;
         int processNum = 0;
@@ -227,6 +229,48 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             log.info("未检测到新视频: {}", DateUtil.now());
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
         }
+    }
+
+    @Override
+    public List<UploadDetail> testProcess(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator, int times) {
+        List<UploadDetail> result = new ArrayList<>();
+        while (iterator.hasNext()) {
+            SimpleVideoInfo next = iterator.next();
+            if (times-- <= 0) {
+                break;
+            }
+
+            // 判断from-to区间
+            if (next.getCreateTime() != null &&
+                    !DateUtil.isIn(new Date(next.getCreateTime() * 1000), subscribe.getFromTime(),
+                            subscribe.getToTime())) {
+                continue;
+            }
+            // 判断关键词跳过
+            if (StrUtil.isNotBlank(subscribe.getKeyWord()) &&
+                    StrUtil.isNotBlank(next.getTitle()) &&
+                    !next.getTitle().contains(subscribe.getKeyWord())) {
+                continue;
+            }
+
+            UploadDetail uploadDetail = new UploadDetail();
+            uploadDetail.setBvid(next.getBvid())
+                    .setCid(next.getCid())
+                    .setSubscribeId(subscribe.getId())
+                    .setTitle(next.getTitle())
+                    .setCrack(subscribe.getCrack().longValue())
+                    .setUseVideoCover(subscribe.getUseVideoCover().longValue())
+                    .setVoiceListId(subscribe.getVoiceListId())
+                    .setPriority(subscribe.getPriority().longValue())
+                    .setUserId(subscribe.getUserId());
+            result.add(uploadDetail);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return result;
     }
 
 }

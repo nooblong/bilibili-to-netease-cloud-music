@@ -13,6 +13,7 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UserVoicelist;
+import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.netmusic.module.weapi.VoiceList;
 import github.nooblong.download.service.SubscribeService;
@@ -36,17 +37,20 @@ public class SubscribeController {
     final UploadDetailService uploadDetailService;
     final SubscribeService subscribeService;
     final UserVoicelistService userVoicelistService;
+    final UploadJob uploadJob;
 
     public SubscribeController(BilibiliClient bilibiliClient,
                                NetMusicClient netMusicClient,
                                UploadDetailService uploadDetailService,
                                SubscribeService subscribeService,
-                               UserVoicelistService userVoicelistService) {
+                               UserVoicelistService userVoicelistService,
+                               UploadJob uploadJob) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = subscribeService;
         this.userVoicelistService = userVoicelistService;
+        this.uploadJob = uploadJob;
     }
 
     @PostMapping("/edit")
@@ -146,6 +150,12 @@ public class SubscribeController {
         SysUser sysUser = JwtUtil.verifierFromContext();
         subscribeService.checkAndSave(sysUser.getId(), voiceListId);
         return Result.ok("ok");
+    }
+
+    @GetMapping("/test")
+    public Result<List<String>> test(@RequestParam("subscribeId") Long subscribeId) {
+        List<String> result = uploadJob.test(subscribeId);
+        return Result.ok("ok", result);
     }
 
 }
