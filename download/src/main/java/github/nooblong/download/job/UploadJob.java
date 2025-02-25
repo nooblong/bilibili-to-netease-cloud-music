@@ -318,6 +318,20 @@ public class UploadJob {
                 String partName = context.bilibiliFullVideo.getPartName() == null ?
                         "" : context.bilibiliFullVideo.getPartName();
                 Date videoCreateTime = context.bilibiliFullVideo.getVideoCreateTime();
+
+                // 匹配正则
+                String r1 = "\\{\\{(.*?)\\}\\}";
+                List<String> all = ReUtil.findAll(r1, regName, 1);
+                for (String s : all) {
+                    try {
+                        String s1 = ReUtil.extractMulti(s, title, "$1");
+                        regName = regName.replaceAll(ReUtil.escape("{{" + s + "}}"),
+                                Objects.requireNonNullElse(s1, "无匹配结果"));
+                    } catch (Exception e) {
+                        regName = regName.replaceAll(ReUtil.escape("{{" + s + "}}"), "正则有误");
+                    }
+                }
+
                 regName = regName.replaceAll("\\{pubdate}", DateUtil.format(videoCreateTime, "yyyy.MM.dd"));
                 regName = regName.replaceAll("\\{title}", title);
                 regName = regName.replaceAll("\\{partname}", partName);

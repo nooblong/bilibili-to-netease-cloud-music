@@ -34,19 +34,6 @@ CREATE TABLE `subscribe`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 157 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for subscribe_reg
--- ----------------------------
-DROP TABLE IF EXISTS `subscribe_reg`;
-CREATE TABLE `subscribe_reg`  (
-                                  `id` bigint NOT NULL AUTO_INCREMENT,
-                                  `subscribe_id` bigint NOT NULL DEFAULT 0,
-                                  `regex` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-                                  `pos` int NOT NULL DEFAULT 0,
-                                  PRIMARY KEY (`id`) USING BTREE,
-                                  UNIQUE INDEX `subscribe_reg_pk_2`(`subscribe_id` ASC, `pos` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
 -- Table structure for sys_user
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_user`;
