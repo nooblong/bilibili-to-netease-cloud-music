@@ -63,6 +63,8 @@ public class BaseTest {
     void testRedis() {
         String redisKey = "user:info";
 
+        System.out.println(redisTemplate.opsForValue().get("asd"));
+
         // 1. 创建 Map
         Map<String, String> userMap = new HashMap<>();
         userMap.put("name", "张三");

@@ -23,6 +23,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -44,19 +45,22 @@ public class BilibiliClient {
 
     final OkHttpClient okHttpClient;
     final IUserService userService;
-    final StringRedisTemplate stringRedisTemplate;
+    final RedisTemplate<String, Map<String, String>> redisTemplate;
 
     public BilibiliClient(IUserService userService,
-                          StringRedisTemplate stringRedisTemplate) {
+                          RedisTemplate<String, Map<String, String>> redisTemplate) {
         this.userService = userService;
-        this.stringRedisTemplate = stringRedisTemplate;
-        this.okHttpClient = new OkHttpClient.Builder()
-                .build();
+        this.redisTemplate = redisTemplate;
+        this.okHttpClient = new OkHttpClient.Builder().build();
     }
 
     public Map<String, String> getAndSetBiliCookie() throws RuntimeException {
         log.info("获取可用b站cookie...");
-//        stringRedisTemplate.opsForValue().get("bilibili-cookie")
+        String key = "bilibili-cookie";
+        Map<String, String> cookieMap = redisTemplate.opsForValue().get(key);
+        if (cookieMap != null) {
+            return cookieMap;
+        }
         List<SysUser> list =
                 Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
@@ -68,6 +72,7 @@ public class BilibiliClient {
             log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
                 log.info("使用用户cookie:{}", sysUser.getUsername());
+                redisTemplate.opsForValue().set(key, userCredMap);
                 return userCredMap;
             }
         }
