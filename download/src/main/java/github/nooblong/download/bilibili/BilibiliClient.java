@@ -409,7 +409,9 @@ public class BilibiliClient {
         builder.addQueryParameter("uid", upId);
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         if (response == null || response.get("code").asInt() == -1) {
-            HttpUrl.Builder builder2 = HttpUrl.parse(Constant.BAU).newBuilder();
+            HttpUrl parse = HttpUrl.parse(Constant.BAU);
+            assert parse != null;
+            HttpUrl.Builder builder2 = parse.newBuilder();
             builder2.addPathSegment("user").addPathSegment("User").addPathSegment("get_user_info");
             builder2.addQueryParameter("uid", upId);
             response = OkUtil.getJsonResponse(OkUtil.get(builder2.build()), okHttpClient);
@@ -417,10 +419,6 @@ public class BilibiliClient {
         Assert.notNull(response, "获取Up信息失败");
         Assert.isTrue(response.get("code").asInt() != -1, "获取Up信息失败");
         return response;
-    }
-
-    public JsonNode getSpiBuvidSync() {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login/get_spi_buvid_sync"), okHttpClient);
     }
 
     public JsonNode updateQrcodeData() {
