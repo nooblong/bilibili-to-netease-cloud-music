@@ -21,6 +21,9 @@ import github.nooblong.download.mapper.SubscribeMapper;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -39,12 +42,15 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
     final UploadDetailService uploadDetailService;
     final BilibiliClient bilibiliClient;
+    final CacheManager cacheManager;
 
 
     public SubscribeServiceImpl(UploadDetailService uploadDetailService,
-                                BilibiliClient bilibiliClient) {
+                                BilibiliClient bilibiliClient,
+                                CacheManager cacheManager) {
         this.uploadDetailService = uploadDetailService;
         this.bilibiliClient = bilibiliClient;
+        this.cacheManager = cacheManager;
     }
 
     @Async
@@ -52,16 +58,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     public void checkAndSave() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1).list();
-        for (Subscribe subscribe : subscribeList) {
-            checkSubscribe(subscribe, availableBilibiliCookie);
-        }
-    }
-
-    @Override
-    public void checkAndSave(Long userId) {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
-        List<Subscribe> subscribeList = lambdaQuery().eq(Subscribe::getEnable, 1)
-                .eq(Subscribe::getUserId, userId).list();
         for (Subscribe subscribe : subscribeList) {
             checkSubscribe(subscribe, availableBilibiliCookie);
         }
@@ -81,7 +77,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     @Override
     public void syncUpNameAndImage() {
         List<Subscribe> subscribes = list();
-//        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
         for (Subscribe subscribe : subscribes) {
             String upId = subscribe.getUpId();
             if (StrUtil.isNotBlank(upId) && StrUtil.isBlank(subscribe.getUpName())) {
@@ -134,6 +129,9 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     subscribe.setPriority(1);
                 }
                 updateById(subscribe);
+                Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+                Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+                Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
             }
         } catch (Exception e) {
             if (counter.get() > 1) {

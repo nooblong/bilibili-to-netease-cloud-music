@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -71,7 +72,7 @@ public class BilibiliClient {
             log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
                 log.info("使用用户cookie:{}", sysUser.getUsername());
-                redisTemplate.opsForValue().set(key, userCredMap);
+                redisTemplate.opsForValue().set(key, userCredMap, Duration.ofMinutes(5));
                 return userCredMap;
             }
         }

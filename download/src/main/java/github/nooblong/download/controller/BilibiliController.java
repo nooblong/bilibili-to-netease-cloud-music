@@ -74,6 +74,7 @@ public class BilibiliController {
         return Result.ok("查询成功", videoInfoResponse);
     }
 
+    @Cacheable(value = "bilibili/getUserInfo")
     @GetMapping("/getUserInfo")
     public Result<JsonNode> getUserInfo(@RequestParam(name = "uid") String uid) {
         UUID uuid = UUID.randomUUID();

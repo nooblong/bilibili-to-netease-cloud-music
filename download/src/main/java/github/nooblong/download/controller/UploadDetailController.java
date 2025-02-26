@@ -174,6 +174,7 @@ public class UploadDetailController {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @PostMapping("/edit")
     public Result<UploadDetail> update(@RequestBody UploadDetail uploadDetail) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -183,6 +184,7 @@ public class UploadDetailController {
         return Result.ok("ok", byId);
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delete")
     public Result<Boolean> delete(@RequestParam(name = "id") Long id) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -192,6 +194,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @PostMapping("/add")
     public Result<String> addQueue(@RequestBody AddQueueRequest reqs) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -229,6 +232,7 @@ public class UploadDetailController {
         return Result.ok("添加队列成功");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/restartJob")
     public Result<String> restartJob(@RequestParam(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -242,6 +246,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delAllWait")
     public Result<String> delAllWait(@RequestParam(name = "voicelistId") Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();

@@ -19,8 +19,6 @@ public interface SubscribeService extends IService<Subscribe> {
 
     void checkAndSave();
 
-    void checkAndSave(Long userId);
-
     void checkAndSave(Long userId, Long voiceListId);
 
     void syncUpNameAndImage();

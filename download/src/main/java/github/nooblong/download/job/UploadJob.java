@@ -107,6 +107,8 @@ public class UploadJob {
         uploadDetailService.updateById(uploadDetail);
 
         Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+        Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+        Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
 
         Context context = new Context();
         context.uploadDetailId = uploadDetailId;
@@ -124,6 +126,8 @@ public class UploadJob {
 
             uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
             Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
         } catch (Exception e) {
             uploadDetail.setUploadStatus(UploadStatusTypeEnum.ERROR);
             if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
@@ -134,6 +138,8 @@ public class UploadJob {
             delete(context);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 垃圾文件清理成功: " + e.getMessage());
             Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
         }
     }
 

@@ -102,7 +102,7 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @Cacheable(value = "subscribe/list")
+    @Cacheable(value = "subscribe/list", key = "#username + ':' + #status + ':' + #voiceListId")
     @GetMapping("/list")
     public Result<List<Subscribe>> subscribeList(@RequestParam(name = "username", required = false) String username,
                                                  @RequestParam(name = "status", required = false) Integer status,
