@@ -48,7 +48,7 @@ public class BilibiliController {
         return Result.ok("ok", upChannels);
     }
 
-    @Cacheable(value = "getVideoInfo")
+    @Cacheable(value = "bilibili/getVideoInfo")
     @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {

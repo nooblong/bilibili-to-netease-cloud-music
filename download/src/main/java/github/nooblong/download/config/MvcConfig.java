@@ -16,12 +16,6 @@ public class MvcConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(netMusicForwardInterceptor)
-//                .addPathPatterns("/direct/login/qr/check")
-//                .addPathPatterns("/direct/login/status")
-//                .addPathPatterns("/direct/voice/list/search")
-//                .addPathPatterns("/direct/dj/program/detail")
-//                .addPathPatterns("/direct/dj/program/detail")
-//                .addPathPatterns("/direct/dj/detail")
                 .addPathPatterns("/direct/**")
         ;
     }

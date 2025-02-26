@@ -20,6 +20,8 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -57,6 +59,7 @@ public class UploadDetailController {
         this.redisTemplate = redisTemplate;
     }
 
+    @Cacheable(value = "uploadDetail/listVoicelist")
     @GetMapping("/listVoicelist")
     public Result<List<UserVoicelist>> listVoicelist(@RequestParam(name = "username", required = false) String username) {
         List<SysUser> userList = Db.list(Wrappers.lambdaQuery(SysUser.class)
@@ -91,6 +94,7 @@ public class UploadDetailController {
         return Result.ok("ok", list);
     }
 
+    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
     @GetMapping("/refreshVoiceList")
     public Result<String> refreshVoiceList() {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -98,6 +102,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @Cacheable(value = "uploadDetail/list")
     @GetMapping("/list")
     public Result<IPage<UploadDetail>> list(@RequestParam(name = "pageNo") int pageNo,
                                             @RequestParam(name = "pageSize") int pageSize,

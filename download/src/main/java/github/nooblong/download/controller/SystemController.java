@@ -16,6 +16,7 @@ import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,6 +45,7 @@ public class SystemController {
         this.userService = userService;
     }
 
+    @Cacheable(value = "sys/sysInfo")
     @GetMapping("/sysInfo")
     public Result<SysInfo> sysInfo() {
         SysInfo sysInfo = new SysInfo();
@@ -81,6 +83,7 @@ public class SystemController {
         return Result.ok("ok", sysInfo);
     }
 
+    @Cacheable(value = "sys/queueInfo")
     @GetMapping("/queueInfo")
     public Result<IPage<UploadDetail>> queueInfo(@RequestParam(name = "pageNo") int pageNo,
                                                  @RequestParam(name = "pageSize") int pageSize) {

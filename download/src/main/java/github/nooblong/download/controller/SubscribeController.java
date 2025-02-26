@@ -18,6 +18,8 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +52,7 @@ public class SubscribeController {
         this.uploadJob = uploadJob;
     }
 
+    @CacheEvict(value = {"subscribe/list", "subscribe/test"}, allEntries = true)
     @PostMapping("/edit")
     public Result<Subscribe> edit(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -64,6 +67,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
+    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
     @PostMapping("/add")
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -88,6 +92,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
+    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
     @GetMapping("/delete")
     public Result<Subscribe> delete(@RequestParam(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -97,6 +102,7 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
+    @Cacheable(value = "subscribe/list")
     @GetMapping("/list")
     public Result<List<Subscribe>> subscribeList(@RequestParam(name = "username", required = false) String username,
                                                  @RequestParam(name = "status", required = false) Integer status,
@@ -149,6 +155,7 @@ public class SubscribeController {
         return Result.ok("ok");
     }
 
+    @Cacheable(value = "subscribe/test")
     @GetMapping("/test")
     public Result<List<String>> test(@RequestParam("subscribeId") Long subscribeId) {
         List<String> result = uploadJob.test(subscribeId);

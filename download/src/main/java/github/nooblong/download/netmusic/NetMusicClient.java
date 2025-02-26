@@ -59,12 +59,16 @@ public class NetMusicClient {
                 .cookieJar(new CookieJar() {
                     @Override
                     public void saveFromResponse(@Nullable HttpUrl url, @Nullable List<Cookie> cookies) {
-                        if (cookieLoginApi(url)) {
+                        if (url != null && (
+                                url.toString().equals(loginQrCheck.getUrl()) ||
+                                        url.toString().equals(login.getUrl()) ||
+                                        url.toString().equals(loginCellphone.getUrl())
+                        )) {
                             if (cookies != null && cookies.size() > 5) {
                                 userService.updateNeteaseCookieByOkhttpCookie(userId, cookies);
                             }
                         }
-                        if (cookieRefreshApi(url)) {
+                        if (url != null && (url.toString().equals(loginRefresh.getUrl()))) {
                             log.info("遇到网易用户set-cookie请求, 用户id: {}", userId);
                             try {
                                 ObjectNode objectNode = CommonUtil.cookieListToObjectNode(cookies);
@@ -127,22 +131,6 @@ public class NetMusicClient {
             }
         }
         return null;
-    }
-
-    private boolean cookieLoginApi(HttpUrl url) {
-        return url != null && (
-                url.toString().equals(loginQrCheck.getUrl()) ||
-                        url.toString().equals(login.getUrl()) ||
-                        url.toString().equals(loginCellphone.getUrl())
-        )
-                ;
-    }
-
-    private boolean cookieRefreshApi(HttpUrl url) {
-        return url != null && (
-                url.toString().equals(loginRefresh.getUrl())
-        )
-                ;
     }
 
     public boolean checkLogin(Long userId) {

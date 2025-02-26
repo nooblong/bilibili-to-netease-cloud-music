@@ -22,6 +22,9 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -46,17 +49,20 @@ public class UploadJob {
     final FfmpegService ffmpegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
+    final CacheManager cacheManager;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
                      SubscribeService subscribeService,
-                     UploadDetailService uploadDetailService) {
+                     UploadDetailService uploadDetailService,
+                     CacheManager cacheManager) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.ffmpegService = ffmpegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
+        this.cacheManager = cacheManager;
     }
 
     public void uploadOne() {
@@ -100,6 +106,8 @@ public class UploadJob {
         uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
         uploadDetailService.updateById(uploadDetail);
 
+        Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+
         Context context = new Context();
         context.uploadDetailId = uploadDetailId;
         try {
@@ -115,6 +123,7 @@ public class UploadJob {
             clear(context, Long.valueOf(voiceId));
 
             uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
+            Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
         } catch (Exception e) {
             uploadDetail.setUploadStatus(UploadStatusTypeEnum.ERROR);
             if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
@@ -124,6 +133,7 @@ public class UploadJob {
             uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + e.getMessage());
             delete(context);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 垃圾文件清理成功: " + e.getMessage());
+            Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
         }
     }
 
