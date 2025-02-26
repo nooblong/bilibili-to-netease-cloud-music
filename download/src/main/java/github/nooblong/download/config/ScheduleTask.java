@@ -118,12 +118,7 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
-                JsonNode loginrefresh = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh",
-                        sysUser.getId());
-                if (!loginrefresh.get("code").asText().equals("200")) {
-                    sysUser.setNetCookies("");
-                    userService.updateById(sysUser);
-                }
+                netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh", sysUser.getId());
             }
         }
     }

@@ -14,6 +14,7 @@ import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UserVoicelistService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         this.netMusicClient = netMusicClient;
     }
 
+    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
     @Override
     public void syncUserVoicelist() {
         log.info("开始刷新用户播客列表...");
@@ -57,8 +59,6 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                 JsonNode userVoiceList = netMusicClient.getUserVoiceList(user.getId());
                 if (userVoiceList != null && userVoiceList.get("total") != null &&
                         userVoiceList.get("total").asInt() > 0) {
-                    Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
-                            .eq(UserVoicelist::getUserId, user.getId()));
                     List<UserVoicelist> toAdd = new ArrayList<>();
                     ArrayNode list = (ArrayNode) userVoiceList.get("list");
                     for (JsonNode jsonNode : list) {
@@ -72,7 +72,11 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                         userVoicelist.setVoicelistImage(coverUrl);
                         toAdd.add(userVoicelist);
                     }
-                    Db.saveBatch(toAdd);
+                    if (!toAdd.isEmpty()) {
+                        Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
+                                .eq(UserVoicelist::getUserId, user.getId()));
+                        Db.saveBatch(toAdd);
+                    }
                 }
             } catch (Exception e) {
                 log.error("用户播客列表查询失败: {}", e.getMessage());

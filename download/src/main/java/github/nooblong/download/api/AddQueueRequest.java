@@ -5,9 +5,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
-public class AddQueueRequest {
+public class AddQueueRequest implements Serializable {
     List<UploadDetail> uploadDetails;
 }

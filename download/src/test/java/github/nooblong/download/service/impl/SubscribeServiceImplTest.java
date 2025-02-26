@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class SubscribeServiceImplTest extends BaseTest {
 
     @Autowired
@@ -26,7 +24,7 @@ class SubscribeServiceImplTest extends BaseTest {
 
     @Test
     void nextFromSubscribe() {
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         Subscribe subscribe = subscribeService.getById(666);
         subscribeService.checkSubscribe(subscribe, availableBilibiliCookie);
     }
@@ -37,8 +35,8 @@ class SubscribeServiceImplTest extends BaseTest {
         context.uploadDetailId = 1L;
         SimpleVideoInfo video = new SimpleVideoInfo();
         video.setBvid("BV1vhADevEgB");
-        Map<String, String> cookie = bilibiliClient.getAvailableBilibiliCookie();
-        context.bilibiliFullVideo = bilibiliClient.init(video, cookie);
+        Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+        context.bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, cookie);
         UploadDetail uploadDetail = new UploadDetail();
         uploadDetail.setSubscribeId(0L);
 

@@ -1,7 +1,6 @@
 package github.nooblong.download.controller;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
@@ -15,18 +14,18 @@ import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
-import github.nooblong.download.netmusic.module.weapi.VoiceList;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/subscribe")
@@ -53,6 +52,7 @@ public class SubscribeController {
         this.uploadJob = uploadJob;
     }
 
+    @CacheEvict(value = {"subscribe/list", "subscribe/test"}, allEntries = true)
     @PostMapping("/edit")
     public Result<Subscribe> edit(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -67,6 +67,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
+    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
     @PostMapping("/add")
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -84,13 +85,14 @@ public class SubscribeController {
         }
         subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
         JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(),
-                bilibiliClient.getAvailableBilibiliCookie());
+                bilibiliClient.getAndSetBiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         Db.save(subscribe);
         return Result.ok("ok", subscribe);
     }
 
+    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
     @GetMapping("/delete")
     public Result<Subscribe> delete(@RequestParam(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -100,6 +102,7 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
+    @Cacheable(value = "subscribe/list", key = "#username + ':' + #status + ':' + #voiceListId")
     @GetMapping("/list")
     public Result<List<Subscribe>> subscribeList(@RequestParam(name = "username", required = false) String username,
                                                  @RequestParam(name = "status", required = false) Integer status,
@@ -152,6 +155,7 @@ public class SubscribeController {
         return Result.ok("ok");
     }
 
+    @Cacheable(value = "subscribe/test")
     @GetMapping("/test")
     public Result<List<String>> test(@RequestParam("subscribeId") Long subscribeId) {
         List<String> result = uploadJob.test(subscribeId);

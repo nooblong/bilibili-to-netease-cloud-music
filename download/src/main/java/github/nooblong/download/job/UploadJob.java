@@ -1,7 +1,6 @@
 package github.nooblong.download.job;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -23,6 +22,9 @@ import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.common.util.Constant;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -47,17 +49,20 @@ public class UploadJob {
     final FfmpegService ffmpegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
+    final CacheManager cacheManager;
 
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
                      SubscribeService subscribeService,
-                     UploadDetailService uploadDetailService) {
+                     UploadDetailService uploadDetailService,
+                     CacheManager cacheManager) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.ffmpegService = ffmpegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
+        this.cacheManager = cacheManager;
     }
 
     public void uploadOne() {
@@ -74,7 +79,7 @@ public class UploadJob {
         log.info("处理: {}", uploadDetailList.get(0).getTitle());
         Map<String, String> availableBilibiliCookie;
         try {
-            availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+            availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         } catch (RuntimeException e) {
             log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
             return;
@@ -101,6 +106,10 @@ public class UploadJob {
         uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
         uploadDetailService.updateById(uploadDetail);
 
+        Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+        Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+        Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
+
         Context context = new Context();
         context.uploadDetailId = uploadDetailId;
         try {
@@ -116,6 +125,9 @@ public class UploadJob {
             clear(context, Long.valueOf(voiceId));
 
             uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
+            Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
         } catch (Exception e) {
             uploadDetail.setUploadStatus(UploadStatusTypeEnum.ERROR);
             if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
@@ -125,6 +137,9 @@ public class UploadJob {
             uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + e.getMessage());
             delete(context);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 垃圾文件清理成功: " + e.getMessage());
+            Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("subscribe/list")).ifPresent(Cache::clear);
+            Optional.ofNullable(cacheManager.getCache("uploadDetail/list")).ifPresent(Cache::clear);
         }
     }
 
@@ -132,11 +147,11 @@ public class UploadJob {
                          Map<String, String> availableBilibiliCookie) {
         assert bvid != null;
         assert !useVideoCover || userId != null && userId != 0;
-        SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(bvid);
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             simpleVideoInfo.setCid(cid);
         }
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.init(simpleVideoInfo, availableBilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         context.bilibiliFullVideo = bilibiliFullVideo;
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
         if (useVideoCover) {
@@ -350,7 +365,7 @@ public class UploadJob {
         Subscribe subscribe = Db.getById(subscribeId, Subscribe.class);
         List<UploadDetail> uploadDetails = new ArrayList<>();
         List<String> result = new ArrayList<>();
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAvailableBilibiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         if (subscribe.getType() == SubscribeTypeEnum.UP) {
             UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                     subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
@@ -370,13 +385,13 @@ public class UploadJob {
             }
         }
         if (!uploadDetails.isEmpty()) {
-            Map<String, String> cookie = bilibiliClient.getAvailableBilibiliCookie();
+            Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
             for (UploadDetail uploadDetail : uploadDetails) {
                 UploadJob.Context context = new UploadJob.Context();
                 SimpleVideoInfo video = new SimpleVideoInfo();
                 video.setBvid(uploadDetail.getBvid());
                 video.setCid(uploadDetail.getCid());
-                context.bilibiliFullVideo = bilibiliClient.init(video, cookie);
+                context.bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, cookie);
                 String s = handleUploadName(context, uploadDetail);
                 result.add(s);
             }

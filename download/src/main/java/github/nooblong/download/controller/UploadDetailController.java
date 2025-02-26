@@ -20,7 +20,8 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
@@ -58,6 +59,7 @@ public class UploadDetailController {
         this.redisTemplate = redisTemplate;
     }
 
+    @Cacheable(value = "uploadDetail/listVoicelist")
     @GetMapping("/listVoicelist")
     public Result<List<UserVoicelist>> listVoicelist(@RequestParam(name = "username", required = false) String username) {
         List<SysUser> userList = Db.list(Wrappers.lambdaQuery(SysUser.class)
@@ -92,6 +94,7 @@ public class UploadDetailController {
         return Result.ok("ok", list);
     }
 
+    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
     @GetMapping("/refreshVoiceList")
     public Result<String> refreshVoiceList() {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -99,6 +102,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @Cacheable(value = "uploadDetail/list")
     @GetMapping("/list")
     public Result<IPage<UploadDetail>> list(@RequestParam(name = "pageNo") int pageNo,
                                             @RequestParam(name = "pageSize") int pageSize,
@@ -170,6 +174,7 @@ public class UploadDetailController {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @PostMapping("/edit")
     public Result<UploadDetail> update(@RequestBody UploadDetail uploadDetail) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -179,6 +184,7 @@ public class UploadDetailController {
         return Result.ok("ok", byId);
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delete")
     public Result<Boolean> delete(@RequestParam(name = "id") Long id) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -188,6 +194,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @PostMapping("/add")
     public Result<String> addQueue(@RequestBody AddQueueRequest reqs) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -203,7 +210,7 @@ public class UploadDetailController {
             Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
             Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
             Assert.notNull(userVoicelistMap.get(req.getVoiceListId()), "not owner");
-            SimpleVideoInfo simpleVideoInfo = bilibiliClient.createByUrl(req.getBvid());
+            SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(req.getBvid());
             UploadDetail uploadDetail = new UploadDetail();
             uploadDetail.setBvid(simpleVideoInfo.getBvid());
             uploadDetail.setCid(req.getCid());
@@ -225,6 +232,7 @@ public class UploadDetailController {
         return Result.ok("添加队列成功");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/restartJob")
     public Result<String> restartJob(@RequestParam(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -238,6 +246,7 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delAllWait")
     public Result<String> delAllWait(@RequestParam(name = "voicelistId") Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();
