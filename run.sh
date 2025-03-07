@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /root/pub
+cd /root
 
 kill $(ps aux | grep java.*system | grep -v 'grep' | awk '{print $2}')
 
