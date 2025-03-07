@@ -216,8 +216,7 @@ public class UploadJob {
         String toAddDesc = "";
         toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
         toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
-        toAddDesc += ("\n一键上传工具: www.nooblong.tech");
-        toAddDesc += ("\ngithub: nooblong/bilibili-to-netease-cloud-music");
+        toAddDesc += ("\n一键上传工具: github.com/nooblong/bilibili-to-netease-cloud-music");
         context.desc += toAddDesc;
         uploadDetailService.logNow(context.uploadDetailId, ">>> 添加介绍: " +
                 toAddDesc.replaceAll("\n", " ").replaceAll("\r", " ").replaceAll("\t", " "));
