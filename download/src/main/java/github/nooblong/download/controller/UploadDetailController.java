@@ -120,7 +120,7 @@ public class UploadDetailController {
         IPage<UploadDetail> pageNew = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<UploadDetail> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(title), UploadDetail::getTitle, title);
-        wrapper.like(StrUtil.isNotBlank(uploadName), UploadDetail::getUploadName, title);
+        wrapper.like(StrUtil.isNotBlank(uploadName), UploadDetail::getUploadName, uploadName);
         if (StrUtil.isNotBlank(username)) {
             LambdaQueryWrapper<SysUser> like = Wrappers.lambdaQuery(SysUser.class).like(SysUser::getUsername, username);
             List<SysUser> list = SimpleQuery.list(like, i -> i);
