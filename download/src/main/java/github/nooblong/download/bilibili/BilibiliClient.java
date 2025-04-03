@@ -152,7 +152,7 @@ public class BilibiliClient {
         try {
             JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
                     + "/user/get_self_info", credMap), okHttpClient);
-            Assert.isTrue(jsonResponse.get("data").get("vip").get("role").asInt() == 3, "不是大会员");
+            Assert.isTrue(jsonResponse.get("data").get("vip").get("status").asInt() == 1, "不是大会员");
             return true;
         } catch (Exception e) {
             log.error("isLogin错误", e);
