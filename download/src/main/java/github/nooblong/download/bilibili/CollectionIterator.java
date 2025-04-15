@@ -14,11 +14,12 @@ public class CollectionIterator extends SimplePageIterator {
     String collectionId;
     CollectionVideoOrder collectionVideoOrder;
 
-    public CollectionIterator(BilibiliClient bilibiliClient, int limitSec,
+    public CollectionIterator(BilibiliClient bilibiliClient, int limitSec, int minSec,
                               VideoOrder videoOrder, String collectionId, CollectionVideoOrder collectionVideoOrder,
                               Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
                               AtomicInteger counter) {
-        super(bilibiliClient, limitSec, videoOrder, false, bilibiliCookie, lastTotalIndex, channelIds, counter);
+        super(bilibiliClient, limitSec, minSec, videoOrder,
+                false, bilibiliCookie, lastTotalIndex, channelIds, counter);
         this.collectionId = collectionId;
         this.collectionVideoOrder = collectionVideoOrder;
     }

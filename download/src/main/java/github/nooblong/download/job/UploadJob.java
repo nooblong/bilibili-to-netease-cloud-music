@@ -367,7 +367,7 @@ public class UploadJob {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         if (subscribe.getType() == SubscribeTypeEnum.UP) {
             UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
-                    subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
+                    subscribe.getLimitSec(), subscribe.getMinSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
                     UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
                     availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), new AtomicInteger(-1));
             uploadDetails = subscribeService.testProcess(subscribe, upIterator, times);
@@ -377,7 +377,7 @@ public class UploadJob {
             List<String> favIdList = CommonUtil.toList(favIds);
             for (String favId : favIdList) {
                 FavoriteIterator favIterator = new FavoriteIterator(favId, bilibiliClient,
-                        subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                        subscribe.getLimitSec(), subscribe.getMinSec(), subscribe.getCheckPart() == 1,
                         availableBilibiliCookie);
                 List<UploadDetail> partDetails = subscribeService.testProcess(subscribe, favIterator, times);
                 uploadDetails.addAll(partDetails);

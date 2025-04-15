@@ -12,7 +12,7 @@ class PartIteratorTest extends BaseTest {
 
     @Test
     void next() {
-        Iterator<SimpleVideoInfo> partIterator = new PartIterator(bilibiliClient, 99999,
+        Iterator<SimpleVideoInfo> partIterator = new PartIterator(bilibiliClient, 99999, 0,
                 VideoOrder.PUB_OLD_FIRST_THEN_NEW, "BV1FQ4y1z7eD",
                 new HashMap<>());
         int times = 0;

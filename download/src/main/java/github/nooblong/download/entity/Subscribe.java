@@ -41,6 +41,7 @@ public class Subscribe implements Serializable {
     private Date toTime;
     private String keyWord;
     private Integer limitSec;
+    private Integer minSec;
     private String videoOrder;
     private String remark;
     private Integer enable;

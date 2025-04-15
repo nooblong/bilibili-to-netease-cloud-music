@@ -12,6 +12,7 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
 
     BilibiliClient bilibiliClient;
     int limitSec;
+    int minSec;
     VideoOrder videoOrder;
     SimpleVideoInfo[] videos;
     int index;
@@ -19,10 +20,11 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
     String bvid;
     Map<String, String> bilibiliCookie;
 
-    public PartIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder, String bvid,
+    public PartIterator(BilibiliClient bilibiliClient, int limitSec, int minSec, VideoOrder videoOrder, String bvid,
                         Map<String, String> bilibiliCookie) {
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
+        this.minSec = minSec;
         this.videoOrder = videoOrder;
         this.bvid = bvid;
         this.bilibiliCookie = bilibiliCookie;
@@ -45,8 +47,9 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
                 result = videos[videos.length - 1 - index];
             }
             index++;
-            if (result.getDuration() > limitSec) {
-                log.info("part超限: 歌曲:{} 时长:{} 超过了限制:{}", result.getPartName(), result.getDuration(), limitSec);
+            if (result.getDuration() > limitSec || result.getDuration() < minSec) {
+                log.info("part超过限制时长: 歌曲:{} 时长:{} 超过了限制:{} - {}",
+                        result.getPartName(), result.getDuration(), minSec, limitSec);
                 return next();
             }
             log.info("part: {}, 位置: {}, 总数:{}", result.getPartName(), index, upVideosTotalNum);

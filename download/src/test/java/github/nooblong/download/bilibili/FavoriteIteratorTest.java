@@ -13,7 +13,7 @@ class FavoriteIteratorTest extends BaseTest {
     @Test
     void next() {
         Iterator<SimpleVideoInfo> upIterator = new FavoriteIterator("68629352", bilibiliClient,
-                9999, true, new HashMap<>());
+                9999, 0, true, new HashMap<>());
         int times = 0;
         while (upIterator.hasNext()) {
             SimpleVideoInfo next = upIterator.next();

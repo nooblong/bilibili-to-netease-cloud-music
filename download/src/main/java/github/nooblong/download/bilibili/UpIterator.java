@@ -19,11 +19,12 @@ public class UpIterator extends SimplePageIterator {
     int lastTotalIndexUp = 1;
 
 
-    public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec,
+    public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec, int minSec,
                       VideoOrder videoOrder, UserVideoOrder userVideoOrder, boolean checkPart,
                       Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
                       AtomicInteger counter) {
-        super(bilibiliClient, limitSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex, channelIds, counter);
+        super(bilibiliClient, limitSec, minSec, videoOrder, checkPart,
+                bilibiliCookie, lastTotalIndex, channelIds, counter);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;

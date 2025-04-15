@@ -19,6 +19,7 @@ CREATE TABLE `subscribe`  (
                               `to_time` datetime NULL DEFAULT NULL,
                               `key_word` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
                               `limit_sec` int NOT NULL DEFAULT 0,
+                              `min_sec` int default 0 not null,
                               `video_order` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'PUB_NEW_FIRST_THEN_OLD',
                               `enable` tinyint NOT NULL DEFAULT 1,
                               `crack` tinyint NOT NULL DEFAULT 0,

@@ -103,7 +103,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         try {
             if (subscribe.getType() == SubscribeTypeEnum.UP) {
                 UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
-                        subscribe.getLimitSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
+                        subscribe.getLimitSec(), subscribe.getMinSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
                         UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
                         availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), counter);
                 process(subscribe, upIterator);
@@ -119,7 +119,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 List<String> favIdList = CommonUtil.toList(favIds);
                 for (String favId : favIdList) {
                     FavoriteIterator favIterator = new FavoriteIterator(favId, bilibiliClient,
-                            subscribe.getLimitSec(), subscribe.getCheckPart() == 1,
+                            subscribe.getLimitSec(), subscribe.getMinSec(), subscribe.getCheckPart() == 1,
                             availableBilibiliCookie);
                     process(subscribe, favIterator);
                 }

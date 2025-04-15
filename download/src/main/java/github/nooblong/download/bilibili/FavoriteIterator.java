@@ -12,6 +12,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
     private final String favoriteId;
     private final BilibiliClient bilibiliClient;
     private final int limitSec;
+    private final int minSec;
     private int index;
     private SimpleVideoInfo[] videos;
     private int page = 1;
@@ -20,11 +21,12 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
     List<SimpleVideoInfo> insidePartList = new ArrayList<>();
     Map<String, String> bilibiliCookie;
 
-    public FavoriteIterator(String favoriteId, BilibiliClient bilibiliClient, int limitSec,
+    public FavoriteIterator(String favoriteId, BilibiliClient bilibiliClient, int limitSec, int minSec,
                             boolean checkPart, Map<String, String> bilibiliCookie) {
         this.favoriteId = favoriteId;
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
+        this.minSec = minSec;
         this.checkPart = checkPart;
         this.bilibiliCookie = bilibiliCookie;
     }
@@ -67,7 +69,8 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
             result = videos[index];
             index++;
             if (result.getDuration() > limitSec && !checkPart) {
-                log.info("favorite歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
+                log.info("favorite歌曲:{} 时长:{} 超过了限制:{} - {}",
+                        result.getTitle(), result.getDuration(), minSec, limitSec);
                 return next();
             }
             if (checkPart) {
@@ -78,7 +81,7 @@ public class FavoriteIterator implements Iterator<SimpleVideoInfo> {
                     // 对part内做时间限制
                     try {
 
-                        Iterator<SimpleVideoInfo> partIterator = new PartIterator(bilibiliClient, limitSec,
+                        Iterator<SimpleVideoInfo> partIterator = new PartIterator(bilibiliClient, limitSec, minSec,
                                 VideoOrder.PUB_NEW_FIRST_THEN_OLD, fullVideo.getBvid(), bilibiliCookie);
                         while (partIterator.hasNext()) {
                             SimpleVideoInfo next = partIterator.next();

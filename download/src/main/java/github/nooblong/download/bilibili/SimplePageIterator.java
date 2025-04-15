@@ -17,6 +17,7 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 
     BilibiliClient bilibiliClient;
     int limitSec;
+    int minSec;
     VideoOrder videoOrder;
     SimpleVideoInfo[] videos;
     int index;
@@ -30,11 +31,12 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
     AtomicInteger counter;
     int currentPageNo = 1;
 
-    public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, VideoOrder videoOrder
+    public SimplePageIterator(BilibiliClient bilibiliClient, int limitSec, int minSec, VideoOrder videoOrder
             , boolean checkPart, Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
                               AtomicInteger counter) {
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
+        this.minSec = minSec;
         this.videoOrder = videoOrder;
         this.checkPart = checkPart;
         this.bilibiliCookie = bilibiliCookie;
@@ -98,8 +100,8 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
             }
             index++;
             totalIndex++;
-            if (result.getDuration() > limitSec && !checkPart) {
-                log.info("simple歌曲:{} 时长:{} 超过了限制:{}", result.getTitle(), result.getDuration(), limitSec);
+            if ((result.getDuration() > limitSec || result.getDuration() < minSec) && !checkPart) {
+                log.info("simple歌曲:{} 时长:{} 超过了限制:{} - {}", result.getTitle(), result.getDuration(), minSec, limitSec);
                 return next();
             }
             if (checkPart || StrUtil.isNotBlank(channelIds)) {
@@ -124,8 +126,8 @@ public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
                         try {
 
                             Iterator<SimpleVideoInfo> partIterator =
-                                    new PartIterator(bilibiliClient, limitSec, VideoOrder.PUB_NEW_FIRST_THEN_OLD,
-                                            fullVideo.getBvid(), bilibiliCookie);
+                                    new PartIterator(bilibiliClient, limitSec, minSec,
+                                            VideoOrder.PUB_NEW_FIRST_THEN_OLD, fullVideo.getBvid(), bilibiliCookie);
                             while (partIterator.hasNext()) {
                                 SimpleVideoInfo next = partIterator.next();
                                 // 将视频的createTime赋值
