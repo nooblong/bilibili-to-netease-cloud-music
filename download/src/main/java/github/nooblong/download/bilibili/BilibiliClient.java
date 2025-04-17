@@ -74,6 +74,16 @@ public class BilibiliClient {
                 log.info("使用用户cookie:{}", sysUser.getUsername());
                 redisTemplate.opsForValue().set(key, userCredMap, Duration.ofMinutes(5));
                 return userCredMap;
+            } else {
+                log.info("删除用户cookie:{}", sysUser.getUsername());
+                SysUser user = userService.getById(sysUser.getId());
+                user.setBiliCookies(null);
+                userService.updateById(user);
+            }
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
         throw new RuntimeException("没有可用b站cookie");
