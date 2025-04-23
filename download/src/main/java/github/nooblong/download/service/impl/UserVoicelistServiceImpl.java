@@ -39,11 +39,6 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         for (SysUser user : userList) {
             syncVoicelistByUser(user);
             log.info("{}刷新成功", user.getUsername());
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
@@ -77,6 +72,7 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                                 .eq(UserVoicelist::getUserId, user.getId()));
                         Db.saveBatch(toAdd);
                     }
+                    Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 log.error("用户播客列表查询失败: {}", e.getMessage());

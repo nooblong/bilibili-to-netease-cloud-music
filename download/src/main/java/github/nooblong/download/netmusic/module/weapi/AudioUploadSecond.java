@@ -58,7 +58,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
 
     public void logNow(Long uploadDetailId, String content) {
         UploadDetail uploadDetail = Db.getById(uploadDetailId, UploadDetail.class);
-        uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
+        uploadDetail.setLog(uploadDetail.getLog() +
                 DateUtil.now() + " " + content + "\n");
         Db.updateById(uploadDetail);
     }
