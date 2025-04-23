@@ -142,7 +142,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
             log.error(e.getMessage(), e);
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
-                    " 订阅处理失败，原因: " + CommonUtil.limitString(e.getMessage()) + "\n");
+                    " 订阅处理失败，原因: " + e.getMessage() + "\n");
             updateById(subscribe);
         }
     }
