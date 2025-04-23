@@ -10,5 +10,5 @@ import java.util.List;
 
 @Data
 public class AddQueueRequest implements Serializable {
-    List<UploadDetail> uploadDetails;
+    private List<UploadDetail> uploadDetails;
 }
