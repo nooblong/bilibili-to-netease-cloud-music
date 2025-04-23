@@ -88,7 +88,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     public void logNow(Long uploadDetailId, String content) {
         log.info(content);
         UploadDetail uploadDetail = getById(uploadDetailId);
-        uploadDetail.setLog(CommonUtil.processString(uploadDetail.getLog()) +
+        uploadDetail.setLog(uploadDetail.getLog() +
                 DateUtil.now() + " " + content + "\n");
         updateById(uploadDetail);
     }
