@@ -231,8 +231,8 @@ public class UploadJob {
         toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
         toAddDesc += ("\n一键上传工具: github.com/nooblong/bilibili-to-netease-cloud-music");
         context.desc += toAddDesc;
-        uploadDetailService.logNow(context.uploadDetailId, ">>> 添加介绍: " +
-                toAddDesc.replaceAll("\n", " ").replaceAll("\r", " ").replaceAll("\t", " "));
+        uploadDetailService.logNow(context.uploadDetailId, CommonUtil.limitString(">>> 添加介绍: " +
+                toAddDesc.replaceAll("\n", " ").replaceAll("\r", " ").replaceAll("\t", " ")));
 
         Assert.notNull(uploadName, "上传名字为空");
         if (uploadName.length() > 40) {
