@@ -1,6 +1,7 @@
 package github.nooblong.download.job;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -114,16 +115,24 @@ public class UploadJob {
         context.uploadDetailId = uploadDetailId;
         try {
             // 收集错误信息
+            uploadDetailService.logNow(context.uploadDetailId, ">> 开始下载音频");
             getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId(), availableBilibiliCookie);
+            uploadDetailService.logNow(context.uploadDetailId, ">> 下载封面成功");
+            uploadDetailService.logNow(context.uploadDetailId, ">> 开始转码");
             codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
                     uploadDetail.getOffset(), uploadDetail.getBitrate());
+            uploadDetailService.logNow(context.uploadDetailId, ">> 转码成功");
             // 上传之前先设置名字
             uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
+            uploadDetailService.logNow(context.uploadDetailId, ">> 开始上传网易云");
             String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()),
                     uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
+            uploadDetailService.logNow(context.uploadDetailId, ">> 上传网易云成功");
+            uploadDetailService.logNow(context.uploadDetailId, ">> 开始清除垃圾");
             clear(context, Long.valueOf(voiceId));
+            uploadDetailService.logNow(context.uploadDetailId, ">> 清除垃圾成功");
 
             uploadDetailService.logNow(context.uploadDetailId, ">>> 单曲上传成功, 声音id: " + voiceId);
             Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
@@ -156,6 +165,7 @@ public class UploadJob {
         context.bilibiliFullVideo = bilibiliFullVideo;
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
         if (useVideoCover) {
+            uploadDetailService.logNow(context.uploadDetailId, ">> 开始下载封面");
             Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 下载封面成功");
             context.netImageId = transImage(context, imagePath, netMusicClient, userId);
@@ -204,10 +214,11 @@ public class UploadJob {
         context.musicPath = targetPath;
         String s1 = "编码:" + ext;
         try {
-            log.info("转码后的文件大小: {}K", Files.size(targetPath) / 1024);
+            log.info("转码后的文件大小: {}K", NumberUtil.round((double) Files.size(targetPath) / 1024, 2));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        uploadDetailService.logNow(context.uploadDetailId, ">> 目标码率: " + bitrate);
         uploadDetailService.logNow(context.uploadDetailId, ">> " + s1 + "音频转码成功");
     }
 
