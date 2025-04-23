@@ -222,6 +222,7 @@ public class UploadDetailController {
             uploadDetail.setUploadName(req.getUploadName());
             uploadDetail.setPrivacy(req.getPrivacy());
             uploadDetail.setPriority(isAdmin ? 999L : 10L);
+            uploadDetail.setBitrate(req.getBitrate());
             uploadDetail.setUserId(userId);
             uploadDetail.setCrack(req.getCrack());
             if (req.getCrack() == 1) {
