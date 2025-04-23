@@ -118,6 +118,7 @@ public class UploadJob {
             uploadDetailService.logNow(context.uploadDetailId, ">> 开始下载音频");
             getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId(), availableBilibiliCookie);
+            uploadDetailService.logNow(context.uploadDetailId, ">> 下载音频成功");
             uploadDetailService.logNow(context.uploadDetailId, ">> 下载封面成功");
             uploadDetailService.logNow(context.uploadDetailId, ">> 开始转码");
             codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
