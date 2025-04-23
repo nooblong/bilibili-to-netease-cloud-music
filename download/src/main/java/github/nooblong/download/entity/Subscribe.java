@@ -51,6 +51,7 @@ public class Subscribe implements Serializable {
     private Integer priority;
     private String log;
     private Integer lastTotalIndex;
+    private Integer bitrate;
 
     @TableField(exist = false)
     private String typeDesc;

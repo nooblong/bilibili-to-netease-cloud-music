@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 public interface FfmpegService {
 
-    Path encodeMp3(Path sourceUrl, double beginSec, double endSec, double voiceOffset);
+    Path encodeMp3(Path sourceUrl, double beginSec, double endSec, double voiceOffset, int bitrate);
 
     MultimediaInfo probeInfo(Path sourceUrl);
 

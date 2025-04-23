@@ -199,6 +199,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     .setUseVideoCover(subscribe.getUseVideoCover().longValue())
                     .setVoiceListId(subscribe.getVoiceListId())
                     .setPriority(subscribe.getPriority().longValue())
+                    .setBitrate(subscribe.getBitrate())
                     .setUserId(subscribe.getUserId());
             if (next.getCreateTime() != null) {
                 log.info("保存: {}, bvid: {}, date: {}",

@@ -116,7 +116,8 @@ public class UploadJob {
             // 收集错误信息
             getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover() == 1, uploadDetail.getUserId(), availableBilibiliCookie);
-            codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(), uploadDetail.getOffset());
+            codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
+                    uploadDetail.getOffset(), uploadDetail.getBitrate());
             // 上传之前先设置名字
             uploadDetail.setUploadName(handleUploadName(context, uploadDetail));
             String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()),
@@ -197,8 +198,8 @@ public class UploadJob {
 
     }
 
-    private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset) {
-        Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset);
+    private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset, int bitrate) {
+        Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset, bitrate);
         String ext = CommonUtil.getFileExt(context.musicPath.getFileName().toString());
         context.musicPath = targetPath;
         String s1 = "编码:" + ext;

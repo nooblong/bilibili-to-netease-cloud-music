@@ -34,6 +34,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Double offset;
     private Double beginSec;
     private Double endSec;
+    private Integer bitrate;
     private Long voiceId;
     private Long voiceListId;
     private Long privacy;
