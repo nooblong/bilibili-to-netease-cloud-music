@@ -145,7 +145,7 @@ public class UploadJob {
                 uploadDetail.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
             }
             Db.updateById(uploadDetail);
-            uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + e.getMessage());
+            uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + CommonUtil.getExceptionStackTraceAsString(e));
             delete(context);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 垃圾文件清理成功: " + e.getMessage());
             Optional.ofNullable(cacheManager.getCache("sys/queueInfo")).ifPresent(Cache::clear);
