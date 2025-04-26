@@ -242,6 +242,7 @@ public class UploadDetailController {
         Assert.isTrue(sysUser.getId().equals(byId.getUserId()), "assert error");
         byId.setUploadRetryTimes(0);
         byId.setMusicRetryTimes(0);
+        byId.setLog("");
         byId.setUploadStatus(UploadStatusTypeEnum.WAIT);
         uploadDetailService.updateById(byId);
         return Result.ok("ok");
