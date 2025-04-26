@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.SubscribeTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
@@ -94,6 +95,15 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     public void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
+        Long userId = subscribe.getUserId();
+        if (userId == null) {
+            return;
+        }
+        SysUser user = Db.getById(userId, SysUser.class);
+        if (StrUtil.isBlank(user.getNetCookies())) {
+            log.info("用户未登录不处理，订阅:{} 用户:{}", subscribe.getId(), user.getId());
+            return;
+        }
         AtomicInteger counter;
         if (subscribe.getLastTotalIndex() < 0) {
             counter = new AtomicInteger(1);
