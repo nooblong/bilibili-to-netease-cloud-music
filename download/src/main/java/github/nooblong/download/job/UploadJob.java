@@ -124,8 +124,8 @@ public class UploadJob {
                     break;
                 } catch (Exception e) {
                     retry++;
-                    log.error("下载音频失败, 重试: {}", retry + 1);
-                    uploadDetailService.logNow(uploadDetailId, "下载音频失败, 重试: " + retry + 1);
+                    log.error("下载音频失败, 重试: {}", (retry + 1));
+                    uploadDetailService.logNow(uploadDetailId, "下载音频失败, 重试: " + (retry + 1));
                 }
             }
             uploadDetailService.logNow(context.uploadDetailId, ">>> 下载音频成功");
@@ -154,6 +154,8 @@ public class UploadJob {
             if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
                 uploadDetail.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
             }
+            UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
+            uploadDetail.setLog(byId.getLog());
             Db.updateById(uploadDetail);
             uploadDetailService.logNow(context.uploadDetailId, ">>> 声音上传失败: " + CommonUtil.getExceptionStackTraceAsString(e));
             delete(context);
