@@ -3,10 +3,12 @@ package github.nooblong.download;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ReUtil;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
@@ -58,6 +60,19 @@ public class BaseTest {
     public UploadJob uploadJob;
     @Autowired
     public RedisTemplate<String, String> redisTemplate;
+
+    @Test
+    void testUpload() {
+        UploadDetail uploadDetail = new UploadDetail();
+        uploadDetail.setId(999999999L);
+        uploadDetail.setUserId(53L);
+        uploadDetail.setVoiceListId(998889515L);
+        uploadDetail.setBvid("BV1GM41157Hz");
+        Db.removeById(uploadDetail.getId(), UploadDetail.class);
+        Db.save(uploadDetail);
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+        uploadJob.process(999999999L, availableBilibiliCookie);
+    }
 
     @Test
     void testRedis() {

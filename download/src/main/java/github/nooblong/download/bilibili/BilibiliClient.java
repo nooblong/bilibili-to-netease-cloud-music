@@ -15,6 +15,9 @@ import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
 import github.nooblong.common.util.Constant;
+import github.nooblong.download.job.UploadJob;
+import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.utils.MultiDownload;
 import github.nooblong.download.utils.OkUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
@@ -46,11 +49,14 @@ public class BilibiliClient {
     final OkHttpClient okHttpClient;
     final IUserService userService;
     final RedisTemplate<String, Map<String, String>> redisTemplate;
+    final UploadDetailService uploadDetailService;
 
     public BilibiliClient(IUserService userService,
-                          RedisTemplate<String, Map<String, String>> redisTemplate) {
+                          RedisTemplate<String, Map<String, String>> redisTemplate,
+                          UploadDetailService uploadDetailService) {
         this.userService = userService;
         this.redisTemplate = redisTemplate;
+        this.uploadDetailService = uploadDetailService;
         this.okHttpClient = new OkHttpClient.Builder().build();
     }
 
@@ -201,18 +207,23 @@ public class BilibiliClient {
         return response;
     }
 
-    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred) {
+    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred, UploadJob.Context context) throws Exception {
         // 文件名: partName-title-aid-cid.ext
         JsonNode bestStreamUrl = getBestStreamUrl(video, cred);
         ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
         String ext = this.expectQuality.getExt();
+        AudioQuality quality = null;
         for (int i = 0; i < arrayNode.size(); i++) {
             if (arrayNode.get(i).has("audio_quality")) {
                 int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
-                ext = AudioQuality.extMap.get(audioQuality);
+                AudioQuality audioQualityEnum = AudioQuality.extMap.get(audioQuality);
+                ext = audioQualityEnum.getExt();
+                quality = audioQualityEnum;
                 break;
             }
         }
+        assert quality != null;
+        uploadDetailService.logNow(context.uploadDetailId, "下载的文件类型: " + ext + ", 码率: " + quality.name());
         String fileName = video.getBvid();
         Path path = Paths.get(Constant.TMP_FOLDER);
         AtomicBoolean isDownloaded = new AtomicBoolean(false);
@@ -231,7 +242,7 @@ public class BilibiliClient {
         if (isDownloaded.get()) {
             return path.resolve(fileName + "." + ext);
         }
-        return doDownload(path.toString(), fileName, bestStreamUrl, video.getBvid());
+        return doDownloadMulti(path.toString(), fileName, bestStreamUrl, video.getBvid(), context);
     }
 
     private Path doDownload(String path, String fileName, JsonNode bestStreamUrl, String bvid) {
@@ -239,7 +250,7 @@ public class BilibiliClient {
         for (int i = 0; i < arrayNode.size(); i++) {
             if (arrayNode.get(i).has("audio_quality")) {
                 int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
-                String ext = AudioQuality.extMap.get(audioQuality);
+                String ext = AudioQuality.extMap.get(audioQuality).getExt();
                 String url = arrayNode.get(i).get("url").asText();
                 Map<String, String> headers = new HashMap<>();
                 headers.put(HttpHeaders.REFERER, "https://bilibili.com/" + bvid);
@@ -258,6 +269,25 @@ public class BilibiliClient {
             }
         }
         return null;
+    }
+
+    private Path doDownloadMulti(String path, String fileName,
+                                 JsonNode bestStreamUrl, String bvid, UploadJob.Context context) throws Exception {
+        ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
+        for (int i = 0; i < arrayNode.size(); i++) {
+            if (arrayNode.get(i).has("audio_quality")) {
+
+                int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
+                String ext = AudioQuality.extMap.get(audioQuality).getExt();
+                String url = arrayNode.get(i).get("url").asText();
+                String referer = "https://bilibili.com/" + bvid;
+                File downloadedFile = new File(path, fileName + "." + ext);
+                MultiDownload.downloadWithRange(url, downloadedFile, 1024 * 512, referer,
+                        uploadDetailService, context.uploadDetailId);
+                return downloadedFile.toPath();
+            }
+        }
+        throw new RuntimeException("没有audio_quality");
     }
 
     public Path downloadCover(BilibiliFullVideo video) throws RuntimeException {

@@ -1,50 +1,60 @@
 package github.nooblong.download.utils;
 
+import github.nooblong.download.service.UploadDetailService;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
+@Slf4j
 public class MultiDownload {
     private static final OkHttpClient client = new OkHttpClient();
     private static final int RETRY_LIMIT = 3;
-    private static final int BUFFER_SIZE = 8192;
+    // 1024 * 512: 1MB per part
 
-    public static void downloadWithRange(String url, String destPath, int partSize) throws IOException {
-        long totalSize = fetchContentLength(url);
+    public static void downloadWithRange(String url, File destFile, int partSize,
+                                         String referer, UploadDetailService service, Long uploadDetailId) throws IOException {
+        long totalSize = fetchContentLength(url, referer);
         if (totalSize <= 0) {
+            service.logNow(uploadDetailId, "获取到负数文件大小");
+            log.error("获取到负数文件大小");
             throw new IOException("Unable to determine file size.");
         }
+        service.logNow(uploadDetailId, "文件总大小: " + totalSize);
+        log.info("文件总大小: {}", totalSize);
 
-        System.out.println("Total size: " + totalSize + " bytes");
-
-        try (FileChannel fileChannel = FileChannel.open(new File(destPath).toPath(),
+        try (FileChannel fileChannel = FileChannel.open(destFile.toPath(),
                 StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
 
             long start = 0;
             while (start < totalSize) {
                 long end = Math.min(start + partSize - 1, totalSize - 1);
-                byte[] data = fetchPart(url, start, end);
+                byte[] data = fetchPart(url, start, end, referer, uploadDetailId, service);
                 if (data != null) {
                     fileChannel.position(start);
                     fileChannel.write(ByteBuffer.wrap(data));
-                    System.out.println("downloaded part " + start + "-" + end);
+                    service.logNow(uploadDetailId, "下载 " + start + "-" + end);
+                    log.info("下载 {}-{}", start, end);
                 } else {
-                    throw new IOException("Download failed for range: " + start + "-" + end);
+                    service.logNow(uploadDetailId, "下载分区数据为空 " + start + "-" + end);
+                    log.error("下载分区数据为空 {}-{}", start, end);
+                    throw new IOException("下载分区数据为空: " + start + "-" + end);
                 }
                 start = end + 1;
             }
         }
 
-        System.out.println("Download completed: " + destPath);
+        log.info("所有分区下载完成: {}", destFile.getAbsolutePath());
+        service.logNow(uploadDetailId, "所有分区下载完成");
     }
 
-    private static long fetchContentLength(String url) throws IOException {
+    private static long fetchContentLength(String url, String referer) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .header("Range", "bytes=0-0")
-                .addHeader("Referer", "https://bilibili.com")
+                .addHeader("Referer", referer)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -55,6 +65,7 @@ public class MultiDownload {
                     return Long.parseLong(totalSizeStr);
                 }
             } else if (response.code() == 200) {
+                assert response.body() != null;
                 return response.body().contentLength();
             }
         }
@@ -62,14 +73,15 @@ public class MultiDownload {
         return -1;
     }
 
-    private static byte[] fetchPart(String url, long start, long end) {
+    private static byte[] fetchPart(String url, long start, long end, String referer,
+                                    Long uploadDetailId, UploadDetailService service) {
         int attempts = 0;
         while (attempts < RETRY_LIMIT) {
             try {
                 Request request = new Request.Builder()
                         .url(url)
                         .header("Range", "bytes=" + start + "-" + end)
-                        .addHeader("Referer", "https://bilibili.com")
+                        .addHeader("Referer", referer)
                         .build();
 
                 try (Response response = client.newCall(request).execute()) {
@@ -78,7 +90,8 @@ public class MultiDownload {
                     }
                 }
             } catch (IOException e) {
-                System.err.println("Failed to download range " + start + "-" + end + ", attempt " + (attempts + 1));
+                log.error("分区下载失败 {}-{}, 重试次数 {}", start, end, attempts + 1);
+                service.logNow(uploadDetailId, "重试次数 " + attempts + 1 + ",分区下载失败: " +  start + " - " + end);
             }
             attempts++;
         }
@@ -91,10 +104,10 @@ public class MultiDownload {
         String destPath = "downloaded.flac";
         int partSize = 1024 * 512; // 1MB per part
 
-        try {
-            downloadWithRange(fileUrl, destPath, partSize);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            downloadWithRange(fileUrl, destPath, partSize);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 }

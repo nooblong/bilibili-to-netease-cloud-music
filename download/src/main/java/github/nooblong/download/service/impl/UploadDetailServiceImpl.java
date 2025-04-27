@@ -5,10 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.JsonNode;
-import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.MusicStatusEnum;
 import github.nooblong.download.UploadStatusTypeEnum;
-import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.mapper.UploadDetailMapper;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -31,12 +29,9 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         implements UploadDetailService {
 
     final NetMusicClient netMusicClient;
-    final BilibiliClient bilibiliClient;
 
-    public UploadDetailServiceImpl(NetMusicClient netMusicClient,
-                                   BilibiliClient bilibiliClient) {
+    public UploadDetailServiceImpl(NetMusicClient netMusicClient) {
         this.netMusicClient = netMusicClient;
-        this.bilibiliClient = bilibiliClient;
     }
 
     @Override
