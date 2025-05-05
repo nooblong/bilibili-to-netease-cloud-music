@@ -19,6 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +63,39 @@ public class NetMusicClient {
     }
 
     public OkHttpClient generateClient(Long userId, List<Cookie> cookiesByUser) {
+        final TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[]{};
+                    }
+                }
+        };
+
+        // 安装信任管理器
+        final SSLContext sslContext;
+        try {
+            sslContext = SSLContext.getInstance("SSL");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new RuntimeException(e);
+        }
+        // 创建一个允许所有主机名的 HostnameVerifier
+        final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
         return templateClient.newBuilder()
+                .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+                .hostnameVerifier((hostname, session) -> true)
                 .cookieJar(new CookieJar() {
                     @Override
                     public void saveFromResponse(@Nullable HttpUrl url, @Nullable List<Cookie> cookies) {
