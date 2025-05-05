@@ -66,7 +66,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
     @Override
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
-        final int CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+        final int CHUNK_SIZE = 1024 * 1024; // 1MB
         byte[] buffer = new byte[CHUNK_SIZE];
         logNow(uploadDetailId, ">>> 开始上传");
         ArrayNode responseArray = objectMapper.createArrayNode();

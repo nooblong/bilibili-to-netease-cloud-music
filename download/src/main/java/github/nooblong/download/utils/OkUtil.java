@@ -52,7 +52,7 @@ public class OkUtil {
                 .add("encSecKey", weapiEncrypt[1])
                 .build();
         Headers.Builder headerBuilder = new Headers.Builder();
-        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com/");
         headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
         header.forEach(headerBuilder::set);
         Headers headers = headerBuilder.build();
@@ -67,7 +67,7 @@ public class OkUtil {
 
     public static Request postApi(JsonNode jsonNode, String url, Map<String, String> header, String method) {
         Headers.Builder headerBuilder = new Headers.Builder();
-        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com/");
         headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
         header.forEach(headerBuilder::set);
         Headers headers = headerBuilder.build();
@@ -83,7 +83,7 @@ public class OkUtil {
 
     public static Request postEApi(JsonNode jsonNode, String url, String optionsUrl, Map<String, String> header, String method) {
         Headers.Builder headerBuilder = new Headers.Builder();
-        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com");
+        headerBuilder.set(HttpHeaders.REFERER, "https://music.163.com/");
         headerBuilder.set(HttpHeaders.USER_AGENT, WEAPI_AGENT);
         header.forEach(headerBuilder::set);
         Headers headers = headerBuilder.build();
@@ -101,6 +101,7 @@ public class OkUtil {
     public static Request uploadWeApi(long length, InputStream inputStream, String url, Map<String, String> header, String method,
                                       String mediaType) throws FileNotFoundException {
         RequestBody requestBody = RequestBodyUtil.create(MediaType.parse(mediaType), inputStream, length);
+        header.put("Referer", "https://music.163.com/");
         Request request = new Request.Builder()
                 .headers(justAddHeaders(header))
                 .url(url).method(method.toUpperCase(), requestBody).build();
@@ -114,8 +115,9 @@ public class OkUtil {
         RequestBody requestBody = RequestBodyUtil.create(MediaType.parse("image/jpeg"), inputStream, length);
         Request request = new Request.Builder().url("https://nosup-hz1.127.net/yyimgs/" +
                         objectKey + "?offset=0&complete=true&version=1.0").post(requestBody)
-                .header("Content-Type", "image/jpeg")
+                .addHeader("Content-Type", "image/jpeg")
                 .addHeader("x-nos-token", xNosToken)
+                .addHeader("Referer", "https://music.163.com/")
                 .build();
         if (LOG_REQUEST) {
             log.info("上传网易云图片: {}", request);
