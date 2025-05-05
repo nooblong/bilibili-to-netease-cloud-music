@@ -52,8 +52,9 @@ public class NetMusicClient {
                           LoginCellphone loginCellphone) {
         this.userService = userService;
         this.templateClient = new OkHttpClient.Builder()
-                .readTimeout(5, TimeUnit.MINUTES)
-                .writeTimeout(5, TimeUnit.MINUTES)
+                .readTimeout(1, TimeUnit.MINUTES)
+                .writeTimeout(1, TimeUnit.MINUTES)
+                .connectTimeout(1, TimeUnit.MINUTES)
                 .build();
         this.moduleFactory = moduleFactory;
         this.loginQrCheck = loginQrCheck;
@@ -141,7 +142,7 @@ public class NetMusicClient {
                         return cookiesByUser;
                     }
                 })
-//                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
                 .build();
     }
 
