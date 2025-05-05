@@ -99,7 +99,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                         responseArray.add(responseWithHeader);
                         logNow(uploadDetailId, String.format(">>> 上传分片 #%d 成功，大小: %d 字节", partNum, bytesRead));
                         success = true;
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         retry++;
                         if (retry < maxRetry) {
                             log.warn("上传分片 #{} 失败，重试中({}/{})...", partNum, retry, maxRetry);
