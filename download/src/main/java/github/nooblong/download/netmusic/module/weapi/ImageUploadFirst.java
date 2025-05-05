@@ -11,6 +11,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -25,6 +26,7 @@ public class ImageUploadFirst extends SimpleWeApiModule {
     private String token;
     private String objectKey;
     private InputStream inputStream;
+    private long length;
 
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
@@ -37,7 +39,9 @@ public class ImageUploadFirst extends SimpleWeApiModule {
         // param
         String path = (String) queryMap.get("imagePath");
         try {
-            inputStream = new FileInputStream(Paths.get(path).toFile());
+            File file = Paths.get(path).toFile();
+            inputStream = new FileInputStream(file);
+            length = file.length();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -56,7 +60,7 @@ public class ImageUploadFirst extends SimpleWeApiModule {
     @Override
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.uploadImgWeapi(inputStream, token, objectKey), client);
+        JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.uploadImgWeapi(length, inputStream, token, objectKey), client);
         assert jsonResponse != null;
         return objectMapper.createObjectNode();
     }

@@ -66,33 +66,62 @@ public class AudioUploadSecond extends SimpleWeApiModule {
     @Override
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
-        byte[] buffer = new byte[5242880];
+        final int CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+        byte[] buffer = new byte[CHUNK_SIZE];
         logNow(uploadDetailId, ">>> 开始上传");
         ArrayNode responseArray = objectMapper.createArrayNode();
+
         try (ReadableByteChannel sourceChannel = Channels.newChannel(dataInputStream)) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
             int partNum = 1;
-            while (sourceChannel.read(byteBuffer) > 0) {
-                byteBuffer.flip();
-                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer, 0, byteBuffer.limit());
-                try {
-                    JsonNode responseWithHeader = OkUtil.getJsonResponseWithHeader(OkUtil.uploadWeApi(byteArrayInputStream,
-                            "https://ymusic.nos-hz.163yun.com/" + objectKey
-                                    + "?partNumber=" + partNum
-                                    + "&uploadId=" + uploadId,
-                            headerMap, getMethod(), "audio/mpeg"), client);
-                    partNum++;
-                    responseArray.add(responseWithHeader);
-                    logNow(uploadDetailId, ">>> 已上传5Mb");
-                } catch (FileNotFoundException e) {
-                    throw new RuntimeException(e);
+            int bytesRead;
+
+            while ((bytesRead = sourceChannel.read(ByteBuffer.wrap(buffer))) > 0) {
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer, 0, bytesRead);
+
+                boolean success = false;
+                int retry = 0;
+                final int maxRetry = 3;
+
+                while (!success) {
+                    try {
+                        JsonNode responseWithHeader = OkUtil.getJsonResponseWithHeader(
+                                OkUtil.uploadWeApi(
+                                        bytesRead,
+                                        byteArrayInputStream,
+                                        "https://ymusic.nos-hz.163yun.com/" + objectKey
+                                                + "?partNumber=" + partNum
+                                                + "&uploadId=" + uploadId,
+                                        headerMap, getMethod(), "audio/mpeg"
+                                ),
+                                client
+                        );
+                        responseArray.add(responseWithHeader);
+                        logNow(uploadDetailId, String.format(">>> 上传分片 #%d 成功，大小: %d 字节", partNum, bytesRead));
+                        success = true;
+                    } catch (IOException e) {
+                        retry++;
+                        if (retry < maxRetry) {
+                            log.warn("上传分片 #{} 失败，重试中({}/{})...", partNum, retry, maxRetry);
+                            byteArrayInputStream.reset(); // 重要：重试时重置流
+                        } else {
+                            log.error("上传分片 #{} 多次失败，终止上传。", partNum);
+                            throw new RuntimeException("上传失败", e);
+                        }
+                    }
                 }
+                partNum++;
             }
+
             logNow(uploadDetailId, ">>> 上传结束");
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("读取上传数据失败", e);
         }
-        assert !responseArray.isEmpty();
+
+        if (responseArray.isEmpty()) {
+            throw new RuntimeException("上传结果为空");
+        }
+
         return responseArray;
     }
 

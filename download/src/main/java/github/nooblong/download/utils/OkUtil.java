@@ -9,9 +9,15 @@ import okhttp3.*;
 import org.springframework.http.HttpHeaders;
 import org.w3c.dom.Document;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -92,9 +98,9 @@ public class OkUtil {
         return request;
     }
 
-    public static Request uploadWeApi(InputStream inputStream, String url, Map<String, String> header, String method,
+    public static Request uploadWeApi(long length, InputStream inputStream, String url, Map<String, String> header, String method,
                                       String mediaType) throws FileNotFoundException {
-        RequestBody requestBody = RequestBodyUtil.create(MediaType.parse(mediaType), inputStream);
+        RequestBody requestBody = RequestBodyUtil.create(MediaType.parse(mediaType), inputStream, length);
         Request request = new Request.Builder()
                 .headers(justAddHeaders(header))
                 .url(url).method(method.toUpperCase(), requestBody).build();
@@ -104,8 +110,8 @@ public class OkUtil {
         return request;
     }
 
-    public static Request uploadImgWeapi(InputStream inputStream, String xNosToken, String objectKey) {
-        RequestBody requestBody = RequestBodyUtil.create(MediaType.parse("image/jpeg"), inputStream);
+    public static Request uploadImgWeapi(long length, InputStream inputStream, String xNosToken, String objectKey) {
+        RequestBody requestBody = RequestBodyUtil.create(MediaType.parse("image/jpeg"), inputStream, length);
         Request request = new Request.Builder().url("https://nosup-hz1.127.net/yyimgs/" +
                         objectKey + "?offset=0&complete=true&version=1.0").post(requestBody)
                 .header("Content-Type", "image/jpeg")
@@ -300,5 +306,39 @@ public class OkUtil {
         return request;
     }
 
+    public static OkHttpClient getUnsafeOkHttpClient() {
+        try {
+            // 创建一个信任所有证书的 TrustManager
+            final TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+
+                        @Override
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+
+                        @Override
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[]{};
+                        }
+                    }
+            };
+
+            // 安装信任管理器
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+
+            // 创建一个允许所有主机名的 HostnameVerifier
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+            builder.hostnameVerifier((hostname, session) -> true);
+
+            return builder.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

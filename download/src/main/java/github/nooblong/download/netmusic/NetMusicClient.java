@@ -101,7 +101,7 @@ public class NetMusicClient {
                         return cookiesByUser;
                     }
                 })
-                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+//                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
                 .build();
     }
 

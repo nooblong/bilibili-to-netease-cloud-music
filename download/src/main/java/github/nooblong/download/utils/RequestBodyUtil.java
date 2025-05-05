@@ -12,7 +12,7 @@ import java.io.InputStream;
 
 public class RequestBodyUtil {
 
-    public static RequestBody create(final MediaType mediaType, final InputStream inputStream) {
+    public static RequestBody create(MediaType mediaType, InputStream inputStream, long contentLength) {
         return new RequestBody() {
             @Override
             public MediaType contentType() {
@@ -21,21 +21,13 @@ public class RequestBodyUtil {
 
             @Override
             public long contentLength() {
-                try {
-                    return inputStream.available();
-                } catch (IOException e) {
-                    return 0;
-                }
+                return contentLength;
             }
 
             @Override
             public void writeTo(BufferedSink sink) throws IOException {
-                Source source = null;
-                try {
-                    source = Okio.source(inputStream);
+                try (Source source = Okio.source(inputStream)) {
                     sink.writeAll(source);
-                } finally {
-                    Util.closeQuietly(source);
                 }
             }
         };
