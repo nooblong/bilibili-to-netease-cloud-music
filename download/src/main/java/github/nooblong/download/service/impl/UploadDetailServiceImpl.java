@@ -88,6 +88,14 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         updateById(uploadDetail);
     }
 
+    @Override
+    public void logNowNoDate(Long uploadDetailId, String content) {
+        log.info(content);
+        UploadDetail uploadDetail = getById(uploadDetailId);
+        uploadDetail.setLog(uploadDetail.getLog() + content + "\n");
+        updateById(uploadDetail);
+    }
+
     private String getAuditStatus(String voiceId, Long userId) {
         Map<String, Object> param = new HashMap<>();
         param.put("id", voiceId);

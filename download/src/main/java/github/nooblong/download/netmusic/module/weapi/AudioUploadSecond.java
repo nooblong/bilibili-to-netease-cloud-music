@@ -58,8 +58,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
 
     public void logNow(Long uploadDetailId, String content) {
         UploadDetail uploadDetail = Db.getById(uploadDetailId, UploadDetail.class);
-        uploadDetail.setLog(uploadDetail.getLog() +
-                DateUtil.now() + " " + content + "\n");
+        uploadDetail.setLog(uploadDetail.getLog() + content + "\n");
         Db.updateById(uploadDetail);
     }
 
@@ -97,7 +96,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                                 client
                         );
                         responseArray.add(responseWithHeader);
-                        logNow(uploadDetailId, String.format(">>> 上传分片 #%d 成功，大小: %d 字节", partNum, bytesRead));
+                        logNow(uploadDetailId, String.format(">>> 上传分片 #%d 成功，%d b", partNum, bytesRead));
                         success = true;
                     } catch (Exception e) {
                         retry++;

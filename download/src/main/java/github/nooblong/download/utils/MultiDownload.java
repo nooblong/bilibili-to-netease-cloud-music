@@ -35,7 +35,7 @@ public class MultiDownload {
                 if (data != null) {
                     fileChannel.position(start);
                     fileChannel.write(ByteBuffer.wrap(data));
-                    service.logNow(uploadDetailId, "下载 " + start + "-" + end);
+                    service.logNowNoDate(uploadDetailId, "下载 " + start + "-" + end);
                     log.info("下载 {}-{}", start, end);
                 } else {
                     service.logNow(uploadDetailId, "下载分区数据为空 " + start + "-" + end);
