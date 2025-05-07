@@ -6,10 +6,8 @@ import java.io.Serializable;
 
 @Data
 public class SysInfo implements Serializable {
-//    private boolean netCookieStatus;
-//    private boolean bilibiliCookieStatus;
-//    private boolean ready;
-    private Integer regNum;
-    private Integer annoVisitNum;
-    private Integer userVisitNum;
+    private Integer login163Num;
+    private Integer visitTimes;
+    private Integer visitToday;
+    private Integer visitTodayTimes;
 }

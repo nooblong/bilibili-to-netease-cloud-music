@@ -31,4 +31,8 @@ public class SysUser implements Serializable {
 
     private Integer isAdmin;
 
+    private Integer visitToday;
+
+    private Integer visitTodayTimes;
+
 }

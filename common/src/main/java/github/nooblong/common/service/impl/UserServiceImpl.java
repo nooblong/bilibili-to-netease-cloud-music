@@ -1,9 +1,7 @@
 package github.nooblong.common.service.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
@@ -16,7 +14,6 @@ import okhttp3.Cookie;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -105,7 +102,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     }
 
     @Override
-    public Integer sumVisitTime() {
-        return baseMapper.sumVisitTime();
+    public Integer visitTimes() {
+        return baseMapper.visitTimes();
+    }
+
+    @Override
+    public Integer visitToday() {
+        return baseMapper.visitToday();
+    }
+
+    @Override
+    public Integer visitTodayTimes() {
+        return baseMapper.visitTodayTimes();
     }
 }

@@ -1,7 +1,6 @@
 package github.nooblong.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import okhttp3.Cookie;
 
@@ -23,5 +22,9 @@ public interface IUserService extends IService<SysUser> {
 
     void updateBilibiliCookieByOkhttpCookie(Long id, List<Cookie> cookieList);
 
-    Integer sumVisitTime();
+    Integer visitTimes();
+
+    Integer visitToday();
+
+    Integer visitTodayTimes();
 }
