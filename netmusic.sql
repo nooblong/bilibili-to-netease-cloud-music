@@ -46,6 +46,8 @@ CREATE TABLE `sys_user`  (
                              `net_cookies` varchar(8192) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
                              `bili_cookies` varchar(4096) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
                              `visit_times` int NOT NULL DEFAULT 0,
+                             `visit_today` int NOT NULL DEFAULT 0,
+                             `visit_today_times` int NOT NULL DEFAULT 0,
                              `update_time` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE CURRENT_TIMESTAMP,
                              `is_admin` int NOT NULL DEFAULT 0,
                              PRIMARY KEY (`id`) USING BTREE,
