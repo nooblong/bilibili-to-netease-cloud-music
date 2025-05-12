@@ -125,6 +125,7 @@ public class UploadJob {
                 } catch (Exception e) {
                     retry++;
                     log.error("下载音频失败, 重试: {}", (retry + 1));
+                    log.error("下载音频失败", e);
                     uploadDetailService.logNow(uploadDetailId, "下载音频失败, 重试: " + (retry + 1));
                 }
             }
