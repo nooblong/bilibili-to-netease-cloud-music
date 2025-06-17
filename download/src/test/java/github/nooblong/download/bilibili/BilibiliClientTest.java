@@ -69,4 +69,11 @@ class BilibiliClientTest extends BaseTest {
                 UserVideoOrder.PUBDATE, "", availableBilibiliCookie);
         System.out.println(collectionTotal.getData().toPrettyString());
     }
+
+    @Test
+    void getAllEmoji() {
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+        JsonNode allEmoji = bilibiliClient.getAllEmoji(availableBilibiliCookie);
+        System.out.println(allEmoji.toPrettyString());
+    }
 }

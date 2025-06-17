@@ -599,4 +599,23 @@ public class BilibiliClient {
         result.setData(data).setTotalNum(favoriteVideos.getTotalNum());
         return result;
     }
+
+    public JsonNode getAllEmoji(Map<String, String> bilibiliCookie) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        bilibiliCookie.forEach(builder::addQueryParameter);
+        builder.addPathSegment("emoji").addPathSegment("get_all_emoji");
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取emoji信息失败");
+        return response.get("data");
+    }
+
+    public JsonNode getEmojiDetail(Map<String, String> bilibiliCookie, String emojiId) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        bilibiliCookie.forEach(builder::addQueryParameter);
+        builder.addPathSegment("emoji").addPathSegment("get_emoji_detail");
+        builder.addQueryParameter("id", emojiId);
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取emojiDetail信息失败");
+        return response.get("data");
+    }
 }

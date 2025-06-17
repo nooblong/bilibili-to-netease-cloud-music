@@ -2,7 +2,9 @@ package github.nooblong.download.controller;
 
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.service.IUserService;
@@ -16,12 +18,14 @@ import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.utils.OkUtil;
 import okhttp3.OkHttpClient;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/bilibili")
@@ -29,10 +33,14 @@ public class BilibiliController {
 
     final BilibiliClient bilibiliClient;
     final IUserService userService;
+    final RedisTemplate<String, String> redisTemplate;
 
-    public BilibiliController(BilibiliClient bilibiliClient, IUserService userService) {
+    public BilibiliController(BilibiliClient bilibiliClient,
+                              IUserService userService,
+                              RedisTemplate<String, String> redisTemplate) {
         this.bilibiliClient = bilibiliClient;
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping("/getUpChannels")
@@ -143,6 +151,30 @@ public class BilibiliController {
     public Result<JsonNode> getQrUrl(@RequestParam("key") String key) {
         SysUser user = JwtUtil.verifierFromContext();
         return Result.ok("ok", bilibiliClient.loginWithKey(key, user));
+    }
+
+    @GetMapping("/allEmoji")
+    public Result<JsonNode> allEmoji() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String allEmoji = redisTemplate.opsForValue().get("allEmoji");
+        if (allEmoji != null) {
+            try {
+                return Result.ok("ok", objectMapper.readTree(allEmoji));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+        JsonNode allEmoji1 = bilibiliClient.getAllEmoji(cookie);
+        redisTemplate.opsForValue().set("allEmoji", allEmoji1.toString(), 5, TimeUnit.DAYS);
+        return Result.ok("ok", allEmoji1);
+    }
+
+    @GetMapping("/emojiDetail")
+    public Result<JsonNode> emojiDetail(@RequestParam("id") String id) {
+        Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+        JsonNode emojiDetail = bilibiliClient.getEmojiDetail(cookie, id);
+        return Result.ok("ok", emojiDetail);
     }
 
 }
