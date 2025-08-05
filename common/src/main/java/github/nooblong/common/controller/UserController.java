@@ -24,7 +24,6 @@ public class UserController {
 
     @PostMapping("/login")
     public Result<String> login(@RequestBody SysUser sysUser) {
-
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getUsername, sysUser.getUsername());
         wrapper.eq(SysUser::getPassword, sysUser.getPassword());
@@ -32,22 +31,23 @@ public class UserController {
         if (userList.isEmpty()) {
             return Result.fail("登录失败");
         }
-
         String token;
         try {
             token = JwtUtil.generateTokenByRS256(userList.get(0));
         } catch (Exception e) {
-            log.error("token生成失败", e);
-            return Result.fail("内部错误");
+            return Result.fail("token生成失败");
         }
-
         return Result.ok("登录成功", token);
     }
 
     @PostMapping("/register")
     public Result<String> register(@RequestBody SysUser sysUser) {
-        userService.save(sysUser);
-        return Result.ok("注册成功");
+        try {
+            userService.save(sysUser);
+            return Result.ok("注册成功");
+        } catch (Exception e) {
+            return Result.fail("注册失败，可能存在相同用户名");
+        }
     }
 
     @PostMapping("/refreshToken")
