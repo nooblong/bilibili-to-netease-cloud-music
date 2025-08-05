@@ -18,6 +18,7 @@ import java.util.List;
  */
 @TableName(value = "subscribe")
 @Data
+// upId regName limitSec fromTime toTime processTime keyWord type videoOrder useVideoCover checkPart channelIdsList
 public class Subscribe implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -29,7 +30,7 @@ public class Subscribe implements Serializable {
     private String upImage;
     private String channelIds;
     @TableField(exist = false)
-    private List<String> channelIdsList;
+    private List<IdName> channelIdsList;
     private SubscribeTypeEnum type;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date processTime;

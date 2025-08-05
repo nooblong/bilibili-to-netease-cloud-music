@@ -1,7 +1,9 @@
 package github.nooblong.download.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,6 +12,7 @@ import github.nooblong.common.model.Result;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.entity.IdName;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.job.UploadJob;
@@ -52,12 +55,44 @@ public class SubscribeController {
         this.uploadJob = uploadJob;
     }
 
-    @CacheEvict(value = {"subscribe/list", "subscribe/test"}, allEntries = true)
-    @PostMapping("/edit")
+    @GetMapping
+    public Result<IPage<Subscribe>> list(@RequestParam(name = "username", required = false) String username,
+                                         @RequestParam(name = "status", required = false) Integer status,
+                                         @RequestParam(name = "voiceListId", required = false) Long voiceListId,
+                                         HttpServletResponse response) {
+        Long selectUserId = null;
+        if (StrUtil.isNotBlank(username)) {
+            List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
+            if (selectUser.isEmpty()) {
+                return Result.ok("ok", new Page<>(1L, 1000L));
+            }
+            selectUserId = selectUser.get(0).getId();
+        }
+        IPage<Subscribe> list = Db.page(new Page<>(1, Integer.MAX_VALUE),
+                Wrappers.lambdaQuery(Subscribe.class)
+                        .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
+                        .eq(voiceListId != null, Subscribe::getVoiceListId, voiceListId)
+                        .eq(status != null, Subscribe::getEnable, status)
+                        .orderByDesc(Subscribe::getUpdateTime));
+        if (list.getRecords().isEmpty()) {
+            return Result.ok("ok", list);
+        }
+        List<SysUser> users = Db.list(SysUser.class);
+        Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
+        list.getRecords().forEach(subscribe -> {
+            subscribe.setTypeDesc(subscribe.getType().getDesc());
+            subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
+            subscribe.setLog(subscribe.getLog());
+        });
+        response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
+        return Result.ok("ok", list);
+    }
+
+    @PutMapping
     public Result<Subscribe> edit(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(subscribe.getId(), Subscribe.class);
-        if (subscribe.getCrack() > 0) {
+        if (subscribe.getCrack() != null && subscribe.getCrack() > 0) {
             if (user.getIsAdmin() != 1) {
                 return Result.fail("fail: crack");
             }
@@ -67,8 +102,7 @@ public class SubscribeController {
         return Result.ok("ok", subscribe);
     }
 
-    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
-    @PostMapping("/add")
+    @PostMapping
     public Result<Subscribe> add(@RequestBody Subscribe subscribe) {
         SysUser user = JwtUtil.verifierFromContext();
         Long voiceListId = subscribe.getVoiceListId();
@@ -78,23 +112,33 @@ public class SubscribeController {
                 .eq(UserVoicelist::getVoicelistId, voiceListId).list();
         Assert.isTrue(!list.isEmpty(), "fail: not owner");
         subscribe.setUserId(user.getId());
-        if (subscribe.getCrack() > 0) {
+        if (subscribe.getCrack() != null && subscribe.getCrack() > 0) {
             if (user.getIsAdmin() != 1) {
                 return Result.fail("fail: crack");
             }
         }
-        subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(subscribe.getChannelIdsList()));
+        List<IdName> channelIdsList = subscribe.getChannelIdsList();
+        if (channelIdsList != null && !channelIdsList.isEmpty()) {
+            ArrayList<String> sList = new ArrayList<>();
+            channelIdsList.forEach(channelId -> sList.add(channelId.getId()));
+            subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(sList));
+        }
         JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(),
                 bilibiliClient.getAndSetBiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
+        if (channelIdsList != null && !channelIdsList.isEmpty()) {
+            ArrayList<String> sList = new ArrayList<>();
+            channelIdsList.forEach(channelId -> sList.add(channelId.getName()));
+            String commaSeparatedString = CommonUtil.toCommaSeparatedString(sList);
+            subscribe.setUpName(subscribe.getUpName() + "(" + commaSeparatedString + ")");
+        }
         Db.save(subscribe);
         return Result.ok("ok", subscribe);
     }
 
-    @CacheEvict(value = {"subscribe/list"}, allEntries = true)
-    @GetMapping("/delete")
-    public Result<Subscribe> delete(@RequestParam(name = "id") Long id) {
+    @DeleteMapping("{id}")
+    public Result<Subscribe> delete(@PathVariable(name = "id") Long id) {
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(id, Subscribe.class);
         Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
@@ -102,41 +146,8 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @Cacheable(value = "subscribe/list", key = "#username + ':' + #status + ':' + #voiceListId")
-    @GetMapping("/list")
-    public Result<List<Subscribe>> subscribeList(@RequestParam(name = "username", required = false) String username,
-                                                 @RequestParam(name = "status", required = false) Integer status,
-                                                 @RequestParam(name = "voiceListId", required = false) Long voiceListId,
-                                                 HttpServletResponse response) {
-        Long selectUserId = null;
-        if (StrUtil.isNotBlank(username)) {
-            List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
-            if (selectUser.isEmpty()) {
-                return Result.ok("ok", new ArrayList<>());
-            }
-            selectUserId = selectUser.get(0).getId();
-        }
-        List<Subscribe> list = Db.list(
-                Wrappers.lambdaQuery(Subscribe.class)
-                        .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
-                        .eq(voiceListId != null, Subscribe::getVoiceListId, voiceListId)
-                        .eq(status != null, Subscribe::getEnable, status));
-        if (list.isEmpty()) {
-            return Result.ok("ok", list);
-        }
-        List<SysUser> users = Db.list(SysUser.class);
-        Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
-        list.forEach(subscribe -> {
-            subscribe.setTypeDesc(subscribe.getType().getDesc());
-            subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
-            subscribe.setLog(subscribe.getLog());
-        });
-        response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
-        return Result.ok("ok", list);
-    }
-
-    @GetMapping("/detail")
-    public Result<Subscribe> subscribeList(@RequestParam(name = "id") Long id) {
+    @GetMapping("/{id}")
+    public Result<Subscribe> subscribeList(@PathVariable(name = "id") Long id) {
         Subscribe byId = Db.getById(id, Subscribe.class);
         return Result.ok("ok", byId);
     }

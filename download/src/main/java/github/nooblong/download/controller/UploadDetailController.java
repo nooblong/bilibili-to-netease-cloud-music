@@ -14,6 +14,7 @@ import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
+import github.nooblong.download.entity.CidName;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.entity.UserVoicelist;
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/uploadDetail")
+@RequestMapping("/upload")
 public class UploadDetailController {
 
     final UploadDetailService uploadDetailService;
@@ -59,51 +60,7 @@ public class UploadDetailController {
         this.redisTemplate = redisTemplate;
     }
 
-    @Cacheable(value = "uploadDetail/listVoicelist")
-    @GetMapping("/listVoicelist")
-    public Result<List<UserVoicelist>> listVoicelist(@RequestParam(name = "username", required = false) String username) {
-        List<SysUser> userList = Db.list(Wrappers.lambdaQuery(SysUser.class)
-                .eq(username != null, SysUser::getUsername, username));
-        if (userList.isEmpty()) {
-            return Result.ok("ok", new ArrayList<>());
-        }
-        List<UserVoicelist> list = Db.list(Wrappers.lambdaQuery(UserVoicelist.class)
-                .in(UserVoicelist::getUserId, userList.stream().map(SysUser::getId).collect(Collectors.toList())));
-        for (UserVoicelist userVoicelist : list) {
-            String voiceNumKey = userVoicelist.getVoicelistId() + ":voiceNum";
-            String subscribeNumKey = userVoicelist.getVoicelistId() + ":subscribeNum";
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(voiceNumKey))) {
-                String s = redisTemplate.opsForValue().get(voiceNumKey);
-                userVoicelist.setUploadCount(s == null ? 0 : Integer.parseInt(s));
-            } else {
-                long count = Db.count(Wrappers.lambdaQuery(UploadDetail.class)
-                        .eq(UploadDetail::getVoiceListId, userVoicelist.getVoicelistId()));
-                userVoicelist.setUploadCount((int) count);
-                redisTemplate.opsForValue().set(voiceNumKey, String.valueOf(count), 1, TimeUnit.MINUTES);
-            }
-            if (Boolean.TRUE.equals(redisTemplate.hasKey(subscribeNumKey))) {
-                String s = redisTemplate.opsForValue().get(subscribeNumKey);
-                userVoicelist.setSubscribeNum(s == null ? 0 : Integer.parseInt(s));
-            } else {
-                long count = Db.count(Wrappers.lambdaQuery(Subscribe.class)
-                        .eq(Subscribe::getVoiceListId, userVoicelist.getVoicelistId()));
-                userVoicelist.setSubscribeNum((int) count);
-                redisTemplate.opsForValue().set(subscribeNumKey, String.valueOf(count), 1, TimeUnit.MINUTES);
-            }
-        }
-        return Result.ok("ok", list);
-    }
-
-    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
-    @GetMapping("/refreshVoiceList")
-    public Result<String> refreshVoiceList() {
-        SysUser sysUser = JwtUtil.verifierFromContext();
-        userVoicelistService.syncUserVoicelist(sysUser.getId());
-        return Result.ok("ok");
-    }
-
-    @Cacheable(value = "uploadDetail/list")
-    @GetMapping("/list")
+    @GetMapping
     public Result<IPage<UploadDetail>> list(@RequestParam(name = "pageNo") int pageNo,
                                             @RequestParam(name = "pageSize") int pageSize,
                                             @RequestParam(name = "column", required = false) String column,
@@ -169,19 +126,92 @@ public class UploadDetailController {
         return Result.ok("查询成功", page);
     }
 
-    @GetMapping("/getById")
-    public Result<UploadDetail> get(@RequestParam(name = "id") Long id) {
-        return Result.ok("ok", Db.getById(id, UploadDetail.class));
+    @PostMapping
+    public Result<String> addQueue(@RequestBody UploadDetail req) {
+        Long userId = JwtUtil.verifierFromContext().getId();
+        List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
+                .eq(SysUser::getId, userId), i -> i);
+        boolean isAdmin = !userList.isEmpty() && userList.get(0).getIsAdmin() == 1;
+        List<UserVoicelist> userVoicelistList = userVoicelistService.lambdaQuery()
+                .eq(UserVoicelist::getUserId, userId)
+                .list();
+        Map<Long, UserVoicelist> userVoicelistMap =
+                SimpleQuery.list2Map(userVoicelistList, UserVoicelist::getVoicelistId, i -> i);
+        if (req.getCidNames() != null && !req.getCidNames().isEmpty()) {
+            for (CidName cidName : req.getCidNames()) {
+                Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid为空");
+                Assert.isTrue(req.getVoiceListId() != null && req.getVoiceListId() != 0, "voiceListId为空");
+                Assert.notNull(userVoicelistMap.get(req.getVoiceListId()), "不是你的voiceListId");
+                SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(req.getBvid());
+                UploadDetail uploadDetail = new UploadDetail();
+                uploadDetail.setBvid(simpleVideoInfo.getBvid());
+                uploadDetail.setCid(cidName.getCid());
+                uploadDetail.setVoiceListId(req.getVoiceListId());
+                uploadDetail.setUseVideoCover(req.getUseVideoCover());
+                uploadDetail.setBeginSec(req.getBeginSec());
+                uploadDetail.setEndSec(req.getEndSec());
+                uploadDetail.setOffset(req.getOffset());
+                uploadDetail.setUploadName(cidName.getName());
+                uploadDetail.setPrivacy(req.getPrivacy());
+                uploadDetail.setPriority(isAdmin ? 999L : 10L);
+                uploadDetail.setBitrate(req.getBitrate());
+                uploadDetail.setUserId(userId);
+                uploadDetail.setCrack(req.getCrack() == null ? 0L : 1L);
+                if (req.getCrack() != null && req.getCrack() == 1) {
+                    Assert.isTrue(isAdmin, "unsupported");
+                }
+                Db.save(uploadDetail);
+            }
+        } else {
+            throw new RuntimeException("没有分p信息");
+        }
+        return Result.ok("添加队列成功");
     }
 
-    @CacheEvict(value = "uploadDetail/list", allEntries = true)
-    @PostMapping("/edit")
+    @PutMapping
     public Result<UploadDetail> update(@RequestBody UploadDetail uploadDetail) {
         Long userId = JwtUtil.verifierFromContext().getId();
         UploadDetail byId = uploadDetailService.getById(uploadDetail.getId());
         Assert.isTrue(byId.getUserId().equals(userId), "assert error");
         uploadDetailService.updateById(byId);
         return Result.ok("ok", byId);
+    }
+
+    @GetMapping("/listVoicelist")
+    public Result<IPage<UserVoicelist>> listVoicelist(@RequestParam(name = "username", required = false) String username,
+                                                      @RequestParam(name = "pageNo", defaultValue = "1", required = false) Integer pageNo,
+                                                      @RequestParam(name = "pageSize", defaultValue = "10", required = false) Integer pageSize) {
+        List<SysUser> userList = Db.list(Wrappers.lambdaQuery(SysUser.class)
+                .eq(username != null, SysUser::getUsername, username));
+        if (userList.isEmpty()) {
+            return Result.ok("ok", new Page<>());
+        }
+        IPage<UserVoicelist> page = Db.page(new Page<>(pageNo, pageSize),
+                Wrappers.lambdaQuery(UserVoicelist.class)
+                        .in(UserVoicelist::getUserId, userList.stream().map(SysUser::getId).collect(Collectors.toList()))
+                        .orderByDesc(UserVoicelist::getVoicelistId));
+        for (UserVoicelist userVoicelist : page.getRecords()) {
+            long count = Db.count(Wrappers.lambdaQuery(UploadDetail.class)
+                    .eq(UploadDetail::getVoiceListId, userVoicelist.getVoicelistId()));
+            userVoicelist.setUploadCount((int) count);
+            long count2 = Db.count(Wrappers.lambdaQuery(Subscribe.class)
+                    .eq(Subscribe::getVoiceListId, userVoicelist.getVoicelistId()));
+            userVoicelist.setSubscribeNum((int) count2);
+        }
+        return Result.ok("ok", page);
+    }
+
+    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
+    @GetMapping("/refreshVoiceList")
+    public Result<String> refreshVoiceList() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        userVoicelistService.syncUserVoicelist(sysUser.getId());
+        return Result.ok("ok");
+    }
+
+    @GetMapping("/getById")
+    public Result<UploadDetail> get(@RequestParam(name = "id") Long id) {
+        return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
     @CacheEvict(value = "uploadDetail/list", allEntries = true)
@@ -192,45 +222,6 @@ public class UploadDetailController {
         Assert.isTrue(byId.getUserId().equals(userId), "assert error");
         uploadDetailService.removeById(id);
         return Result.ok("ok");
-    }
-
-    @CacheEvict(value = "uploadDetail/list", allEntries = true)
-    @PostMapping("/add")
-    public Result<String> addQueue(@RequestBody AddQueueRequest reqs) {
-        Long userId = JwtUtil.verifierFromContext().getId();
-        List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class)
-                .eq(SysUser::getId, userId), i -> i);
-        boolean isAdmin = !userList.isEmpty() && userList.get(0).getIsAdmin() == 1;
-        List<UserVoicelist> userVoicelistList = userVoicelistService.lambdaQuery()
-                .eq(UserVoicelist::getUserId, userId)
-                .list();
-        Map<Long, UserVoicelist> userVoicelistMap =
-                SimpleQuery.list2Map(userVoicelistList, UserVoicelist::getVoicelistId, i -> i);
-        for (UploadDetail req : reqs.getUploadDetails()) {
-            Assert.isTrue(StrUtil.isNotBlank(req.getBvid()), "bvid empty");
-            Assert.isTrue(req.getVoiceListId() != null, "voiceListId empty");
-            Assert.notNull(userVoicelistMap.get(req.getVoiceListId()), "not owner");
-            SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(req.getBvid());
-            UploadDetail uploadDetail = new UploadDetail();
-            uploadDetail.setBvid(simpleVideoInfo.getBvid());
-            uploadDetail.setCid(req.getCid());
-            uploadDetail.setVoiceListId(req.getVoiceListId());
-            uploadDetail.setUseVideoCover(req.getUseVideoCover());
-            uploadDetail.setBeginSec(req.getBeginSec());
-            uploadDetail.setEndSec(req.getEndSec());
-            uploadDetail.setOffset(req.getOffset());
-            uploadDetail.setUploadName(req.getUploadName());
-            uploadDetail.setPrivacy(req.getPrivacy());
-            uploadDetail.setPriority(isAdmin ? 999L : 10L);
-            uploadDetail.setBitrate(req.getBitrate());
-            uploadDetail.setUserId(userId);
-            uploadDetail.setCrack(req.getCrack());
-            if (req.getCrack() == 1) {
-                Assert.isTrue(isAdmin, "crack error");
-            }
-            Db.save(uploadDetail);
-        }
-        return Result.ok("添加队列成功");
     }
 
     @CacheEvict(value = "uploadDetail/list", allEntries = true)

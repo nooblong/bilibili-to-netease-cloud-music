@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @TableName upload_detail
@@ -22,6 +23,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
+//uploadName offset beginSec endSec bitrate voiceListId privacy bvid cid useVideoCover crack
 public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long id;
     private Long subscribeId;
@@ -63,6 +65,8 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private String mergeTitle;
     @TableField(exist = false)
     private String subscribeName;
+    @TableField(exist = false)
+    private List<CidName> cidNames;
 
     @Override
     public int compareTo(@NotNull UploadDetail o) {
