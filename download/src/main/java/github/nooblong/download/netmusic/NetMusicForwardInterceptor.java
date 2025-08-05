@@ -42,12 +42,32 @@ public class NetMusicForwardInterceptor implements HandlerInterceptor {
                 .replaceAll("/", "");
 
         JsonNode musicData;
+        PrintWriter writer = null;
+
+        if (request.getMethod().equals("OPTIONS")) {
+            try {
+                response.setContentType("text/html;charset=utf-8");
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+                response.setHeader("Access-Control-Allow-Headers", "Content-Type,Access-Token");
+                writer = response.getWriter();
+                writer.print("");
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            } finally {
+                assert writer != null;
+                writer.close();
+            }
+            return false;
+        }
         SysUser sysUser = JwtUtil.verifierFromContext();
         musicData = bs.getMusicDataByUserId(queryMap, key, sysUser.getId());
         log.info("response: {}", musicData.toString());
-        PrintWriter writer = null;
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=utf-8");
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type,Access-Token");
         try {
             writer = response.getWriter();
             writer.print(musicData);
