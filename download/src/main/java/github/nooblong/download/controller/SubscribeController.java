@@ -88,8 +88,9 @@ public class SubscribeController {
         return Result.ok("ok", list);
     }
 
-    @PutMapping
-    public Result<Subscribe> edit(@RequestBody Subscribe subscribe) {
+    @PutMapping("/{id}")
+    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable Long id) {
+        subscribe.setId(id);
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(subscribe.getId(), Subscribe.class);
         if (subscribe.getCrack() != null && subscribe.getCrack() > 0) {
