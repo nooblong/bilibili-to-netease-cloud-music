@@ -201,7 +201,6 @@ public class UploadDetailController {
         return Result.ok("ok", page);
     }
 
-    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
     @GetMapping("/refreshVoiceList")
     public Result<String> refreshVoiceList() {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -214,7 +213,6 @@ public class UploadDetailController {
         return Result.ok("ok", Db.getById(id, UploadDetail.class));
     }
 
-    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delete")
     public Result<Boolean> delete(@RequestParam(name = "id") Long id) {
         Long userId = JwtUtil.verifierFromContext().getId();
@@ -224,7 +222,6 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
-    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/restartJob")
     public Result<String> restartJob(@RequestParam(name = "id") Long id) {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -239,7 +236,6 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
-    @CacheEvict(value = "uploadDetail/list", allEntries = true)
     @GetMapping("/delAllWait")
     public Result<String> delAllWait(@RequestParam(name = "voicelistId") Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();

@@ -31,7 +31,6 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         this.netMusicClient = netMusicClient;
     }
 
-    @CacheEvict(value = "uploadDetail/listVoicelist", allEntries = true)
     @Override
     public void syncUserVoicelist() {
         log.info("开始刷新用户播客列表...");

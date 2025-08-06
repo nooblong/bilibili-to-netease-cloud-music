@@ -166,7 +166,6 @@ public class SubscribeController {
         return Result.ok("ok");
     }
 
-    @Cacheable(value = "subscribe/test")
     @GetMapping("/test")
     public Result<List<String>> test(@RequestParam("subscribeId") Long subscribeId) {
         List<String> result = uploadJob.test(subscribeId);

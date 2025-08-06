@@ -56,7 +56,6 @@ public class BilibiliController {
         return Result.ok("ok", upChannels);
     }
 
-    @Cacheable(value = "bilibili/getVideoInfo")
     @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
@@ -82,7 +81,6 @@ public class BilibiliController {
         return Result.ok("查询成功", videoInfoResponse);
     }
 
-    @Cacheable(value = "bilibili/getUserInfo")
     @GetMapping("/getUserInfo")
     public Result<JsonNode> getUserInfo(@RequestParam(name = "uid") String uid) {
         UUID uuid = UUID.randomUUID();

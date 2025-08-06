@@ -62,7 +62,6 @@ public class SystemController {
         return Result.ok("ok", sysInfo);
     }
 
-    @Cacheable(value = "sys/queueInfo")
     @GetMapping("/queueInfo")
     public Result<IPage<UploadDetail>> queueInfo(@RequestParam(name = "pageNo") int pageNo,
                                                  @RequestParam(name = "pageSize") int pageSize) {
