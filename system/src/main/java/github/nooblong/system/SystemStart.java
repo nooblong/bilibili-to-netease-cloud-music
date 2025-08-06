@@ -7,10 +7,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"github.nooblong.common", "github.nooblong.download"})
+@ComponentScan(basePackages = {"github.nooblong.*"})
 @MapperScan(basePackages = {"github.nooblong.common.mapper", "github.nooblong.download.mapper"})
+@EnableScheduling
 @EnableCaching
 @Slf4j
 public class SystemStart {
