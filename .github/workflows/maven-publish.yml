@@ -6,10 +6,10 @@ name: Maven Package run
 on:
   workflow_dispatch:
 
-  push:
-    branches: [ refine ]
-  pull_request:
-    branches: [ refine ]
+#  push:
+#    branches: [ refine ]
+#  pull_request:
+#    branches: [ refine ]
 
 jobs:
   build:
