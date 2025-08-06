@@ -1,0 +1,42 @@
+# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
+# For more information see: https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
+
+name: Maven Package run
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches: [ refine ]
+  pull_request:
+    branches: [ refine ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Generate the package
+        run: mvn -B package --file pom.xml -Dmaven.test.skip=true
+
+      - name: 删除旧的jar包以及运行脚本
+        run: sshpass -p ${{ secrets.PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.USERIP }} "cd /root && rm -f system-1.0-SNAPSHOT.jar && rm -f run.sh"
+
+      - name: 上传jar包和启动脚本到服务器中
+        run: sshpass -p ${{ secrets.PASSWORD }} scp -r -o StrictHostKeyChecking=no /home/runner/work/bilibili-to-netease-cloud-music/bilibili-to-netease-cloud-music/system/target/system-1.0-SNAPSHOT.jar ./run.sh ${{ secrets.USERIP }}:/root
+
+      - name: 启动项目
+        run: sshpass -p ${{ secrets.PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.USERIP }} "cd /root && chmod +x run.sh && ./run.sh"
