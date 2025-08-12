@@ -244,4 +244,10 @@ public class UploadDetailController {
         return Result.ok("ok");
     }
 
+    @GetMapping("/getLog")
+    public Result<String> getLog(@RequestParam(name = "id") Long id) {
+        UploadDetail byId = uploadDetailService.getById(id);
+        return Result.ok("ok", byId.getLog());
+    }
+
 }
