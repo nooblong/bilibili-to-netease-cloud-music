@@ -84,6 +84,11 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         return count(wrapper) == 0;
     }
 
+    @Override
+    public UploadDetail getToUploadWithCookie() {
+        return getBaseMapper().getToUploadWithCookie();
+    }
+
     private String getAuditStatus(String voiceId, Long userId) {
         Map<String, Object> param = new HashMap<>();
         param.put("id", voiceId);

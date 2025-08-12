@@ -82,24 +82,19 @@ public class UploadJob {
     }
 
     public void uploadOne() {
-        LambdaQueryWrapper<UploadDetail> wrapper = Wrappers.lambdaQuery(UploadDetail.class)
-                .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.WAIT.name())
-                .orderByDesc(UploadDetail::getPriority)
-                .orderByAsc(UploadDetail::getCreateTime)
-                .last("limit 1");
-        List<UploadDetail> uploadDetailList = uploadDetailService.list(wrapper);
-        if (uploadDetailList.isEmpty()) {
+        UploadDetail upload = uploadDetailService.getToUploadWithCookie();
+        if (upload == null) {
             return;
         }
-        log.info("处理: {}", uploadDetailList.get(0).getTitle());
+        log.info("处理: {}", upload.getTitle());
         Map<String, String> availableBilibiliCookie;
         try {
             availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
         } catch (RuntimeException e) {
-            log.info("准备下载:{}: 没有可用b站cookie", uploadDetailList.get(0).getTitle());
+            log.error("准备下载失败:", e);
             return;
         }
-        this.process(uploadDetailList.get(0).getId(), availableBilibiliCookie);
+        this.process(upload.getId(), availableBilibiliCookie);
     }
 
     public static class Context {
@@ -167,6 +162,11 @@ public class UploadJob {
             simpleVideoInfo.setCid(cid);
         }
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
+        if (bilibiliFullVideo.getVideoInfo().has("is_upower_exclusive")) {
+            if (bilibiliFullVideo.getVideoInfo().get("is_upower_exclusive").asBoolean()) {
+                throw new RuntimeException("充电视频跳过");
+            }
+        }
         context.bilibiliFullVideo = bilibiliFullVideo;
         context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
 
@@ -302,10 +302,10 @@ public class UploadJob {
         newUploadDetail.setVoiceId(voiceId);
         newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
         stopRedirectLog();
-        uploadLog.setLength(0);
         String uploadLogString = uploadLog.toString();
         newUploadDetail.setLog(uploadLogString);
         Db.updateById(newUploadDetail);
+        uploadLog.setLength(0);
         // 清理数据
         delete();
     }
