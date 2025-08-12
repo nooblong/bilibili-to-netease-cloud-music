@@ -77,6 +77,8 @@ public class ScheduleTask {
     private int enableRefreshBiliCookie;
     @Value("${enableRefreshUserVoiceList}")
     private int enableRefreshUserVoiceList;
+    @Value("${removeUselessCookie}")
+    private int removeUselessCookie;
 
     @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void getAuditStatus() {
@@ -92,6 +94,14 @@ public class ScheduleTask {
             return;
         }
         userVoicelistService.syncUserVoicelist();
+    }
+
+    @Scheduled(fixedDelay = 30800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    public void removeUselessCookie() {
+        if (removeUselessCookie <= 0) {
+            return;
+        }
+        subscribeService.removeUselessCookie();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
@@ -119,6 +129,11 @@ public class ScheduleTask {
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
                 netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh", sysUser.getId());
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }
@@ -178,7 +193,14 @@ public class ScheduleTask {
                         userService.updateBilibiliCookieByCookieMap(sysUser.getId(), updateMap);
                     }
                 } catch (Exception e) {
-                    log.error("b站cookie刷新失败: {}", sysUser.getUsername());
+                    log.error("b站cookie刷新失败: {}, 删除cookie", sysUser.getUsername());
+                    sysUser.setBiliCookies("");
+                    Db.updateById(sysUser);
+                }
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         }

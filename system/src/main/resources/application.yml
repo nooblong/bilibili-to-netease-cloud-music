@@ -2,7 +2,7 @@ pythonCmd: "python"
 pythonPath: "C:/Users/yjlyl/Documents/GitHub/bilibili-api/server.py"
 pythonPort: "9000"
 
-initialDelay: 1
+initialDelay: 3
 enableGetUpJob: 1
 enableGetAuditStatus: 1
 enableUploadJob: 1
@@ -10,6 +10,7 @@ enableRefreshNetCookie: 1
 enableRestartJob: 1
 enableRefreshBiliCookie: 1
 enableRefreshUserVoiceList: 1
+removeUselessCookie: 1
 
 server:
   port: 25565

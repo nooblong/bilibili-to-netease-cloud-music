@@ -37,7 +37,6 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
         for (SysUser user : userList) {
             syncVoicelistByUser(user);
-            log.info("{}刷新成功", user.getUsername());
         }
     }
 
@@ -66,17 +65,19 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                         userVoicelist.setVoicelistImage(coverUrl);
                         toAdd.add(userVoicelist);
                     }
+                    Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
+                            .eq(UserVoicelist::getUserId, user.getId()));
                     if (!toAdd.isEmpty()) {
-                        Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
-                                .eq(UserVoicelist::getUserId, user.getId()));
                         Db.saveBatch(toAdd);
                     }
+                    log.info("{}播客列表刷新成功", user.getUsername());
                     Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 log.error("用户播客列表查询失败: {}", e.getMessage());
             }
         } else {
+            log.info("清除用户{}播客列表", user.getUsername());
             Db.remove(Wrappers.lambdaQuery(UserVoicelist.class)
                     .eq(UserVoicelist::getUserId, user.getId()));
         }

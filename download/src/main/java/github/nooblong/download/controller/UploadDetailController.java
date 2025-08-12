@@ -157,9 +157,6 @@ public class UploadDetailController {
                 uploadDetail.setBitrate(req.getBitrate());
                 uploadDetail.setUserId(userId);
                 uploadDetail.setCrack(req.getCrack() == null ? 0L : 1L);
-                if (req.getCrack() != null && req.getCrack() == 1) {
-                    Assert.isTrue(isAdmin, "unsupported");
-                }
                 Db.save(uploadDetail);
             }
         } else {

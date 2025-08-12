@@ -62,6 +62,11 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
                 log.error("声音:{}获取状态失败:{}", item.getTitle(), e.getMessage());
                 item.setMusicRetryTimes(item.getMusicRetryTimes() + 1);
             }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             item.setMusicRetryTimes(item.getMusicRetryTimes() + 1);
             item.setUpdateTime(new Date());
             updateById(item);

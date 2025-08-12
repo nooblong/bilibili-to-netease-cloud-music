@@ -26,4 +26,6 @@ public interface SubscribeService extends IService<Subscribe> {
     void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie);
 
     List<UploadDetail> testProcess(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator, int times);
+
+    void removeUselessCookie();
 }

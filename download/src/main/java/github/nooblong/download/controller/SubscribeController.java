@@ -99,11 +99,6 @@ public class SubscribeController {
         subscribe.setId(id);
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(subscribe.getId(), Subscribe.class);
-        if (subscribe.getCrack() != null && subscribe.getCrack() > 0) {
-            if (user.getIsAdmin() != 1) {
-                return Result.fail("fail: crack");
-            }
-        }
         Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
         Db.updateById(subscribe);
         return Result.ok("ok", subscribe);
@@ -119,11 +114,6 @@ public class SubscribeController {
                 .eq(UserVoicelist::getVoicelistId, voiceListId).list();
         Assert.isTrue(!list.isEmpty(), "fail: not owner");
         subscribe.setUserId(user.getId());
-        if (subscribe.getCrack() != null && subscribe.getCrack() > 0) {
-            if (user.getIsAdmin() != 1) {
-                return Result.fail("fail: crack");
-            }
-        }
         List<IdName> channelIdsList = subscribe.getChannelIdsList();
         if (channelIdsList != null && !channelIdsList.isEmpty()) {
             ArrayList<String> sList = new ArrayList<>();

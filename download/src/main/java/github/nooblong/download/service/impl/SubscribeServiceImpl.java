@@ -4,8 +4,10 @@ package github.nooblong.download.service.impl;
 import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.util.CommonUtil;
@@ -18,7 +20,9 @@ import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.VideoOrder;
 import github.nooblong.download.entity.Subscribe;
 import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.mapper.SubscribeMapper;
+import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static net.sf.jsqlparser.util.validation.metadata.NamedObject.user;
 
 /**
  * @author lyl
@@ -40,12 +46,15 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
 
     final UploadDetailService uploadDetailService;
     final BilibiliClient bilibiliClient;
+    final NetMusicClient netMusicClient;
 
 
     public SubscribeServiceImpl(UploadDetailService uploadDetailService,
-                                BilibiliClient bilibiliClient) {
+                                BilibiliClient bilibiliClient,
+                                NetMusicClient netMusicClient) {
         this.uploadDetailService = uploadDetailService;
         this.bilibiliClient = bilibiliClient;
+        this.netMusicClient = netMusicClient;
     }
 
     @Async
@@ -96,6 +105,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         SysUser user = Db.getById(userId, SysUser.class);
         if (StrUtil.isBlank(user.getNetCookies())) {
             log.info("用户未登录不处理，订阅:{} 用户:{}", subscribe.getId(), user.getId());
+            subscribe.setLog("用户未登录不处理\n");
+            updateById(subscribe);
             return;
         }
         AtomicInteger counter;
@@ -134,7 +145,17 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 }
                 updateById(subscribe);
             }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         } catch (Exception e) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             if (counter.get() > 1) {
                 log.error("订阅: {}处理失败, 但是遍历到了第{}页, 下次将从此开始", subscribe.getId(), counter.get());
                 subscribe.setLastTotalIndex(counter.get());
@@ -271,6 +292,30 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             }
         }
         return result;
+    }
+
+    @Override
+    public void removeUselessCookie() {
+        List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
+        for (SysUser user : userList) {
+            if (StrUtil.isNotBlank(user.getNetCookies())) {
+                JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", 53L);
+                if (loginstatus.get("account") != null
+                && loginstatus.get("account").get("id") != null
+                && !loginstatus.get("account").get("id").asText().isEmpty()) {
+                    log.info("用户{}网易登录有效", user.getUsername());
+                } else {
+                    log.info("清除网易云cookie: 用户{}", user.getUsername());
+                    user.setNetCookies("");
+                    Db.updateById(user);
+                }
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
     }
 
 }

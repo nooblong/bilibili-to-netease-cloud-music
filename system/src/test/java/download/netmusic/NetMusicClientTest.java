@@ -23,6 +23,12 @@ import java.util.*;
 class NetMusicClientTest extends BaseTest {
 
     @Test
+    public void testLoginStatus() {
+        JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", 53L);
+        System.out.println(loginstatus.toPrettyString());
+    }
+
+    @Test
     public void testTrans() {
         HashMap<String, Object> hashMap = new HashMap<>();
         hashMap.put("programId", "2532916453");
