@@ -1,12 +1,7 @@
-package github.nooblong.download;
+package download;
 
-import cn.hutool.core.date.DateTime;
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.ReUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
-import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.service.IUserService;
-import github.nooblong.common.util.CommonUtil;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.job.UploadJob;
@@ -14,34 +9,20 @@ import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
-import github.nooblong.download.utils.OkUtil;
+import github.nooblong.system.SystemStart;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import ws.schild.jave.Encoder;
-import ws.schild.jave.EncoderException;
-import ws.schild.jave.MultimediaObject;
-import ws.schild.jave.encode.AudioAttributes;
-import ws.schild.jave.encode.EncodingAttributes;
-import ws.schild.jave.info.MultimediaInfo;
 
-import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@SpringBootTest(properties = {"spring.config.location=classpath:application-local.yml"})
+@SpringBootTest(properties = {"spring.config.location=classpath:application-local.yml"}, classes = SystemStart.class)
 public class BaseTest {
 
     @Autowired
@@ -67,7 +48,14 @@ public class BaseTest {
         uploadDetail.setId(999999999L);
         uploadDetail.setUserId(53L);
         uploadDetail.setVoiceListId(998889515L);
-        uploadDetail.setBvid("BV1GM41157Hz");
+        uploadDetail.setSubscribeId(177L);
+        uploadDetail.setBvid("BV1P8tGzbE4a");
+        uploadDetail.setCid("31482908075");
+        uploadDetail.setBeginSec(10D);
+        uploadDetail.setEndSec(70D);
+        uploadDetail.setOffset(-20D);
+//        uploadDetail.setUploadName("test");
+        uploadDetail.setUseVideoCover(1L);
         Db.removeById(uploadDetail.getId(), UploadDetail.class);
         Db.save(uploadDetail);
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();

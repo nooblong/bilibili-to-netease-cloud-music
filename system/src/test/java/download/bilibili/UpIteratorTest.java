@@ -1,6 +1,8 @@
-package github.nooblong.download.bilibili;
+package download.bilibili;
 
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
+import github.nooblong.download.bilibili.UpIterator;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.VideoOrder;
 import org.junit.jupiter.api.Test;

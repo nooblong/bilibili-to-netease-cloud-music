@@ -1,4 +1,4 @@
-package github.nooblong.download;
+package download;
 
 import org.junit.jupiter.api.Test;
 

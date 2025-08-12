@@ -11,9 +11,13 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.CommonUtil;
 import github.nooblong.common.util.JwtUtil;
-import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.SubscribeTypeEnum;
+import github.nooblong.download.VideoOrder;
+import github.nooblong.download.bilibili.*;
+import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IdName;
 import github.nooblong.download.entity.Subscribe;
+import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.netmusic.NetMusicClient;
@@ -27,8 +31,10 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/subscribe")
@@ -169,7 +175,42 @@ public class SubscribeController {
 
     @GetMapping("/test")
     public Result<List<String>> test(@RequestParam("subscribeId") Long subscribeId) {
-        List<String> result = uploadJob.test(subscribeId);
+        int times = 10;
+        Subscribe subscribe = Db.getById(subscribeId, Subscribe.class);
+        List<UploadDetail> uploadDetails = new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+        if (subscribe.getType() == SubscribeTypeEnum.UP) {
+            UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
+                    subscribe.getLimitSec(), subscribe.getMinSec(), VideoOrder.valueOf(subscribe.getVideoOrder()),
+                    UserVideoOrder.PUBDATE, subscribe.getCheckPart() == 1,
+                    availableBilibiliCookie, subscribe.getLastTotalIndex(), subscribe.getChannelIds(), new AtomicInteger(-1));
+            uploadDetails = subscribeService.testProcess(subscribe, upIterator, times);
+        }
+        if (subscribe.getType() == SubscribeTypeEnum.FAVORITE) {
+            String favIds = subscribe.getChannelIds();
+            List<String> favIdList = CommonUtil.toList(favIds);
+            for (String favId : favIdList) {
+                FavoriteIterator favIterator = new FavoriteIterator(favId, bilibiliClient,
+                        subscribe.getLimitSec(), subscribe.getMinSec(), subscribe.getCheckPart() == 1,
+                        availableBilibiliCookie);
+                List<UploadDetail> partDetails = subscribeService.testProcess(subscribe, favIterator, times);
+                uploadDetails.addAll(partDetails);
+            }
+        }
+        if (!uploadDetails.isEmpty()) {
+            Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+            for (UploadDetail uploadDetail : uploadDetails) {
+                SimpleVideoInfo video = new SimpleVideoInfo();
+                video.setBvid(uploadDetail.getBvid());
+                video.setCid(uploadDetail.getCid());
+                BilibiliFullVideo fullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, cookie);
+                String regName = subscribe.getRegName();
+                String s = UploadJob.handleUploadName(regName, uploadDetail, fullVideo);
+                result.add(s);
+            }
+            return Result.ok("ok", result);
+        }
         return Result.ok("ok", result);
     }
 

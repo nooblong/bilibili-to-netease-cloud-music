@@ -1,13 +1,11 @@
-package github.nooblong.download.service.impl;
+package download.service.impl;
 
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
 import github.nooblong.download.service.FfmpegService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ws.schild.jave.info.MultimediaInfo;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -19,13 +17,6 @@ class FfmpegServiceImplTest extends BaseTest {
 
     @Autowired
     FfmpegService ffmpegService;
-
-    @Test
-    void probeInfo() {
-        File file = new File("C:\\Users\\lyl\\Music\\『胡广生』空灵凄美的民谣，故事感满满【兰音翻唱】.m4a");
-        MultimediaInfo multimediaInfo = ffmpegService.probeInfo(file.toPath());
-        System.out.println(multimediaInfo);
-    }
 
     @Test
     void getTmpFolder() {

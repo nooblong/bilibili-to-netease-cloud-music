@@ -1,6 +1,9 @@
-initialDelay: 1
 bilibiliApiUrl: "http://127.0.0.1:9000"
+pythonCmd: "python"
+pythonPath: "C:/Users/yjlyl/Documents/GitHub/bilibili-api/server.py"
+pythonPort: "9001"
 
+initialDelay: 1
 enableGetUpJob: 1
 enableGetAuditStatus: 1
 enableUploadJob: 1

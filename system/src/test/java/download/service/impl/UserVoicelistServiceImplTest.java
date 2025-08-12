@@ -1,9 +1,7 @@
-package github.nooblong.download.service.impl;
+package download.service.impl;
 
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class UserVoicelistServiceImplTest extends BaseTest {
 

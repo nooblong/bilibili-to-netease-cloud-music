@@ -115,15 +115,6 @@ public class CommonUtil {
         }
     }
 
-    public static String getFileExt(String fileName) {
-        String fileExtension = "";
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0) {
-            fileExtension = fileName.substring(dotIndex + 1);
-        }
-        return fileExtension;
-    }
-
     public static int parseStrTime(String strTime) {
         // 00:23  01:26
         // 拆分时分秒

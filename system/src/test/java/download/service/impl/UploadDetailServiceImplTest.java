@@ -1,7 +1,7 @@
-package github.nooblong.download.service.impl;
+package download.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
 import github.nooblong.download.entity.UploadDetail;
 import org.junit.jupiter.api.Test;
 

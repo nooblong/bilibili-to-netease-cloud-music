@@ -1,7 +1,7 @@
-package github.nooblong.download.netmusic.module.weapi;
+package download.netmusic.module.weapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;

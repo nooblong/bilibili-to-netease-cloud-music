@@ -1,7 +1,10 @@
-package github.nooblong.download.bilibili;
+package download.bilibili;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import github.nooblong.download.BaseTest;
+import download.BaseTest;
+import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.bilibili.BilibiliFullVideo;
+import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import org.junit.jupiter.api.Test;
@@ -39,9 +42,9 @@ class BilibiliClientTest extends BaseTest {
     @Test
     void getBestStreamUrl1() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
-        SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1ju411T7so");
+        SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo().setBvid("BV1P8tGzbE4a").setCid("31482908075");
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
-        System.out.println(bilibiliClient.getBestStreamUrl(bilibiliFullVideo, availableBilibiliCookie).toPrettyString());
+        System.out.println(bilibiliClient.getAudioUrl(bilibiliFullVideo, availableBilibiliCookie));
         System.out.println(bilibiliFullVideo.getHasMultiPart());
         System.out.println(bilibiliFullVideo.getHasSeries());
     }

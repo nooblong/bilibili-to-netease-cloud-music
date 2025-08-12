@@ -44,8 +44,6 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 public class BilibiliClient {
-    private final AudioQuality expectQuality = AudioQuality._192K;// 设置此选项不会限制hires/dolby
-
     final OkHttpClient okHttpClient;
     final IUserService userService;
     final RedisTemplate<String, Map<String, String>> redisTemplate;
@@ -184,17 +182,46 @@ public class BilibiliClient {
                 + "/Credential/refresh", cred), okHttpClient);
     }
 
-    public JsonNode getBestStreamUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
+    public List<String> getAudioUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
-        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("my_detect");
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_download_url");
         builder.addQueryParameter("bvid", bilibiliFullVideo.getBvid());
-        builder.addQueryParameter("cid", bilibiliFullVideo.getCid());
-        builder.addQueryParameter("audio_max_quality", "video.AudioQuality(" + this.expectQuality.getCode() + ")" +
-                ":parse");
+        if (StrUtil.isNotBlank(bilibiliFullVideo.getCid())) {
+            builder.addQueryParameter("cid", bilibiliFullVideo.getCid());
+        } else {
+            builder.addQueryParameter("page_index", "0");
+        }
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
-        Assert.isTrue(response.get("code").asInt() != -1, "获取最好的流链接失败");
-        return response;
+        Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+        ArrayNode audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+        int max = 0;
+        boolean hasHiRes = false;
+        for (JsonNode audio : audios) {
+            if (audio.get("id").asInt() > max) {
+                max = audio.get("id").asInt();
+            }
+            if (audio.get("id").asInt() == AudioQuality.HI_RES.getCode()) {
+                hasHiRes = true;
+            }
+        }
+        Assert.isTrue(max != 0, "获取不到下载链接1");
+        List<String> urls = new ArrayList<>();
+        for (JsonNode audio : audios) {
+            if (hasHiRes) {
+                if (audio.get("id").asInt() == AudioQuality.HI_RES.getCode()) {
+                    urls.add(audio.get("base_url").asText());
+                    urls.add(audio.get("backup_url").asText());
+                }
+            } else {
+                if (audio.get("id").asInt() == max) {
+                    urls.add(audio.get("base_url").asText());
+                    urls.add(audio.get("backup_url").asText());
+                }
+            }
+        }
+        Assert.isTrue(!urls.isEmpty(), "获取不到下载链接2");
+        return urls;
     }
 
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
@@ -207,87 +234,31 @@ public class BilibiliClient {
         return response;
     }
 
-    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred, UploadJob.Context context) throws Exception {
-        // 文件名: partName-title-aid-cid.ext
-        JsonNode bestStreamUrl = getBestStreamUrl(video, cred);
-        ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
-        String ext = this.expectQuality.getExt();
-        AudioQuality quality = null;
-        for (int i = 0; i < arrayNode.size(); i++) {
-            if (arrayNode.get(i).has("audio_quality")) {
-                int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
-                AudioQuality audioQualityEnum = AudioQuality.extMap.get(audioQuality);
-                ext = audioQualityEnum.getExt();
-                quality = audioQualityEnum;
-                break;
-            }
-        }
-        assert quality != null;
-        uploadDetailService.logNow(context.uploadDetailId, "下载的文件类型: " + ext + ", 码率: " + quality.name());
+    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred) throws Exception {
+        List<String> audioUrl = getAudioUrl(video, cred);
         String fileName = video.getBvid();
         Path path = Paths.get(Constant.TMP_FOLDER);
-        AtomicBoolean isDownloaded = new AtomicBoolean(false);
-        try (Stream<Path> filesWalk = Files.walk(path, 1)) {
-            String finalExt = ext;
-            filesWalk.forEach(fw -> {
-                if (Files.isRegularFile(fw) && fw.getFileName().toString()
-                        .equals(fileName + "." + finalExt)) {
-                    log.info("文件已存在: {}", fileName);
-                    isDownloaded.set(true);
-                }
-            });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        if (isDownloaded.get()) {
-            return path.resolve(fileName + "." + ext);
-        }
-        return doDownloadMulti(path.toString(), fileName, bestStreamUrl, video.getBvid(), context);
-    }
-
-    private Path doDownload(String path, String fileName, JsonNode bestStreamUrl, String bvid) {
-        ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
-        for (int i = 0; i < arrayNode.size(); i++) {
-            if (arrayNode.get(i).has("audio_quality")) {
-                int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
-                String ext = AudioQuality.extMap.get(audioQuality).getExt();
-                String url = arrayNode.get(i).get("url").asText();
-                Map<String, String> headers = new HashMap<>();
-                headers.put(HttpHeaders.REFERER, "https://bilibili.com/" + bvid);
-                Request request = OkUtil.get(url, Collections.emptyMap(), headers);
-                try (Response response = okHttpClient.newCall(request).execute()) {
-                    File downloadedFile = new File(path, fileName + "." + ext);
-                    BufferedSink sink = Okio.buffer(Okio.sink(downloadedFile));
-                    assert response.body() != null;
-                    log.info("音频文件大小: {}K", response.body().contentLength() / 1024);
-                    sink.writeAll(response.body().source());
-                    sink.close();
-                    return downloadedFile.toPath();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-        return null;
+        return doDownloadMulti(path.toString(), fileName, audioUrl, video.getBvid());
     }
 
     private Path doDownloadMulti(String path, String fileName,
-                                 JsonNode bestStreamUrl, String bvid, UploadJob.Context context) throws Exception {
-        ArrayNode arrayNode = (ArrayNode) bestStreamUrl.get("data");
-        for (int i = 0; i < arrayNode.size(); i++) {
-            if (arrayNode.get(i).has("audio_quality")) {
-
-                int audioQuality = arrayNode.get(i).get("audio_quality").asInt();
-                String ext = AudioQuality.extMap.get(audioQuality).getExt();
-                String url = arrayNode.get(i).get("url").asText();
-                String referer = "https://bilibili.com/" + bvid;
-                File downloadedFile = new File(path, fileName + "." + ext);
-                MultiDownload.downloadWithRange(url, downloadedFile, 1024 * 512, referer,
-                        uploadDetailService, context.uploadDetailId);
-                return downloadedFile.toPath();
+                                 List<String> audioUrl, String bvid) throws Exception {
+        File downloadedFile = new File(path, fileName + "-" + UUID.randomUUID().toString().substring(0, 8));
+        String referer = "https://bilibili.com/" + bvid;
+        try {
+            MultiDownload.downloadWithRange(audioUrl.get(0), downloadedFile, 1024 * 512, referer);
+        } catch (Exception e) {
+            log.error("链接失效: {}", audioUrl.get(0));
+            if (audioUrl.size() > 1) {
+                log.info("尝试备用链接: {}", audioUrl.get(1));
+                try {
+                    MultiDownload.downloadWithRange(audioUrl.get(0), downloadedFile, 1024 * 512, referer);
+                } catch (Exception e1) {
+                    throw new RuntimeException("备用链接失效");
+                }
             }
         }
-        throw new RuntimeException("没有audio_quality");
+        return downloadedFile.toPath();
     }
 
     public Path downloadCover(BilibiliFullVideo video) throws RuntimeException {
@@ -333,7 +304,7 @@ public class BilibiliClient {
 
     public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn,
                                                           CollectionVideoOrder collectionVideoOrder, Map<String,
-            String> cred) {
+                    String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("channel_series").addPathSegment("ChannelSeries").addPathSegment("get_videos");

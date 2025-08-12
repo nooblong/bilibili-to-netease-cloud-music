@@ -1,4 +1,4 @@
-package github.nooblong.download;
+package download;
 
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
