@@ -194,7 +194,9 @@ public class BilibiliClient {
         }
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+//        log.info("获取信息: {}", response.toPrettyString());
         ArrayNode audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+        log.info(audios.toPrettyString());
         int max = 0;
         boolean hasHiRes = false;
         for (JsonNode audio : audios) {
@@ -216,7 +218,12 @@ public class BilibiliClient {
             } else {
                 if (audio.get("id").asInt() == max) {
                     urls.add(audio.get("base_url").asText());
-                    urls.add(audio.get("backup_url").asText());
+                    if (audio.has("backup_url")) {
+                        ArrayNode backupUrls = (ArrayNode) audio.get("backup_url");
+                        for (JsonNode backupUrl : backupUrls) {
+                            urls.add(backupUrl.asText());
+                        }
+                    }
                 }
             }
         }

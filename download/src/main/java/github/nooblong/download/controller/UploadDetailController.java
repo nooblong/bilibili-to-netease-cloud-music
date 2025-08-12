@@ -122,6 +122,7 @@ public class UploadDetailController {
                     record.getTitle());
             Subscribe subscribe = subscribeMap.get(record.getSubscribeId());
             record.setSubscribeName(subscribe == null ? "单曲上传" : subscribe.getUpName());
+            record.setLog("");
         }
         return Result.ok("查询成功", page);
     }

@@ -141,16 +141,18 @@ public class UploadJob {
                     uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
 
+            log.info("上传完成");
             clear(context, Long.valueOf(voiceId));
         } catch (Exception e) {
             log.error("处理失败1", e);
             stopRedirectLog();
             String uploadLogString = uploadLog.toString();
+            uploadLog.setLength(0);
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
             byId.setLog(uploadLogString);
-            uploadDetail.setUploadStatus(UploadStatusTypeEnum.ERROR);
-            if (uploadDetail.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
-                uploadDetail.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
+            byId.setUploadStatus(UploadStatusTypeEnum.ERROR);
+            if (byId.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
+                byId.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
             }
             Db.updateById(byId);
             delete();
@@ -299,6 +301,7 @@ public class UploadJob {
         newUploadDetail.setVoiceId(voiceId);
         newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
         stopRedirectLog();
+        uploadLog.setLength(0);
         String uploadLogString = uploadLog.toString();
         newUploadDetail.setLog(uploadLogString);
         Db.updateById(newUploadDetail);
