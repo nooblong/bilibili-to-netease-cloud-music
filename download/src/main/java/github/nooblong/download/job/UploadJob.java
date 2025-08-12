@@ -144,7 +144,7 @@ public class UploadJob {
             log.info("上传完成");
             clear(context, Long.valueOf(voiceId));
         } catch (Exception e) {
-            log.error("处理失败1", e);
+            log.error("处理失败1", e.getMessage());
             stopRedirectLog();
             String uploadLogString = uploadLog.toString();
             uploadLog.setLength(0);
@@ -156,6 +156,7 @@ public class UploadJob {
             }
             Db.updateById(byId);
             delete();
+            throw new RuntimeException(e);
         }
     }
 
