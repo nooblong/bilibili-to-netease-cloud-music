@@ -68,8 +68,7 @@ public class BilibiliController {
                 .setTitle(bilibiliFullVideo.getTitle())
                 .setPages(bilibiliFullVideo.getVideoInfo().get("data").get("pages"))
                 .setAuthor(bilibiliFullVideo.getAuthor())
-                .setUid(bilibiliFullVideo.getUserId())
-                ;
+                .setUid(bilibiliFullVideo.getUserId());
         return Result.ok("查询成功", videoInfoResponse);
     }
 
@@ -143,21 +142,16 @@ public class BilibiliController {
         return Result.ok("ok", bilibiliClient.loginWithKey(key, user));
     }
 
+    public static JsonNode allEmoji = null;
+
     @GetMapping("/allEmoji")
     public Result<JsonNode> allEmoji() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String allEmoji = redisTemplate.opsForValue().get("allEmoji");
         if (allEmoji != null) {
-            try {
-                return Result.ok("ok", objectMapper.readTree(allEmoji));
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
+            return Result.ok("ok", allEmoji);
         }
         Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
-        JsonNode allEmoji1 = bilibiliClient.getAllEmoji(cookie);
-        redisTemplate.opsForValue().set("allEmoji", allEmoji1.toString(), 5, TimeUnit.DAYS);
-        return Result.ok("ok", allEmoji1);
+        allEmoji = bilibiliClient.getAllEmoji(cookie);
+        return Result.ok("ok", allEmoji);
     }
 
     @GetMapping("/emojiDetail")
