@@ -81,7 +81,7 @@ CREATE TABLE `upload_detail`  (
                                   `bitrate` int NOT NULL DEFAULT 320000,
                                   `priority` int NOT NULL DEFAULT 0,
                                   `instance_id` bigint NOT NULL DEFAULT 0,
-                                  `log` varchar(8192) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+                                  `log` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
                                   `upload_status` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'WAIT',
                                   `upload_retry_times` int NOT NULL DEFAULT 0,
                                   PRIMARY KEY (`id`) USING BTREE,
@@ -95,6 +95,13 @@ CREATE TABLE `upload_detail`  (
                                   INDEX `upload_detail_user_id_index`(`user_id` ASC) USING BTREE,
                                   INDEX `upload_detail_voice_list_id_index`(`voice_list_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 49042 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = DYNAMIC;
+
+create index upload_detail_create_time_index
+    on upload_detail (create_time);
+
+create index upload_detail_upload_status_index
+    on upload_detail (upload_status);
+
 
 -- ----------------------------
 -- Table structure for user_voicelist

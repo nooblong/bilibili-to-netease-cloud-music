@@ -71,7 +71,7 @@ public class UserVoicelistServiceImpl extends ServiceImpl<UserVoicelistMapper, U
                         Db.saveBatch(toAdd);
                     }
                     log.info("{}播客列表刷新成功", user.getUsername());
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 }
             } catch (Exception e) {
                 log.error("用户播客列表查询失败: {}", e.getMessage());

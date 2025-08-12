@@ -89,7 +89,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     subscribe.setUpImage(userInfo.get("data").get("face").asText());
                     subscribe.setUpName(userInfo.get("data").get("name").asText());
                     Db.updateById(subscribe);
-                    Thread.sleep(1000);
+                    Thread.sleep(500);
                 } catch (Exception e) {
                     log.error("err: ", e);
                 }
@@ -146,13 +146,13 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 updateById(subscribe);
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
         } catch (Exception e) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
@@ -310,7 +310,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                     Db.updateById(user);
                 }
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }

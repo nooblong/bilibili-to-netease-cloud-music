@@ -48,13 +48,16 @@ public class BilibiliClient {
     final IUserService userService;
     final RedisTemplate<String, Map<String, String>> redisTemplate;
     final UploadDetailService uploadDetailService;
+    final PythonManager pythonManager;
 
     public BilibiliClient(IUserService userService,
                           RedisTemplate<String, Map<String, String>> redisTemplate,
-                          UploadDetailService uploadDetailService) {
+                          UploadDetailService uploadDetailService,
+                          PythonManager pythonManager) {
         this.userService = userService;
         this.redisTemplate = redisTemplate;
         this.uploadDetailService = uploadDetailService;
+        this.pythonManager = pythonManager;
         this.okHttpClient = new OkHttpClient.Builder().build();
     }
 
@@ -76,11 +79,11 @@ public class BilibiliClient {
             log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
                 log.info("使用用户cookie:{}", sysUser.getUsername());
-                redisTemplate.opsForValue().set(key, userCredMap, Duration.ofMinutes(5));
+                redisTemplate.opsForValue().set(key, userCredMap, Duration.ofMinutes(1));
                 return userCredMap;
             }
             try {
-                Thread.sleep(3000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -190,7 +193,7 @@ public class BilibiliClient {
         if (StrUtil.isNotBlank(bilibiliFullVideo.getCid())) {
             builder.addQueryParameter("cid", bilibiliFullVideo.getCid());
         } else {
-            builder.addQueryParameter("page_index", "0");
+            builder.addQueryParameter("page_index", "int(0):parse");
         }
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
@@ -200,7 +203,14 @@ public class BilibiliClient {
             audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
         } catch (Exception e) {
             log.error("返回了什么? {}", response.toPrettyString());
-            log.info("重来一次!");
+            log.info("重启python服务!");
+            try {
+                pythonManager.restart();
+                Thread.sleep(5000);
+            } catch (IOException | InterruptedException ex) {
+                log.error("python服务重启失败");
+                throw new RuntimeException(ex);
+            }
             JsonNode response2 = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
             audios = ((ArrayNode) response2.get("data").get("dash").get("audio"));
             log.error("返回了什么? {}", response2.toPrettyString());
