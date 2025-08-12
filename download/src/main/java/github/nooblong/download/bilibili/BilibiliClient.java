@@ -195,7 +195,16 @@ public class BilibiliClient {
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
 //        log.info("获取信息: {}", response.toPrettyString());
-        ArrayNode audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+        ArrayNode audios;
+        try {
+            audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+        } catch (Exception e) {
+            log.error("返回了什么? {}", response.toPrettyString());
+            log.info("重来一次!");
+            JsonNode response2 = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+            audios = ((ArrayNode) response2.get("data").get("dash").get("audio"));
+            log.error("返回了什么? {}", response2.toPrettyString());
+        }
         log.info(audios.toPrettyString());
         int max = 0;
         boolean hasHiRes = false;
