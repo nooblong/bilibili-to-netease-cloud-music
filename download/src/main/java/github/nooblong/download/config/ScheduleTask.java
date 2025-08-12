@@ -112,7 +112,7 @@ public class ScheduleTask {
         getUpJob.process();
     }
 
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "1")
     public void uploadJob() {
         if (enableUploadJob <= 0) {
             return;

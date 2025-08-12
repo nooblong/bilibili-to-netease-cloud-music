@@ -162,8 +162,8 @@ public class UploadJob {
             simpleVideoInfo.setCid(cid);
         }
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
-        if (bilibiliFullVideo.getVideoInfo().has("is_upower_exclusive")) {
-            if (bilibiliFullVideo.getVideoInfo().get("is_upower_exclusive").asBoolean()) {
+        if (bilibiliFullVideo.getVideoInfo().get("data").has("is_upower_exclusive")) {
+            if (bilibiliFullVideo.getVideoInfo().get("data").get("is_upower_exclusive").asBoolean()) {
                 throw new RuntimeException("充电视频跳过");
             }
         }
