@@ -201,6 +201,9 @@ public class BilibiliClient {
         ArrayNode audios;
         try {
             audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+            if (overLengthLimit(response.get("data"))) {
+                return null;
+            }
         } catch (Exception e) {
             log.error("返回了什么? {}", response.toPrettyString());
             log.info("重启python服务!");
@@ -212,6 +215,9 @@ public class BilibiliClient {
                 throw new RuntimeException(ex);
             }
             JsonNode response2 = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+            if (overLengthLimit(response2.get("data"))) {
+                return null;
+            }
             audios = ((ArrayNode) response2.get("data").get("dash").get("audio"));
             log.error("返回了什么? {}", response2.toPrettyString());
         }
@@ -250,6 +256,15 @@ public class BilibiliClient {
         return urls;
     }
 
+    private boolean overLengthLimit(JsonNode data) {
+        int timelength = data.get("timelength").asInt();
+        if ((timelength / 1000 / 60 / 60) > 2) {
+            log.error("时长超过2小时，请升级ssssssssvip");
+            return true;
+        }
+        return false;
+    }
+
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -262,6 +277,9 @@ public class BilibiliClient {
 
     public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred) throws Exception {
         List<String> audioUrl = getAudioUrl(video, cred);
+        if (audioUrl.isEmpty()) {
+            throw new RuntimeException("audioUrl为空");
+        }
         String fileName = video.getBvid();
         Path path = Paths.get(Constant.TMP_FOLDER);
         return doDownloadMulti(path.toString(), fileName, audioUrl, video.getBvid());
