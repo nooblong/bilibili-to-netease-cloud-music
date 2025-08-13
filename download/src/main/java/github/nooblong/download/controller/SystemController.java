@@ -7,15 +7,19 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.JwtUtil;
+import github.nooblong.download.AfdUtil;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
+import github.nooblong.download.entity.AfdOrder;
 import github.nooblong.download.entity.SysInfo;
 import github.nooblong.download.entity.UploadDetail;
 import github.nooblong.download.netmusic.NetMusicClient;
+import github.nooblong.download.service.AfdOrderService;
 import github.nooblong.download.service.UploadDetailService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,15 +39,18 @@ public class SystemController {
     final NetMusicClient netMusicClient;
     final UploadDetailService uploadDetailService;
     final IUserService userService;
+    final AfdOrderService afdOrderService;
 
     public SystemController(BilibiliClient bilibiliClient,
                             NetMusicClient netMusicClient,
                             UploadDetailService uploadDetailService,
-                            IUserService userService) {
+                            IUserService userService,
+                            AfdOrderService afdOrderService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.userService = userService;
+        this.afdOrderService = afdOrderService;
     }
 
     @GetMapping("/sysInfo")
@@ -110,12 +117,33 @@ public class SystemController {
         return Result.ok("ok");
     }
 
-    // 每天 0 点执行
-    @Scheduled(cron = "0 0 0 * * ?")
-    public void runAtMidnight() {
-        userService.update(new LambdaUpdateWrapper<SysUser>()
-                .set(SysUser::getVisitToday, 0)
-                .set(SysUser::getVisitTodayTimes, 0));
+    @GetMapping("/generateOrder")
+    public Result<String> generateOrder() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        String orderId = afdOrderService.generateOrder(sysUser.getId());
+        return Result.ok("success", orderId);
+    }
+
+    @GetMapping("/refreshAll")
+    public Result<String> refreshAll() {
+        JwtUtil.verifierFromContext();
+        afdOrderService.updateData();
+        afdOrderService.updateUser();
+        return Result.ok("ok");
+    }
+
+    @GetMapping("/refreshAfdOrder")
+    public Result<String> refreshAfdOrder() {
+        JwtUtil.verifierFromContext();
+        afdOrderService.updateData();
+        return Result.ok("ok");
+    }
+
+    @GetMapping("/refreshAfdUser")
+    public Result<String> refreshAfdUser() {
+        JwtUtil.verifierFromContext();
+        afdOrderService.updateUser();
+        return Result.ok("ok");
     }
 
 }

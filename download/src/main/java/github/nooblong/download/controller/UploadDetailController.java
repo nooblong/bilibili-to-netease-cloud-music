@@ -154,7 +154,7 @@ public class UploadDetailController {
                 uploadDetail.setOffset(req.getOffset());
                 uploadDetail.setUploadName(cidName.getName());
                 uploadDetail.setPrivacy(req.getPrivacy());
-                uploadDetail.setPriority(isAdmin ? 999L : 10L);
+                uploadDetail.setPriority(isAdmin ? 200L : 10L);
                 uploadDetail.setBitrate(req.getBitrate());
                 uploadDetail.setUserId(userId);
                 uploadDetail.setCrack(req.getCrack() == null ? 0L : 1L);

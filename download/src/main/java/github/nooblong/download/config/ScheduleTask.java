@@ -1,6 +1,7 @@
 package github.nooblong.download.config;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -204,5 +205,13 @@ public class ScheduleTask {
                 }
             }
         }
+    }
+
+    // 每天 0 点执行
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void runAtMidnight() {
+        userService.update(new LambdaUpdateWrapper<SysUser>()
+                .set(SysUser::getVisitToday, 0)
+                .set(SysUser::getVisitTodayTimes, 0));
     }
 }

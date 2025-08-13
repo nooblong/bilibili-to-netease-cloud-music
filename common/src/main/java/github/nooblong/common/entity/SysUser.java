@@ -3,6 +3,7 @@ package github.nooblong.common.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -34,5 +35,12 @@ public class SysUser implements Serializable {
     private Integer visitToday;
 
     private Integer visitTodayTimes;
+
+    private String afdUserId;
+
+    private String totalPay;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date expire;
 
 }

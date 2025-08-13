@@ -12,6 +12,9 @@ enableRefreshBiliCookie: 1
 enableRefreshUserVoiceList: 1
 removeUselessCookie: 1
 
+afdToken: xxx
+afdUserId: xxx
+
 server:
   port: 25565
 spring:

@@ -149,13 +149,6 @@ public class SubscribeController {
         return Result.ok("ok", byId);
     }
 
-    @GetMapping("/checkUpJob")
-    public Result<String> checkUpJob() {
-        Assert.isTrue(JwtUtil.verifierFromContext().getIsAdmin() == 1, "fail: no permission");
-        subscribeService.checkAndSave();
-        return Result.ok("ok");
-    }
-
     @GetMapping("/checkMyUpJob")
     public Result<String> checkMyUpJob(@RequestParam("voicelistId") Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();
