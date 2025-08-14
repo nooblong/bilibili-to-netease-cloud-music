@@ -1,5 +1,6 @@
 package github.nooblong.download.controller;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -29,7 +30,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/sys")
@@ -66,6 +69,21 @@ public class SystemController {
         sysInfo.setVisitToday(visitToday);
         Integer visitTodayTimes = userService.visitTodayTimes();
         sysInfo.setVisitTodayTimes(visitTodayTimes);
+        List<AfdOrder> orderList = afdOrderService.list(Wrappers.lambdaQuery(AfdOrder.class)
+                .isNotNull(AfdOrder::getOutCreateTime));
+        sysInfo.setAfdOrders(orderList);
+        try {
+            SysUser sysUser = JwtUtil.verifierFromContext();
+            sysInfo.setLogin(true);
+            sysInfo.setExpireTime(sysUser.getExpire());
+            sysInfo.setAfdId(StrUtil.isBlank(sysUser.getAfdUserId()) ? "-" : sysUser.getAfdUserId());
+            List<AfdOrder> myOrder =
+                    orderList.stream().filter(i -> i.getUserId().equals(sysUser.getId())).toList();
+            sysInfo.setMyOrders(myOrder);
+        } catch (Exception e) {
+            sysInfo.setExpireTime(DateUtil.parse("2000-01-01 00:00:00"));
+            sysInfo.setLogin(false);
+        }
         return Result.ok("ok", sysInfo);
     }
 

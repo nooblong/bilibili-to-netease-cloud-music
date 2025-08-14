@@ -64,7 +64,7 @@ public class AfdOrderServiceImpl extends ServiceImpl<AfdOrderMapper, AfdOrder> i
                     user.setAfdUserId(outUserId);
                     Db.updateById(user);
                 } else {
-                    log.info("未知的orderId");
+                    log.info("已绑定outUserId");
                 }
             } else {
                 log.info("未知订阅者");
@@ -77,20 +77,23 @@ public class AfdOrderServiceImpl extends ServiceImpl<AfdOrderMapper, AfdOrder> i
         JsonNode send = afdUtil.reqUser();
         for (JsonNode jsonNode : send) {
             String outUserId = jsonNode.get("user").get("user_id").asText();
-            SysUser sysUser = Db.getOne(Wrappers.lambdaQuery(SysUser.class)
+            List<SysUser> sysUserList = Db.list(Wrappers.lambdaQuery(SysUser.class)
                     .eq(SysUser::getAfdUserId, outUserId));
-            if (sysUser != null) {
-                JsonNode currentPlan = jsonNode.get("current_plan");
-                if (currentPlan.has("name") &&
-                        StrUtil.isNotBlank(currentPlan.get("name").asText())) {
-                    long expireTime = currentPlan.get("expire_time").asLong();
-                    Date expireDate = new Date(expireTime * 1000);
-                    sysUser.setExpire(expireDate);
-                    sysUser.setTotalPay(jsonNode.get("all_sum_amount").asText());
-                    Db.updateById(sysUser);
+            for (SysUser sysUser : sysUserList) {
+                // 同一个afd账号的过期时间共享
+                if (sysUser != null) {
+                    JsonNode currentPlan = jsonNode.get("current_plan");
+                    if (currentPlan.has("name") &&
+                            StrUtil.isNotBlank(currentPlan.get("name").asText())) {
+                        long expireTime = currentPlan.get("expire_time").asLong();
+                        Date expireDate = new Date(expireTime * 1000);
+                        sysUser.setExpire(expireDate);
+                        sysUser.setTotalPay(jsonNode.get("all_sum_amount").asText());
+                        Db.updateById(sysUser);
+                    }
+                } else {
+                    log.info("未知的outUserId");
                 }
-            } else {
-                log.info("未知的outUserId");
             }
         }
     }
