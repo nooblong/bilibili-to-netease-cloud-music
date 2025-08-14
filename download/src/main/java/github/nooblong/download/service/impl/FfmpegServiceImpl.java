@@ -69,7 +69,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
                 }
             }).start();
 
-            boolean finished = process.waitFor(3, TimeUnit.MINUTES);
+            boolean finished = process.waitFor(20, TimeUnit.MINUTES);
             if (!finished) {
                 process.destroyForcibly();
                 throw new RuntimeException("转码超时");

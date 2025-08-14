@@ -43,4 +43,10 @@ public class SysUser implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date expire;
 
+    private Integer remaining;
+
+    public boolean expired() {
+        return expire.before(new Date());
+    }
+
 }

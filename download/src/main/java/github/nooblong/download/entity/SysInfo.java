@@ -19,4 +19,5 @@ public class SysInfo implements Serializable {
     private List<AfdOrder> afdOrders;
     private List<AfdOrder> myOrders;
     private String afdId;
+    private Integer remaining;
 }

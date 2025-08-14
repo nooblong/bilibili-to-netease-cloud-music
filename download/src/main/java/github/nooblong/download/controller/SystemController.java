@@ -77,6 +77,7 @@ public class SystemController {
             sysInfo.setLogin(true);
             sysInfo.setExpireTime(sysUser.getExpire());
             sysInfo.setAfdId(StrUtil.isBlank(sysUser.getAfdUserId()) ? "-" : sysUser.getAfdUserId());
+            sysInfo.setRemaining(sysUser.getRemaining());
             List<AfdOrder> myOrder =
                     orderList.stream().filter(i -> i.getUserId().equals(sysUser.getId())).toList();
             sysInfo.setMyOrders(myOrder);

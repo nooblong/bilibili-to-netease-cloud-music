@@ -195,8 +195,8 @@ public class ScheduleTask {
                     }
                 } catch (Exception e) {
                     log.error("b站cookie刷新失败: {}, 删除cookie", sysUser.getUsername());
-                    sysUser.setBiliCookies("");
-                    Db.updateById(sysUser);
+//                    sysUser.setBiliCookies("");
+//                    Db.updateById(sysUser);
                 }
                 try {
                     Thread.sleep(1000);
@@ -212,6 +212,7 @@ public class ScheduleTask {
     public void runAtMidnight() {
         userService.update(new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getVisitToday, 0)
-                .set(SysUser::getVisitTodayTimes, 0));
+                .set(SysUser::getVisitTodayTimes, 0)
+                .set(SysUser::getRemaining, 50));
     }
 }

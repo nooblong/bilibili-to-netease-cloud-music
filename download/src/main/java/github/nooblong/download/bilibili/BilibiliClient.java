@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
+import github.nooblong.download.MusicStatusEnum;
+import github.nooblong.download.UploadFailException;
+import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.enums.AudioQuality;
 import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
@@ -185,7 +188,7 @@ public class BilibiliClient {
                 + "/Credential/refresh", cred), okHttpClient);
     }
 
-    public List<String> getAudioUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred) {
+    public List<String> getAudioUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred, SysUser user) throws UploadFailException {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_download_url");
@@ -201,9 +204,9 @@ public class BilibiliClient {
         ArrayNode audios;
         try {
             audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
-            if (overLengthLimit(response.get("data"))) {
-                return null;
-            }
+            overLengthLimit(response.get("data"), user);
+        } catch (UploadFailException uploadFailException) {
+            throw uploadFailException;
         } catch (Exception e) {
             log.error("返回了什么? {}", response.toPrettyString());
             log.info("重启python服务!");
@@ -215,13 +218,10 @@ public class BilibiliClient {
                 throw new RuntimeException(ex);
             }
             JsonNode response2 = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
-            if (overLengthLimit(response2.get("data"))) {
-                return null;
-            }
+            overLengthLimit(response2.get("data"), user);
             audios = ((ArrayNode) response2.get("data").get("dash").get("audio"));
             log.error("返回了什么? {}", response2.toPrettyString());
         }
-        log.info(audios.toPrettyString());
         int max = 0;
         boolean hasHiRes = false;
         for (JsonNode audio : audios) {
@@ -253,16 +253,16 @@ public class BilibiliClient {
             }
         }
         Assert.isTrue(!urls.isEmpty(), "获取不到下载链接2");
+        log.info("下载链接: {}", urls);
         return urls;
     }
 
-    private boolean overLengthLimit(JsonNode data) {
+    private void overLengthLimit(JsonNode data, SysUser user) throws UploadFailException {
         int timelength = data.get("timelength").asInt();
-        if ((timelength / 1000 / 60 / 60) > 2) {
+        if ((timelength / 1000 / 60 / 60) > 2 && user.expired()) {
             log.error("时长超过2小时，请升级ssssssssvip");
-            return true;
+            throw new UploadFailException(UploadStatusTypeEnum.OVER_DURATION);
         }
-        return false;
     }
 
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
@@ -275,8 +275,8 @@ public class BilibiliClient {
         return response;
     }
 
-    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred) throws Exception {
-        List<String> audioUrl = getAudioUrl(video, cred);
+    public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred, SysUser user) throws Exception {
+        List<String> audioUrl = getAudioUrl(video, cred, user);
         if (audioUrl.isEmpty()) {
             throw new RuntimeException("audioUrl为空");
         }

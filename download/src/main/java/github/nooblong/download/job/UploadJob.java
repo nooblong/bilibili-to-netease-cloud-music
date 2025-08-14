@@ -12,6 +12,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import github.nooblong.common.entity.SysUser;
+import github.nooblong.download.UploadFailException;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.*;
 import github.nooblong.download.entity.Subscribe;
@@ -103,6 +105,7 @@ public class UploadJob {
         public String netImageId;
         public BilibiliFullVideo bilibiliFullVideo;
         public Long uploadDetailId;
+        public SysUser sysUser;
     }
 
     public void process(Long uploadDetailId, Map<String, String> availableBilibiliCookie) {
@@ -113,9 +116,13 @@ public class UploadJob {
         uploadDetailService.updateById(uploadDetail);
         Context context = new Context();
         context.uploadDetailId = uploadDetailId;
-
+        context.sysUser = Db.getById(uploadDetail.getUserId(), SysUser.class);
         try {
             log.info("开始处理: {}", uploadDetail);
+            checkUploadPerDay(context.sysUser);
+            Assert.notNull(context.sysUser, "user不能为空");
+            Db.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId, context.sysUser.getId())
+                    .setSql("remaining = remaining - 1"));
             getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
                     uploadDetail.getUseVideoCover(), uploadDetail.getUserId(), availableBilibiliCookie);
 
@@ -138,8 +145,18 @@ public class UploadJob {
 
             log.info("上传完成");
             clear(context, Long.valueOf(voiceId));
+        } catch (UploadFailException uploadFailException) {
+            log.error("超过最大时长");
+            stopRedirectLog();
+            String uploadLogString = uploadLog.toString();
+            uploadLog.setLength(0);
+            UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
+            byId.setLog(uploadLogString);
+            byId.setUploadStatus(uploadFailException.getuploadStatusTypeEnum());
+            Db.updateById(byId);
+            delete();
         } catch (Exception e) {
-            log.error("处理失败1", e.getMessage());
+            log.error("处理失败1, {}", e.getMessage());
             stopRedirectLog();
             String uploadLogString = uploadLog.toString();
             uploadLog.setLength(0);
@@ -151,7 +168,13 @@ public class UploadJob {
             }
             Db.updateById(byId);
             delete();
-            throw new RuntimeException(e);
+        }
+    }
+
+    private void checkUploadPerDay(SysUser sysUser) throws UploadFailException {
+        if (sysUser.getRemaining() <= 0 && sysUser.expired()) {
+            log.error("每日上传次数用完，请升级ssssssssvip");
+            throw new UploadFailException(UploadStatusTypeEnum.OVER_UPLOAD_DAY);
         }
     }
 
@@ -164,11 +187,11 @@ public class UploadJob {
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         if (bilibiliFullVideo.getVideoInfo().get("data").has("is_upower_exclusive")) {
             if (bilibiliFullVideo.getVideoInfo().get("data").get("is_upower_exclusive").asBoolean()) {
-                throw new RuntimeException("充电视频跳过");
+                throw new UploadFailException(UploadStatusTypeEnum.RECHARGE_VIDEO);
             }
         }
         context.bilibiliFullVideo = bilibiliFullVideo;
-        context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie);
+        context.musicPath = bilibiliClient.downloadFile(bilibiliFullVideo, availableBilibiliCookie, context.sysUser);
 
         if (useVideoCover == 1) {
             try {
