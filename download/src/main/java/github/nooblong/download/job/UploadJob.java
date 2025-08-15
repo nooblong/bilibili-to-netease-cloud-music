@@ -146,7 +146,7 @@ public class UploadJob {
             log.info("上传完成");
             clear(context, Long.valueOf(voiceId));
         } catch (UploadFailException uploadFailException) {
-            log.error("超过最大时长");
+            log.error(uploadFailException.getuploadStatusTypeEnum().getDesc());
             stopRedirectLog();
             String uploadLogString = uploadLog.toString();
             uploadLog.setLength(0);
