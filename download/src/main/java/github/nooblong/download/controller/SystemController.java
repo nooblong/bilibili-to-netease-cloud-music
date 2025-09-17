@@ -16,22 +16,21 @@ import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.AfdUtil;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.BilibiliClient;
-import github.nooblong.download.entity.AfdOrder;
-import github.nooblong.download.entity.SysInfo;
-import github.nooblong.download.entity.UploadDetail;
+import github.nooblong.download.entity.*;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.AfdOrderService;
+import github.nooblong.download.service.SubscribeService;
 import github.nooblong.download.service.UploadDetailService;
+import github.nooblong.download.service.UserVoicelistService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,17 +42,23 @@ public class SystemController {
     final UploadDetailService uploadDetailService;
     final IUserService userService;
     final AfdOrderService afdOrderService;
+    final SubscribeService subscribeService;
+    final UserVoicelistService userVoicelistService;
 
     public SystemController(BilibiliClient bilibiliClient,
                             NetMusicClient netMusicClient,
                             UploadDetailService uploadDetailService,
                             IUserService userService,
-                            AfdOrderService afdOrderService) {
+                            AfdOrderService afdOrderService,
+                            SubscribeService subscribeService,
+                            UserVoicelistService userVoicelistService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.userService = userService;
         this.afdOrderService = afdOrderService;
+        this.subscribeService = subscribeService;
+        this.userVoicelistService = userVoicelistService;
     }
 
     @GetMapping("/sysInfo")
@@ -163,6 +168,65 @@ public class SystemController {
         JwtUtil.verifierFromContext();
         afdOrderService.updateUser();
         return Result.ok("ok");
+    }
+
+    @GetMapping("/listMyUser")
+    public Result<List<SysUser>> listMyUser() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        List<SysUser> res = new ArrayList<>();
+        if (sysUser != null) {
+            Map<String, String> neteaseCookieMap = userService.getNeteaseCookieMap(sysUser.getId());
+            if (neteaseCookieMap != null && neteaseCookieMap.containsKey("MUSIC_A_T")) {
+                String musicAT = neteaseCookieMap.get("MUSIC_A_T");
+                if (StrUtil.isNotBlank(musicAT)) {
+                    List<SysUser> list = userService.lambdaQuery().like(SysUser::getNetCookies, musicAT)
+                            .list();
+                    for (SysUser user : list) {
+                        SysUser setUser = new SysUser();
+                        setUser.setId(user.getId());
+                        setUser.setExpire(user.getExpire());
+                        setUser.setUsername(user.getUsername());
+                        res.add(setUser);
+                    }
+                }
+            }
+        }
+        return Result.ok("ok", res);
+    }
+
+    @GetMapping("/deleteMyUser")
+    public Result<String> deleteMyUser() {
+        SysUser sysUser = JwtUtil.verifierFromContext();
+        userService.removeById(sysUser.getId());
+        subscribeService.lambdaUpdate()
+                .eq(Subscribe::getUserId, sysUser.getId())
+                .set(Subscribe::getEnable, 0);
+        List<UserVoicelist> list = userVoicelistService.lambdaQuery()
+                .eq(UserVoicelist::getUserId, sysUser.getId()).list();
+        userVoicelistService.removeByIds(list.stream().map(UserVoicelist::getId).collect(Collectors.toList()));
+        return Result.ok("ok");
+    }
+
+    @PostMapping("/changeUsername")
+    public Result<String> changeUsername(@RequestBody SysUser sysUser) {
+        SysUser user = JwtUtil.verifierFromContext();
+        if (StrUtil.isNotBlank(sysUser.getUsername())) {
+            user.setUsername(sysUser.getUsername());
+            Db.updateById(user);
+            return Result.ok("ok");
+        }
+        return Result.fail("失败");
+    }
+
+    @PostMapping("/changePassword")
+    public Result<String> changePassword(@RequestBody SysUser sysUser) {
+        SysUser user = JwtUtil.verifierFromContext();
+        if (StrUtil.isNotBlank(sysUser.getPassword())) {
+            user.setPassword(sysUser.getPassword());
+            Db.updateById(user);
+            return Result.ok("ok");
+        }
+        return Result.fail("失败");
     }
 
 }
