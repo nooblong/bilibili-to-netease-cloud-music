@@ -140,6 +140,9 @@ public class SubscribeController {
         Subscribe byId = Db.getById(id, Subscribe.class);
         Assert.isTrue(byId.getUserId().equals(user.getId()), "fail: not owner");
         Db.removeById(byId);
+        Db.remove(Wrappers.lambdaQuery(UploadDetail.class)
+                .eq(UploadDetail::getSubscribeId, byId.getId())
+                .eq(UploadDetail::getUploadStatus, "WAIT"));
         return Result.ok("ok", byId);
     }
 
