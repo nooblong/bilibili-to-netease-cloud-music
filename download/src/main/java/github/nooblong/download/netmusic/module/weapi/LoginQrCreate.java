@@ -1,4 +1,4 @@
-package github.nooblong.download.netmusic.module.get;
+package github.nooblong.download.netmusic.module.weapi;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.download.netmusic.module.base.SimpleGetTypeModule;

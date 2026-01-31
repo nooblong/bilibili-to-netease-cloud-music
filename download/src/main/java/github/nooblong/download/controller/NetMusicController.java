@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/netmusic")
@@ -57,11 +58,51 @@ public class NetMusicController {
         loginqrkey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginqrkey", sysUser.getId());
         String unikey = loginqrkey.get("unikey").asText();
         BufferedImage generate = QrCodeUtil.generate("https://music.163.com/login?codekey=" +
-                unikey, 300, 300);
+                unikey + "&chainId=" + generateChainId(null), 300, 300);
         QrResponse qrResponse = new QrResponse();
         qrResponse.setImage(bufferedImageToBase64(generate));
         qrResponse.setUniqueKey(unikey);
         return Result.ok("ok", qrResponse);
+    }
+
+    private static String generateChainId(String cookie) {
+        String version = "v1";
+
+        int randomNum = ThreadLocalRandom.current().nextInt(1_000_000);
+
+        String deviceId = getCookieValue(cookie, "sDeviceId");
+        if (deviceId == null || deviceId.isEmpty()) {
+            deviceId = "unknown-" + randomNum;
+        }
+
+        String platform = "web";
+        String action = "login";
+        long timestamp = System.currentTimeMillis();
+
+        return String.format("%s_%s_%s_%s_%d",
+                version, deviceId, platform, action, timestamp);
+    }
+
+    private static String getCookieValue(String cookieStr, String name) {
+        if (cookieStr == null || cookieStr.isEmpty()) {
+            return null;
+        }
+
+        String cookies = "; " + cookieStr;
+        String target = "; " + name + "=";
+
+        String[] parts = cookies.split(target);
+
+        if (parts.length == 2) {
+            String lastPart = parts[1];
+            int endIndex = lastPart.indexOf(";");
+            if (endIndex != -1) {
+                return lastPart.substring(0, endIndex);
+            }
+            return lastPart;
+        }
+
+        return null;
     }
 
     /**
