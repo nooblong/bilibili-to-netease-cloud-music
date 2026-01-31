@@ -14,7 +14,7 @@ public class LoginQrCheck extends SimpleWeApiModule {
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
         node.put("key", (String) queryMap.get("key"));
-        node.put("type", 1);
+        node.put("type", 3);
     }
 
     @Override

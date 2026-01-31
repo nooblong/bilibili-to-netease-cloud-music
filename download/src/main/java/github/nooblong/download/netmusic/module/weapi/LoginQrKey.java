@@ -21,7 +21,7 @@ public class LoginQrKey extends SimpleWeApiModule {
 
     @Override
     public void genParams(ObjectNode node, Map<String, Object> queryMap) {
-        node.put("type", 1);
+        node.put("type", 3);
     }
 
     @Override
