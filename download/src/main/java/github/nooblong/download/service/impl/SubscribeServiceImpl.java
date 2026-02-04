@@ -299,7 +299,7 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
         for (SysUser user : userList) {
             if (StrUtil.isNotBlank(user.getNetCookies())) {
-                JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", 53L);
+                JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", user.getId());
                 if (loginstatus.get("account") != null
                 && loginstatus.get("account").get("id") != null
                 && !loginstatus.get("account").get("id").asText().isEmpty()) {
