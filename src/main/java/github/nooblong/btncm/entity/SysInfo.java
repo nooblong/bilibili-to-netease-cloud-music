@@ -20,4 +20,13 @@ public class SysInfo implements Serializable {
     private List<AfdOrder> myOrders;
     private String afdId;
     private Integer remaining;
+
+    private Integer todayUploadNum;
+    private Integer todayUploadSuccessNum;
+    private Integer totalUploadNum;
+    private Integer todayUploadUserNum;
+    private Integer todayHasNewUploadSubscribe;
+    private Integer enabledSubscribeNum;
+    private Integer enabledSubscribeUserNum;
+
 }
