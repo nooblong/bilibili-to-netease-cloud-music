@@ -91,12 +91,12 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     private String getAuditStatus(String voiceId, Long userId) {
         Map<String, Object> param = new HashMap<>();
         param.put("id", voiceId);
-        JsonNode voicedetail = netMusicClient.getMusicDataByUserId(param, "voicedetail", userId);
-        if (voicedetail.get("code").asInt() == 301) {
+        JsonNode voiceDetail = netMusicClient.getMusicDataByUserId(param, "VoiceDetail", userId);
+        if (voiceDetail.get("code").asInt() == 301) {
             return "NO_COOKIE";
         }
         String result;
-        result = voicedetail.get("data").get("displayStatus").asText();
+        result = voiceDetail.get("data").get("displayStatus").asText();
         return result;
     }
 }

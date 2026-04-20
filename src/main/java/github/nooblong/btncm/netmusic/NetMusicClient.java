@@ -6,17 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.btncm.service.IUserService;
 import github.nooblong.btncm.utils.CommonUtil;
-import github.nooblong.btncm.netmusic.module.base.BaseModule;
-import github.nooblong.btncm.netmusic.module.base.ModuleFactory;
-import github.nooblong.btncm.netmusic.module.weapi.Login;
-import github.nooblong.btncm.netmusic.module.weapi.LoginCellphone;
-import github.nooblong.btncm.netmusic.module.weapi.LoginQrCheck;
-import github.nooblong.btncm.netmusic.module.weapi.LoginRefresh;
+import github.nooblong.btncm.netmusic.api.weapi.Login;
+import github.nooblong.btncm.netmusic.api.weapi.LoginCellphone;
+import github.nooblong.btncm.netmusic.api.weapi.LoginQrCheck;
+import github.nooblong.btncm.netmusic.api.weapi.LoginRefresh;
 import github.nooblong.btncm.utils.OkUtil;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
@@ -38,14 +37,14 @@ import java.util.concurrent.TimeUnit;
 public class NetMusicClient {
 
     private final OkHttpClient templateClient;
-    private final ModuleFactory moduleFactory;
+    private final ApplicationContext applicationContext;
     private final IUserService userService;
     final LoginQrCheck loginQrCheck;
     final LoginRefresh loginRefresh;
     final Login login;
     final LoginCellphone loginCellphone;
 
-    public NetMusicClient(ModuleFactory moduleFactory, IUserService userService,
+    public NetMusicClient(ApplicationContext applicationContext, IUserService userService,
                           LoginQrCheck loginQrCheck,
                           LoginRefresh loginRefresh,
                           Login login,
@@ -56,7 +55,7 @@ public class NetMusicClient {
                 .writeTimeout(1, TimeUnit.MINUTES)
                 .connectTimeout(1, TimeUnit.MINUTES)
                 .build();
-        this.moduleFactory = moduleFactory;
+        this.applicationContext = applicationContext;
         this.loginQrCheck = loginQrCheck;
         this.loginRefresh = loginRefresh;
         this.login = login;
@@ -148,7 +147,7 @@ public class NetMusicClient {
 
     public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
         List<Cookie> cookiesByUser = userService.getNeteaseOkhttpCookie(userId);
-        BaseModule baseModule = moduleFactory.getService(key);
+        BaseModule baseModule = applicationContext.getBean(key, BaseModule.class);
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode paramNode = objectMapper.createObjectNode();
         baseModule.genParams(paramNode, queryMap);
@@ -175,7 +174,7 @@ public class NetMusicClient {
     }
 
     public boolean checkLogin(Long userId) {
-        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "loginstatus", userId);
+        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "LoginStatus", userId);
         return loginstatus.has("account") &&
                 loginstatus.get("account").get("id") != null &&
                 loginstatus.get("profile") != null &&

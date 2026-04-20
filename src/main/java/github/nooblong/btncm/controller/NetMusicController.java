@@ -37,8 +37,8 @@ public class NetMusicController {
     @GetMapping("/loginStatus")
     public Result<JsonNode> getloginStatus() {
         SysUser sysUser = JwtUtil.verifierFromContext();
-        JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
-        return Result.ok("ok", loginstatus);
+        JsonNode loginStatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginStatus", sysUser.getId());
+        return Result.ok("ok", loginStatus);
     }
 
     @PostMapping("/setNetCookie")
@@ -47,16 +47,16 @@ public class NetMusicController {
         String cookie = json.toString();
         Map<String, String> map = CommonUtil.convertJsonToMap(cookie);
         userService.updateNeteaseCookieByCookieMap(sysUser.getId(), map);
-        JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", sysUser.getId());
-        return Result.ok("ok", loginstatus);
+        JsonNode loginStatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginStatus", sysUser.getId());
+        return Result.ok("ok", loginStatus);
     }
 
     @GetMapping("/getQrCode")
     public Result<QrResponse> getQrCode() {
-        JsonNode loginqrkey;
+        JsonNode loginQrKey;
         SysUser sysUser = JwtUtil.verifierFromContext();
-        loginqrkey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginqrkey", sysUser.getId());
-        String unikey = loginqrkey.get("unikey").asText();
+        loginQrKey = netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginQrKey", sysUser.getId());
+        String unikey = loginQrKey.get("unikey").asText();
         BufferedImage generate = QrCodeUtil.generate("https://music.163.com/login?codekey=" +
                 unikey + "&chainId=" + generateChainId(null), 300, 300);
         QrResponse qrResponse = new QrResponse();

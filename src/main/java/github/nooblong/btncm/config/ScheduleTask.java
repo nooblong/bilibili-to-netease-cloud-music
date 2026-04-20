@@ -129,7 +129,7 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
-                netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginrefresh", sysUser.getId());
+                netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginRefresh", sysUser.getId());
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {

@@ -223,16 +223,16 @@ public class UploadJob {
             throw new RuntimeException("下载的封面图片读取失败: " + path);
         }
         params.put("imagePath", path.toString());
-        JsonNode imageuploadalloc = netMusicClient.getMusicDataByUserId(params, "imageuploadalloc", userId);
-        String docId = imageuploadalloc.get("result").get("docId").asText();
-        String objectKey = imageuploadalloc.get("result").get("objectKey").asText();
-        String token = imageuploadalloc.get("result").get("token").asText();
+        JsonNode imageUploadAlloc = netMusicClient.getMusicDataByUserId(params, "ImageUploadAlloc", userId);
+        String docId = imageUploadAlloc.get("result").get("docId").asText();
+        String objectKey = imageUploadAlloc.get("result").get("objectKey").asText();
+        String token = imageUploadAlloc.get("result").get("token").asText();
         params.put("docId", docId);
         params.put("objectKey", objectKey);
         params.put("token", token);
-        netMusicClient.getMusicDataByUserId(params, "imageuploadfirst", userId);
-        JsonNode imageuploadsecond = netMusicClient.getMusicDataByUserId(params, "imageuploadsecond", userId);
-        return imageuploadsecond.get("id").asText();
+        netMusicClient.getMusicDataByUserId(params, "ImageUploadFirst", userId);
+        JsonNode imageUploadSecond = netMusicClient.getMusicDataByUserId(params, "ImageUploadSecond", userId);
+        return imageUploadSecond.get("id").asText();
 
     }
 
@@ -278,17 +278,17 @@ public class UploadJob {
         HashMap<String, Object> queryMap = new HashMap<>();
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
-        JsonNode audiouploadalloc = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadalloc", userId);
+        JsonNode audioUploadAlloc = netMusicClient.getMusicDataByUserId(queryMap, "AudioUploadAlloc", userId);
 
-        String docId = audiouploadalloc.get("result").get("docId").asText();
-        String objectKey = audiouploadalloc.get("result").get("objectKey").asText();
-        String token = audiouploadalloc.get("result").get("token").asText();
+        String docId = audioUploadAlloc.get("result").get("docId").asText();
+        String objectKey = audioUploadAlloc.get("result").get("objectKey").asText();
+        String token = audioUploadAlloc.get("result").get("token").asText();
         queryMap.put("docId", docId);
         queryMap.put("objectKey", objectKey);
         queryMap.put("token", token);
 
-        JsonNode audiouploadfirst = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadfirst", userId);
-        String uploadId = audiouploadfirst.get("uploadId").asText();
+        JsonNode audioUploadFirst = netMusicClient.getMusicDataByUserId(queryMap, "AudioUploadFirst", userId);
+        String uploadId = audioUploadFirst.get("uploadId").asText();
         queryMap.put("uploadId", uploadId);
 
         try {
@@ -299,10 +299,10 @@ public class UploadJob {
 
         queryMap.put("uploadDetailId", uploadDetailId);
 
-        JsonNode audiouploadsecond = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadsecond", userId);
+        JsonNode audioUploadSecond = netMusicClient.getMusicDataByUserId(queryMap, "AudioUploadSecond", userId);
 
         queryMap.put("name", uploadName);
-        queryMap.put("uploadResult", audiouploadsecond);
+        queryMap.put("uploadResult", audioUploadSecond);
         queryMap.put("voiceListId", voiceListId);
         queryMap.put("coverImgId", coverImgId);
         queryMap.put("categoryId", categoryId);
@@ -310,14 +310,14 @@ public class UploadJob {
         queryMap.put("privacy", privacy);
         queryMap.put("description", description);
 
-        JsonNode audiouploadthird = netMusicClient.getMusicDataByUserId(queryMap, "audiouploadthird", userId);
+        JsonNode audioUploadThird = netMusicClient.getMusicDataByUserId(queryMap, "AudioUploadThird", userId);
 
-        JsonNode audioprecheck = netMusicClient.getMusicDataByUserId(queryMap, "audioprecheck", userId);
-        Assert.isTrue(audioprecheck.get("code").asInt() == 200, "声音发布失败: " + audioprecheck.get("message").asText());
+        JsonNode audioPreCheck = netMusicClient.getMusicDataByUserId(queryMap, "AudioPreCheck", userId);
+        Assert.isTrue(audioPreCheck.get("code").asInt() == 200, "声音发布失败: " + audioPreCheck.get("message").asText());
 
-        JsonNode audioupload = netMusicClient.getMusicDataByUserId(queryMap, "audiosubmit", userId);
-        Assert.isTrue(audioupload.get("code").asInt() == 200, "声音发布失败: " + audioprecheck.get("message").asText());
-        ArrayNode result = (ArrayNode) audioupload.get("data");
+        JsonNode audioUpload = netMusicClient.getMusicDataByUserId(queryMap, "AudioSubmit", userId);
+        Assert.isTrue(audioUpload.get("code").asInt() == 200, "声音发布失败: " + audioPreCheck.get("message").asText());
+        ArrayNode result = (ArrayNode) audioUpload.get("data");
         return result.get(0).asText();
     }
 

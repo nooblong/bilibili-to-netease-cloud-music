@@ -296,10 +296,10 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         List<SysUser> userList = SimpleQuery.list(Wrappers.lambdaQuery(SysUser.class), i -> i);
         for (SysUser user : userList) {
             if (StrUtil.isNotBlank(user.getNetCookies())) {
-                JsonNode loginstatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginstatus", user.getId());
-                if (loginstatus.get("account") != null
-                && loginstatus.get("account").get("id") != null
-                && !loginstatus.get("account").get("id").asText().isEmpty()) {
+                JsonNode loginStatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginStatus", user.getId());
+                if (loginStatus.get("account") != null
+                && loginStatus.get("account").get("id") != null
+                && !loginStatus.get("account").get("id").asText().isEmpty()) {
                     log.info("用户{}网易登录有效", user.getUsername());
                 } else {
                     log.info("清除网易云cookie: 用户{}", user.getUsername());
