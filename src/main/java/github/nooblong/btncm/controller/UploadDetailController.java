@@ -74,6 +74,8 @@ public class UploadDetailController {
             if (!list.isEmpty()) {
                 wrapper.eq(UploadDetail::getUserId,
                         list.get(0).getId());
+            } else {
+                return Result.ok("查询成功", pageNew);
             }
         }
         List<Subscribe> subscribes = Db.list(Wrappers.lambdaQuery(Subscribe.class)
