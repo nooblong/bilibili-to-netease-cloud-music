@@ -41,6 +41,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * 上传视频到网易云的全部步骤
+ */
 @Component
 @Slf4j
 public class UploadJob {
@@ -92,7 +95,7 @@ public class UploadJob {
         log.info("处理: {}", upload.getTitle());
         Map<String, String> availableBilibiliCookie;
         try {
-            availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+            availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
         } catch (RuntimeException e) {
             log.error("准备下载失败:", e);
             return;
@@ -174,7 +177,7 @@ public class UploadJob {
 
     private void checkUploadPerDay(SysUser sysUser) throws UploadFailException {
         if (sysUser.getRemaining() <= 0 && sysUser.expired()) {
-            log.error("每日上传次数用完，请升级ssssssssvip");
+            log.error("每日上传次数用完");
             throw new UploadFailException(UploadStatusTypeEnum.OVER_UPLOAD_DAY);
         }
     }

@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
+/**
+ * up主迭代器
+ */
 @Slf4j
 public class UpIterator extends SimplePageIterator {
     private final String keyWord;
@@ -18,12 +21,19 @@ public class UpIterator extends SimplePageIterator {
     int lastTotalIndexUp = 1;
 
 
-    public UpIterator(BilibiliClient bilibiliClient, String upId, String keyWord, int limitSec, int minSec,
-                      VideoOrderEnum videoOrder, UserVideoOrderEnum userVideoOrder, boolean checkPart,
-                      Map<String, String> bilibiliCookie, Integer lastTotalIndex, String channelIds,
+    public UpIterator(BilibiliClient bilibiliClient,
+                      String upId,
+                      String keyWord,
+                      int limitSec,
+                      int minSec,
+                      VideoOrderEnum videoOrder,
+                      UserVideoOrderEnum userVideoOrder,
+                      boolean checkPart,
+                      Map<String, String> bilibiliCookie,
+                      Integer lastTotalIndex,
+                      String channelIds,
                       AtomicInteger counter) {
-        super(bilibiliClient, limitSec, minSec, videoOrder, checkPart,
-                bilibiliCookie, lastTotalIndex, channelIds, counter);
+        super(bilibiliClient, limitSec, minSec, videoOrder, checkPart, bilibiliCookie, lastTotalIndex, channelIds, counter);
         this.upId = upId;
         this.keyWord = keyWord;
         this.userVideoOrder = userVideoOrder;
@@ -48,7 +58,7 @@ public class UpIterator extends SimplePageIterator {
 
     public void lazyInit() {
         if (this.videos == null) {
-            log.info("up初始化集合:");
+            log.debug("up初始化集合:");
             // 第一次初始化
             // 先查总数
             if (videoOrder == VideoOrderEnum.PUB_NEW_FIRST_THEN_OLD) {
@@ -59,13 +69,13 @@ public class UpIterator extends SimplePageIterator {
                 upVideosTotalNum = upVideoListFromBilibili.getTotalNum();
                 this.totalIndex += (lastTotalIndexUp - 1) * pageSize;
                 this.currentPageNo = lastTotalIndexUp;
-                log.info("up获取总数和第一页: {}", upVideoListFromBilibili.getTotalNum());
+                log.debug("up获取总数和第一页: {}", upVideoListFromBilibili.getTotalNum());
             } else {
                 if (upVideosTotalNum == 0) {
                     IteratorCollectionTotalList<SimpleVideoInfo> toGetCount = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,
                             1,
                             userVideoOrder, keyWord, bilibiliCookie);
-                    log.info("up先获取一遍总数: {}", toGetCount.getTotalNum());
+                    log.debug("up先获取一遍总数: {}", toGetCount.getTotalNum());
                     upVideosTotalNum = toGetCount.getTotalNum();
                 }
                 IteratorCollectionTotalList<SimpleVideoInfo> upVideoListFromBilibili = bilibiliClient.getUpVideoListFromBilibili(upId, pageSize,

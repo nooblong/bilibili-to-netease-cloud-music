@@ -8,6 +8,9 @@ import org.springframework.util.Assert;
 
 import java.util.Date;
 
+/**
+ * 包含所以视频信息，包括选择的cid等
+ */
 @Data
 @Accessors(chain = true)
 public class BilibiliFullVideo {

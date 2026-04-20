@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 系统状态接口
+ */
 @RestController
 @RequestMapping("/sys")
 public class SystemController {

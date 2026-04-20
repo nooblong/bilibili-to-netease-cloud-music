@@ -9,6 +9,11 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 public enum UserVideoOrderEnum {
+    /**
+     * 发布时间排序
+     * 收藏量排序
+     * 观看次数排序
+     */
     PUBDATE("pubdate"),
     FAVORITE("stow"),
     VIEW("click"),

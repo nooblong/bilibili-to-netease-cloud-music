@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 /**
- * 单个视频
+ * 单个视频的简单信息，可能只包含bvid
  */
 @Data
 @Accessors(chain = true)

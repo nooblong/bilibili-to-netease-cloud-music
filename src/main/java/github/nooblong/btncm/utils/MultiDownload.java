@@ -7,6 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
+/**
+ * 分区下载b站视频工具
+ */
 @Slf4j
 public class MultiDownload {
     private static final OkHttpClient client = new OkHttpClient();

@@ -3,6 +3,7 @@ package github.nooblong.btncm.controller;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
+import github.nooblong.btncm.entity.ExpiringCache;
 import github.nooblong.btncm.entity.SysUser;
 import github.nooblong.btncm.entity.Result;
 import github.nooblong.btncm.service.IUserService;
@@ -22,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * b站接口
+ */
 @RestController
 @RequestMapping("/bilibili")
 public class BilibiliController {
@@ -35,12 +39,18 @@ public class BilibiliController {
         this.userService = userService;
     }
 
+    /**
+     * 获取up主的合集列表
+     */
     @GetMapping("/getUpChannels")
     public Result<JsonNode> getUpChannels(@RequestParam(name = "upId") String upId) {
         JsonNode upChannels = bilibiliClient.getUpChannels(upId, new HashMap<>());
         return Result.ok("ok", upChannels);
     }
 
+    /**
+     * 获取当前账号的b站信息
+     */
     @GetMapping("/getSelfInfo")
     public Result<JsonNode> getSelfInfo() {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -48,12 +58,15 @@ public class BilibiliController {
         return Result.ok("ok", upChannels);
     }
 
+    /**
+     * 根据bvid获取视频信息
+     */
     @GetMapping("/getVideoInfo")
     public Result<VideoInfoResponse> getVideoInfo(@RequestParam(name = "bvid") String bvid,
                                                   @RequestParam(required = false, name = "cid") String cid) {
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         simpleVideoInfo.setCid(cid);
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
         BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
         VideoInfoResponse videoInfoResponse = new VideoInfoResponse()
                 .setImage(bilibiliFullVideo.getVideoInfo().get("data").get("pic").asText())
@@ -64,6 +77,9 @@ public class BilibiliController {
         return Result.ok("查询成功", videoInfoResponse);
     }
 
+    /**
+     * 根据uid获取用户信息
+     */
     @GetMapping("/getUserInfo")
     public Result<JsonNode> getUserInfo(@RequestParam(name = "uid") String uid) {
         UUID uuid = UUID.randomUUID();
@@ -79,34 +95,49 @@ public class BilibiliController {
         return Result.ok("查询成功", jsonResponse);
     }
 
+    /**
+     * 根据合集id获取视频列表
+     */
     @GetMapping("/getSeriesInfo")
     public Result<JsonNode> getSeriesInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getAndSetBiliCookie());
+        JsonNode seriesMeta1 = bilibiliClient.getSeriesMeta(id, bilibiliClient.getBilibiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
+    /**
+     * 根据旧合集id获取视频列表
+     */
     @GetMapping("/getOldSeriesInfo")
     public Result<JsonNode> getOldSeriesInfo(@RequestParam(name = "id") String id) {
-        JsonNode seriesMeta1 = bilibiliClient.getOldSeriesMeta(id, bilibiliClient.getAndSetBiliCookie());
+        JsonNode seriesMeta1 = bilibiliClient.getOldSeriesMeta(id, bilibiliClient.getBilibiliCookie());
         return Result.ok("查询成功", seriesMeta1);
     }
 
+    /**
+     * 根据收藏夹id获取视频列表
+     */
     @GetMapping("/getFavoriteList")
     public Result<JsonNode> getUserFavoriteList(@RequestParam(name = "uid") String uid) {
-        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getAndSetBiliCookie());
+        JsonNode favoriteList = bilibiliClient.getUserFavoriteList(uid, bilibiliClient.getBilibiliCookie());
         return Result.ok("查询成功", favoriteList);
     }
 
+    /**
+     * 根据视频id获取视频属于的合集
+     */
     @GetMapping("/getSeriesIdByBvid")
     public Result<String> getSeriesIdByBvid(@RequestParam(name = "url") String url) {
         SimpleVideoInfo video = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(url);
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, bilibiliClient.getAndSetBiliCookie());
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(video, bilibiliClient.getBilibiliCookie());
         if (!bilibiliFullVideo.getHasSeries()) {
             return Result.fail("视频没有合集");
         }
         return Result.ok("ok", bilibiliFullVideo.getMySeriesId());
     }
 
+    /**
+     * 设置当前用户的b站cookie
+     */
     @PostMapping("/setBiliCookies")
     public Result<JsonNode> setBiliCookies(@RequestBody JsonNode jsonNode) {
         SysUser user = JwtUtil.verifierFromContext();
@@ -116,6 +147,9 @@ public class BilibiliController {
         return Result.ok("ok", upChannels);
     }
 
+    /**
+     * 获取登录二维码
+     */
     @GetMapping("/getQrBili")
     public Result<QrResponse> getQrUrl() {
         JwtUtil.verifierFromContext();
@@ -128,27 +162,36 @@ public class BilibiliController {
         return Result.ok("ok", qrResponse);
     }
 
+    /**
+     * 二维码登录
+     */
     @GetMapping("/checkQrBili")
     public Result<JsonNode> getQrUrl(@RequestParam("key") String key) {
         SysUser user = JwtUtil.verifierFromContext();
         return Result.ok("ok", bilibiliClient.loginWithKey(key, user));
     }
 
-    public static JsonNode allEmoji = null;
+    public ExpiringCache<JsonNode> emojiList = new ExpiringCache<>(72 *60 * 60 * 1000L, this::getAllEmoji);
 
+    /**
+     * 获取emoji列表
+     */
     @GetMapping("/allEmoji")
     public Result<JsonNode> allEmoji() {
-        if (allEmoji != null) {
-            return Result.ok("ok", allEmoji);
-        }
-        Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
-        allEmoji = bilibiliClient.getAllEmoji(cookie);
-        return Result.ok("ok", allEmoji);
+        return Result.ok("ok", emojiList.get());
     }
 
+    public JsonNode getAllEmoji() {
+        Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
+        return bilibiliClient.getAllEmoji(cookie);
+    }
+
+    /**
+     * 获取emoji图片
+     */
     @GetMapping("/emojiDetail")
     public Result<JsonNode> emojiDetail(@RequestParam("id") String id) {
-        Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+        Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
         JsonNode emojiDetail = bilibiliClient.getEmojiDetail(cookie, id);
         return Result.ok("ok", emojiDetail);
     }

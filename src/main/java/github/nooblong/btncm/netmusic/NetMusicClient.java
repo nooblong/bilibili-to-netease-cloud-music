@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 处理网易云接口相关
+ */
 @Slf4j
 @Component
 public class NetMusicClient {
@@ -62,14 +65,19 @@ public class NetMusicClient {
         this.loginCellphone = loginCellphone;
     }
 
+    /**
+     * 每个用户需要创建一个Okhttp客户端来发送请求
+     */
     public OkHttpClient generateClient(Long userId, List<Cookie> cookiesByUser) {
         final TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                    }
 
                     @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                    }
 
                     @Override
                     public X509Certificate[] getAcceptedIssuers() {
@@ -97,6 +105,7 @@ public class NetMusicClient {
                 .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
                 .hostnameVerifier((hostname, session) -> true)
                 .cookieJar(new CookieJar() {
+                    // 当遇到网易云的更新cookie请求时, 更新数据库中的cookie
                     @Override
                     public void saveFromResponse(@Nullable HttpUrl url, @Nullable List<Cookie> cookies) {
                         if (url != null && (
@@ -145,6 +154,9 @@ public class NetMusicClient {
                 .build();
     }
 
+    /**
+     * 根据用户id+接口名字（bean的名字）来调用网易云接口
+     */
     public JsonNode getMusicDataByUserId(Map<String, Object> queryMap, String key, Long userId) {
         List<Cookie> cookiesByUser = userService.getNeteaseOkhttpCookie(userId);
         BaseModule baseModule = applicationContext.getBean(key, BaseModule.class);
@@ -164,6 +176,9 @@ public class NetMusicClient {
         return result;
     }
 
+    /**
+     * 获取csrfToken
+     */
     private String getCsrfToken(List<Cookie> cookies) {
         for (Cookie cookie : cookies) {
             if (cookie.name().equals("__csrf")) {
@@ -173,6 +188,9 @@ public class NetMusicClient {
         return null;
     }
 
+    /**
+     * 检查是否登录
+     */
     public boolean checkLogin(Long userId) {
         JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "loginStatus", userId);
         return loginstatus.has("account") &&
@@ -183,11 +201,17 @@ public class NetMusicClient {
 
     // -------------------------------Common Api--------------------------------------
 
+    /**
+     * 获取用户播客列表
+     */
     public JsonNode getUserVoiceList(Long userId) {
         Map<String, Object> queryMap = new HashMap<>();
         return this.getMusicDataByUserId(queryMap, "voiceListSearch", userId).get("data");
     }
 
+    /**
+     * 获取用户播客详情
+     */
     public JsonNode getVoiceListDetail(String voiceListId, Long userId) {
         Map<String, Object> params = new HashMap<>();
         params.put("voiceListId", voiceListId);
@@ -195,6 +219,9 @@ public class NetMusicClient {
         return this.getMusicDataByUserId(params, "voiceListDetail", userId).get("data");
     }
 
+    /**
+     * 根据播客列表id获取声音列表
+     */
     public JsonNode getVoiceList(String voiceListId, Long userId, Long offset) {
         Map<String, Object> params = new HashMap<>();
         params.put("offset", offset);
@@ -203,6 +230,9 @@ public class NetMusicClient {
         return this.getMusicDataByUserId(params, "voiceList", userId).get("data");
     }
 
+    /**
+     * 根据播客列表id获取用户播客详情
+     */
     public JsonNode getVoiceListDetailByUserId(String voiceListId, Long userId) {
         Map<String, Object> params = new HashMap<>();
         params.put("voiceListId", voiceListId);

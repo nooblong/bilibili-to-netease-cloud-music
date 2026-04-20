@@ -16,6 +16,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * 爱发电工具
+ */
 @Slf4j
 @Component
 public class AfdUtil {

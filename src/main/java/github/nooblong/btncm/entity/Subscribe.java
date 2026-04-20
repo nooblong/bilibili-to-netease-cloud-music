@@ -12,9 +12,6 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-/**
- * @TableName subscribe
- */
 @TableName(value = "subscribe")
 @Data
 // upId regName limitSec fromTime toTime processTime keyWord type videoOrder useVideoCover checkPart channelIdsList

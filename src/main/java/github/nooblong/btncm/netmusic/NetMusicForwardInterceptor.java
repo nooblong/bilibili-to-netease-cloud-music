@@ -17,6 +17,9 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 让/direct的链接直接请求netmusic包的网易云接口，省去controller
+ */
 @Component
 @Slf4j
 public class NetMusicForwardInterceptor implements HandlerInterceptor {

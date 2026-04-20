@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * 网易云音乐接口
+ */
 @RestController
 @RequestMapping("/netmusic")
 @Slf4j
@@ -34,6 +37,9 @@ public class NetMusicController {
         this.userService = userService;
     }
 
+    /**
+     * 登录状态
+     */
     @GetMapping("/loginStatus")
     public Result<JsonNode> getloginStatus() {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -41,6 +47,9 @@ public class NetMusicController {
         return Result.ok("ok", loginStatus);
     }
 
+    /**
+     * 设置网易云cookie
+     */
     @PostMapping("/setNetCookie")
     public Result<JsonNode> setNetCookie(@RequestBody JsonNode json) {
         SysUser sysUser = JwtUtil.verifierFromContext();
@@ -51,6 +60,9 @@ public class NetMusicController {
         return Result.ok("ok", loginStatus);
     }
 
+    /**
+     * 获取登录二维码
+     */
     @GetMapping("/getQrCode")
     public Result<QrResponse> getQrCode() {
         JsonNode loginQrKey;
@@ -65,6 +77,9 @@ public class NetMusicController {
         return Result.ok("ok", qrResponse);
     }
 
+    /**
+     * 二维码登录相关
+     */
     private static String generateChainId(String cookie) {
         String version = "v1";
 
@@ -83,6 +98,9 @@ public class NetMusicController {
                 version, deviceId, platform, action, timestamp);
     }
 
+    /**
+     * 二维码登录相关
+     */
     private static String getCookieValue(String cookieStr, String name) {
         if (cookieStr == null || cookieStr.isEmpty()) {
             return null;

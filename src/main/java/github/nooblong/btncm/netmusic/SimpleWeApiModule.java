@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * 网易云需要加密的weapi请求
+ */
 public abstract class SimpleWeApiModule implements BaseModule {
 
     @Override

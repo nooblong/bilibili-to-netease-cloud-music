@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import github.nooblong.btncm.entity.ExpiringCache;
 import github.nooblong.btncm.entity.SysUser;
 import github.nooblong.btncm.enums.UploadStatusTypeEnum;
 import github.nooblong.btncm.service.IUserService;
@@ -34,6 +35,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+/**
+ * 处理bilibili-api相关
+ */
 @Slf4j
 @Component
 public class BilibiliClient {
@@ -41,6 +45,11 @@ public class BilibiliClient {
     final IUserService userService;
     final UploadDetailService uploadDetailService;
     final PythonManager pythonManager;
+
+    /**
+     * b站cookie缓存
+     */
+    ExpiringCache<Map<String, String>> expiringCache = new ExpiringCache<>(30 * 60 * 1000, this::getBilibiliCookieFromDb);
 
     public BilibiliClient(IUserService userService,
                           UploadDetailService uploadDetailService,
@@ -51,19 +60,27 @@ public class BilibiliClient {
         this.okHttpClient = new OkHttpClient.Builder().build();
     }
 
-    public Map<String, String> getAndSetBiliCookie() throws RuntimeException {
-        log.info("获取可用b站cookie...");
-        List<SysUser> list =
-                Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
+    /**
+     * 获取b站cookie
+     */
+    public Map<String, String> getBilibiliCookie() throws RuntimeException {
+        log.debug("获取b站cookie");
+        return expiringCache.get();
+    }
+
+    /**
+     * 从数据库获取b站cookie
+     */
+    private Map<String, String> getBilibiliCookieFromDb() {
+        log.debug("从数据库获取b站cookie");
+        List<SysUser> list = Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
-            throw new RuntimeException("没有用户存在b站cookie");
+            throw new RuntimeException("没有b站cookie");
         }
         for (SysUser sysUser : list) {
             Map<String, String> userCredMap = userService.getBilibiliCookieMap(sysUser.getId());
             boolean login3 = isLogin(userCredMap);
-            log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
-                log.info("使用用户cookie:{}", sysUser.getUsername());
                 return userCredMap;
             }
             try {
@@ -75,11 +92,17 @@ public class BilibiliClient {
         throw new RuntimeException("没有可用b站cookie");
     }
 
+    /**
+     * 根据bvid获取
+     */
     public BilibiliFullVideo getFullVideoByBvidOrUrl(String bvid, Map<String, String> bilibiliCookie) {
         SimpleVideoInfo byUrl = getSimpleVideoInfoByBvidOrUrl(bvid);
         return getFullVideoBySimpleVideo(byUrl, bilibiliCookie);
     }
 
+    /**
+     * 获取完整的视频信息
+     */
     public BilibiliFullVideo getFullVideoBySimpleVideo(SimpleVideoInfo video, Map<String, String> cred) {
         Assert.notNull(video.getBvid(), "bvid为空");
         Assert.isTrue(video.getBvid().toLowerCase().startsWith("bv"), "不是bv开头");
@@ -102,11 +125,11 @@ public class BilibiliClient {
         return bilibiliFullVideo;
     }
 
+    /**
+     * 解析前端传来的url
+     */
     public SimpleVideoInfo getSimpleVideoInfoByBvidOrUrl(String url) {
-        if (url.startsWith("http") ||
-                url.startsWith("www.") ||
-                url.startsWith("b23.tv") ||
-                url.startsWith("bilibili")) {
+        if (url.startsWith("http") || url.startsWith("www.") || url.startsWith("b23.tv") || url.startsWith("bilibili")) {
             String bvid;
             if (!url.startsWith("http")) {
                 url = "https://" + url;
@@ -116,8 +139,7 @@ public class BilibiliClient {
             String topPrivateDomain = parse.topPrivateDomain();
             assert topPrivateDomain != null;
             if (topPrivateDomain.equals("b23.tv")) {
-                Request request = new Request.Builder().url(url)
-                        .header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
+                Request request = new Request.Builder().url(url).header(HttpHeaders.USER_AGENT, OkUtil.WEAPI_AGENT).get().build();
                 try (Response response = okHttpClient.newCall(request).execute()) {
                     HttpUrl httpUrl = response.request().url();
                     String topPrivateDomain1 = httpUrl.topPrivateDomain();
@@ -144,31 +166,39 @@ public class BilibiliClient {
         }
     }
 
+    /**
+     * b站cookie是否有效
+     */
     public boolean isLogin(Map<String, String> credMap) {
         try {
-            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
-                    + "/user/get_self_info", credMap), okHttpClient);
+            JsonNode jsonResponse = OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/user/get_self_info", credMap), okHttpClient);
 //            Assert.isTrue(jsonResponse.get("data").get("vip").get("status").asInt() == 1, "不是大会员");
             Assert.isTrue(jsonResponse.get("code").asInt() != -1, "未登录");
             return true;
         } catch (Exception e) {
-            log.error("isLogin错误", e);
             return false;
         }
     }
 
 //    ------------------------------Common Api----------------------------
 
+    /**
+     * 检查cookie是否需要刷新
+     */
     public JsonNode checkRefresh(Map<String, String> cred) {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
-                + "/Credential/check_refresh", cred), okHttpClient);
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/Credential/check_refresh", cred), okHttpClient);
     }
 
+    /**
+     * 刷新b站cookie
+     */
     public JsonNode refresh(Map<String, String> cred) {
-        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU
-                + "/Credential/refresh", cred), okHttpClient);
+        return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/Credential/refresh", cred), okHttpClient);
     }
 
+    /**
+     * 根据完整视频信息获取音频下载链接
+     */
     public List<String> getAudioUrl(BilibiliFullVideo bilibiliFullVideo, Map<String, String> cred, SysUser user) throws UploadFailException {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -190,7 +220,7 @@ public class BilibiliClient {
             throw uploadFailException;
         } catch (Exception e) {
             log.error("返回了什么? {}", response.toPrettyString());
-            log.info("重启python服务!");
+            log.error("重启python服务!");
             try {
                 pythonManager.restart();
                 Thread.sleep(5000);
@@ -238,14 +268,20 @@ public class BilibiliClient {
         return urls;
     }
 
+    /**
+     * 判断视频长度
+     */
     private void overLengthLimit(JsonNode data, SysUser user) throws UploadFailException {
         int timelength = data.get("timelength").asInt();
         if ((timelength / 1000 / 60 / 60) > 2 && user.expired()) {
-            log.error("时长超过2小时，请升级ssssssssvip");
+            log.error("需要VIP解锁超长视频上传");
             throw new UploadFailException(UploadStatusTypeEnum.OVER_DURATION);
         }
     }
 
+    /**
+     * 获取用户收藏夹列表
+     */
     public JsonNode getUserFavoriteList(String uid, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -256,6 +292,9 @@ public class BilibiliClient {
         return response;
     }
 
+    /**
+     * 下载音频
+     */
     public Path downloadFile(BilibiliFullVideo video, Map<String, String> cred, SysUser user) throws Exception {
         List<String> audioUrl = getAudioUrl(video, cred, user);
         if (audioUrl.isEmpty()) {
@@ -266,6 +305,9 @@ public class BilibiliClient {
         return doDownloadMulti(path.toString(), fileName, audioUrl, video.getBvid());
     }
 
+    /**
+     * 下载并尝试备用链接
+     */
     private Path doDownloadMulti(String path, String fileName,
                                  List<String> audioUrl, String bvid) throws Exception {
         File downloadedFile = new File(path, fileName + "-" + UUID.randomUUID().toString().substring(0, 8));
@@ -286,6 +328,9 @@ public class BilibiliClient {
         return downloadedFile.toPath();
     }
 
+    /**
+     * 下载视频封面
+     */
     public Path downloadCover(BilibiliFullVideo video) throws RuntimeException {
         String url = video.getVideoInfo().get("data").get("pic").asText();
         Map<String, String> headers = new HashMap<>();
@@ -305,6 +350,9 @@ public class BilibiliClient {
         }
     }
 
+    /**
+     * 获取b站视频合集
+     */
     public IteratorCollectionTotal getCollectionVideos(String collectionId, int ps, int pn,
                                                        CollectionVideoOrderEnum collectionVideoOrder,
                                                        Map<String, String> cred) {
@@ -327,6 +375,9 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("total").asInt());
     }
 
+    /**
+     * 获取b站视频旧合集
+     */
     public IteratorCollectionTotal getOldCollectionVideos(String collectionId, int ps, int pn,
                                                           CollectionVideoOrderEnum collectionVideoOrder, Map<String,
                     String> cred) {
@@ -349,6 +400,9 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("total").asInt());
     }
 
+    /**
+     * 获取收藏夹内视频
+     */
     public IteratorCollectionTotal getFavoriteVideos(String mediaId, int page, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -362,6 +416,9 @@ public class BilibiliClient {
     }
 
 
+    /**
+     * 获取视频合集的信息
+     */
     public JsonNode getSeriesMeta(String seriesId, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -371,6 +428,9 @@ public class BilibiliClient {
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 
+    /**
+     * 获取视频旧合集的信息
+     */
     public JsonNode getOldSeriesMeta(String seriesId, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -380,6 +440,9 @@ public class BilibiliClient {
         return OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
     }
 
+    /**
+     * 获取up主投稿
+     */
     public IteratorCollectionTotal getUpVideos(String upId, int ps, int pn, UserVideoOrderEnum userVideoOrder,
                                                String keyWord, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
@@ -412,6 +475,9 @@ public class BilibiliClient {
                 .setTotalNum(response.get("data").get("page").get("count").asInt());
     }
 
+    /**
+     * 获取up主合集列表
+     */
     public JsonNode getUpChannels(String upId, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -425,6 +491,9 @@ public class BilibiliClient {
         return response;
     }
 
+    /**
+     * 获取个人信息
+     */
     public JsonNode getSelfInfo(Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -435,6 +504,9 @@ public class BilibiliClient {
         return response;
     }
 
+    /**
+     * 获取用户信息
+     */
     public JsonNode getUserInfo(String upId, Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         cred.forEach(builder::addQueryParameter);
@@ -454,10 +526,16 @@ public class BilibiliClient {
         return response;
     }
 
+    /**
+     * 生成b站登录二维码
+     */
     public JsonNode updateQrcodeData() {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/login_v2/QrCodeLogin/generate_qrcode"), okHttpClient);
     }
 
+    /**
+     * b站二维码登录
+     */
     public JsonNode loginWithKey(String key, SysUser user) {
         // 查询到成功就保存到用户cookie
         JsonNode response =
@@ -491,6 +569,9 @@ public class BilibiliClient {
         return response;
     }
 
+    /**
+     * 获取up主视频列表并解析为SimpleVideoInfo
+     */
     public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn,
                                                                                    UserVideoOrderEnum userVideoOrder,
                                                                                    String keyWord,
@@ -510,6 +591,9 @@ public class BilibiliClient {
         return result;
     }
 
+    /**
+     * 获取多p视频合集并解析为SimpleVideoInfo
+     */
     public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid,
                                                                                   Map<String, String> bilibiliCookie) {
         SimpleVideoInfo video = getSimpleVideoInfoByBvidOrUrl(bvid);
@@ -529,6 +613,9 @@ public class BilibiliClient {
         return result;
     }
 
+    /**
+     * 根据合集id获取视频列表并封装为SimpleVideoInfo
+     */
     public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId,
                                                                                            int ps, int pn,
                                                                                            CollectionVideoOrderEnum collectionVideoOrder,
@@ -554,6 +641,9 @@ public class BilibiliClient {
         return result;
     }
 
+    /**
+     * 根据旧合集id获取视频列表并封装为SimpleVideoInfo
+     */
     public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId,
                                                                                               int ps, int pn,
                                                                                               CollectionVideoOrderEnum collectionVideoOrder,
@@ -579,6 +669,9 @@ public class BilibiliClient {
         return result;
     }
 
+    /**
+     * 根据收藏夹id获取视频列表并封装为SimpleVideoInfo
+     */
     public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page,
                                                                                          Map<String, String> bilibiliCookie) {
         IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page, bilibiliCookie);
@@ -596,6 +689,9 @@ public class BilibiliClient {
         return result;
     }
 
+    /**
+     * 获取b站所以表情列表
+     */
     public JsonNode getAllEmoji(Map<String, String> bilibiliCookie) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         bilibiliCookie.forEach(builder::addQueryParameter);
@@ -605,6 +701,9 @@ public class BilibiliClient {
         return response.get("data");
     }
 
+    /**
+     * 获取b站所以表情内容
+     */
     public JsonNode getEmojiDetail(Map<String, String> bilibiliCookie, String emojiId) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
         bilibiliCookie.forEach(builder::addQueryParameter);

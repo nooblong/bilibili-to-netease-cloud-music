@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Select;
 
 public interface UploadDetailMapper extends BaseMapper<UploadDetail> {
 
+    /**
+     * 获取待上传的视频
+     */
     @Select("""
             select *
             from upload_detail u

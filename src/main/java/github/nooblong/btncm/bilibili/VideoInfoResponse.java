@@ -6,6 +6,9 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 
+/**
+ * 返回前端的视频信息类
+ */
 @Data
 @Accessors(chain = true)
 public class VideoInfoResponse implements Serializable {

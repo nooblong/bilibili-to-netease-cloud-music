@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+/**
+ * http发送工具
+ */
 @Slf4j
 public class OkUtil {
 

@@ -16,6 +16,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * 登录信息工具类
+ */
 public class JwtUtil {
 
     private static final String ISSUER = "NOOBLONG";

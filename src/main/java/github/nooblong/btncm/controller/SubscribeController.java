@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 订阅接口
+ */
 @RestController
 @RequestMapping("/subscribe")
 public class SubscribeController {
@@ -113,7 +116,7 @@ public class SubscribeController {
             subscribe.setChannelIds(CommonUtil.toCommaSeparatedString(sList));
         }
         JsonNode userInfo = bilibiliClient.getUserInfo(subscribe.getUpId(),
-                bilibiliClient.getAndSetBiliCookie());
+                bilibiliClient.getBilibiliCookie());
         subscribe.setUpImage(userInfo.get("data").get("face").asText());
         subscribe.setUpName(userInfo.get("data").get("name").asText());
         if (channelIdsList != null && !channelIdsList.isEmpty()) {
@@ -157,7 +160,7 @@ public class SubscribeController {
         Subscribe subscribe = Db.getById(subscribeId, Subscribe.class);
         List<UploadDetail> uploadDetails = new ArrayList<>();
         List<String> result = new ArrayList<>();
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getAndSetBiliCookie();
+        Map<String, String> availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
         if (subscribe.getType() == SubscribeTypeEnum.UP) {
             UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                     subscribe.getLimitSec(), subscribe.getMinSec(), VideoOrderEnum.valueOf(subscribe.getVideoOrder()),
@@ -177,7 +180,7 @@ public class SubscribeController {
             }
         }
         if (!uploadDetails.isEmpty()) {
-            Map<String, String> cookie = bilibiliClient.getAndSetBiliCookie();
+            Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
             for (UploadDetail uploadDetail : uploadDetails) {
                 SimpleVideoInfo video = new SimpleVideoInfo();
                 video.setBvid(uploadDetail.getBvid());

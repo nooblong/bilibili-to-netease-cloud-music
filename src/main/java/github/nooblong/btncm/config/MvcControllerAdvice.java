@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+/**
+ * 异常捕捉
+ */
 @ControllerAdvice
 @Slf4j
 public class MvcControllerAdvice {

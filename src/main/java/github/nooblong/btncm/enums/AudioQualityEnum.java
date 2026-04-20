@@ -9,11 +9,13 @@ import java.util.Map;
 @AllArgsConstructor
 @Getter
 public enum AudioQualityEnum {
-    //    _64K = 30216
-    //    _132K = 30232
-    //    DOLBY = 30255
-    //    HI_RES = 30251
-    //    _192K = 30280
+    /**
+     * _64K = 30216
+     * _132K = 30232
+     * DOLBY = 30255
+     * HI_RES = 30251
+     * _192K = 30280
+     **/
     _64K(30216, "m4a"),
     _132K(30232, "m4a"),
     DOLBY(30255, "m4a"),

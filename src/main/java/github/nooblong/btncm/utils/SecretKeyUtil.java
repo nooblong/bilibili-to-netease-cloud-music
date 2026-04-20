@@ -12,6 +12,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 登录用
+ */
 public class SecretKeyUtil {
 
     public static final String KEY_ALGORITHM = "RSA";

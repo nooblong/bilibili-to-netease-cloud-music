@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 
+/**
+ * 获取所有订阅的up主视频任务
+ */
 @Slf4j
 @Component
 public class GetUpJob {
@@ -20,7 +23,7 @@ public class GetUpJob {
     }
 
     public void process() {
-        log.info("开始获取up主");
+        log.info("开始检查up主");
         subscribeService.checkAndSave();
     }
 

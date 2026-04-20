@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * b站分页的简单实现，用于up主视频列表和合集视频列表
+ */
 @Slf4j
 public abstract class SimplePageIterator implements Iterator<SimpleVideoInfo> {
 

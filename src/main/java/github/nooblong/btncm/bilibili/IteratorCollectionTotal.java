@@ -6,6 +6,9 @@ import lombok.experimental.Accessors;
 
 import java.io.Serializable;
 
+/**
+ * 帮助类
+ */
 @Data
 @Accessors(chain = true)
 public class IteratorCollectionTotal implements Serializable {

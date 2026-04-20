@@ -9,6 +9,9 @@ import okhttp3.OkHttpClient;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 网易云简单的get请求
+ */
 public abstract class SimpleGetTypeModule implements BaseModule {
 
     @Override

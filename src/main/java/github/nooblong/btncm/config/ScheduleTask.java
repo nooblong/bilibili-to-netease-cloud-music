@@ -34,6 +34,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+/**
+ * 配置里的定时任务从这里开始执行
+ */
 @Configuration
 @Slf4j
 public class ScheduleTask {
@@ -49,7 +52,8 @@ public class ScheduleTask {
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
-                        SubscribeService service, BilibiliClient bilibiliClient,
+                        SubscribeService service,
+                        BilibiliClient bilibiliClient,
                         IUserService userService,
                         GetUpJob getUpJob,
                         UploadJob uploadJob,
@@ -154,7 +158,7 @@ public class ScheduleTask {
                             boolean delete = file.delete();
                         }
                     });
-            System.out.println("删除下载文件成功");
+            log.info("删除下载文件成功");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -178,9 +182,9 @@ public class ScheduleTask {
                 try {
                     JsonNode need = bilibiliClient.checkRefresh(userService.getBilibiliCookieMap(sysUser.getId()));
                     if (need.get("data").asText().equals("false")) {
-                        log.info("b站cookie无需更新: {}", sysUser.getUsername());
+                        log.info("{}的b站cookie无需更新: {}", sysUser.getUsername(), sysUser.getUsername());
                     } else if (need.get("data").asText().equals("true")) {
-                        log.info("b站cookie需更新: {}", sysUser.getUsername());
+                        log.info("{}的b站cookie需更新: {}", sysUser.getUsername(), sysUser.getUsername());
                         JsonNode refresh = bilibiliClient.refresh(userService.getBilibiliCookieMap(sysUser.getId()));
                         String sessdata = refresh.get("data").get("sessdata").asText();
                         String bili_jct = refresh.get("data").get("bili_jct").asText();
@@ -194,9 +198,7 @@ public class ScheduleTask {
                         userService.updateBilibiliCookieByCookieMap(sysUser.getId(), updateMap);
                     }
                 } catch (Exception e) {
-                    log.error("b站cookie刷新失败: {}, 删除cookie", sysUser.getUsername());
-//                    sysUser.setBiliCookies("");
-//                    Db.updateById(sysUser);
+                    log.error("{}的b站cookie刷新失败: {}", sysUser.getUsername(), sysUser.getUsername());
                 }
                 try {
                     Thread.sleep(1000);
@@ -207,7 +209,9 @@ public class ScheduleTask {
         }
     }
 
-    // 每天 0 点执行
+    /**
+     * 第二天重置用户上传数量
+     */
     @Scheduled(cron = "0 0 0 * * ?")
     public void runAtMidnight() {
         userService.update(new LambdaUpdateWrapper<SysUser>()

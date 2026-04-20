@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+/**
+ * python控制器，用于启动和停止bilibili-api服务
+ */
 @Service
 @Slf4j
 public class PythonManager implements CommandLineRunner {

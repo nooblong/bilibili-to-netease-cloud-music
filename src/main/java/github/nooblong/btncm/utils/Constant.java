@@ -11,6 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * 保存bilibili-api地址，创建临时文件夹
+ */
 @Slf4j
 @Component
 public class Constant {

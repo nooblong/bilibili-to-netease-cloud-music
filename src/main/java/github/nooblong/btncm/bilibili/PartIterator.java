@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * 多p视频迭代器
+ */
 @Slf4j
 public class PartIterator implements Iterator<SimpleVideoInfo> {
 
@@ -19,8 +22,7 @@ public class PartIterator implements Iterator<SimpleVideoInfo> {
     String bvid;
     Map<String, String> bilibiliCookie;
 
-    public PartIterator(BilibiliClient bilibiliClient, int limitSec, int minSec, VideoOrderEnum videoOrder, String bvid,
-                        Map<String, String> bilibiliCookie) {
+    public PartIterator(BilibiliClient bilibiliClient, int limitSec, int minSec, VideoOrderEnum videoOrder, String bvid, Map<String, String> bilibiliCookie) {
         this.bilibiliClient = bilibiliClient;
         this.limitSec = limitSec;
         this.minSec = minSec;
