@@ -213,6 +213,6 @@ public class ScheduleTask {
         userService.update(new LambdaUpdateWrapper<SysUser>()
                 .set(SysUser::getVisitToday, 0)
                 .set(SysUser::getVisitTodayTimes, 0)
-                .set(SysUser::getRemaining, 50));
+                .set(SysUser::getRemaining, 100));
     }
 }
