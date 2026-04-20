@@ -265,7 +265,7 @@ public class UploadJob {
         String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
         String voiceId = doUpload(netMusicClient, "mp3", uploadName, context.musicPath, voiceListId, netImageId,
                 categoryId, secondCategoryId, context.desc, uploadUserId,
-                privacy == 1 ? "true" : "false", context.uploadDetailId);
+                Boolean.toString(privacy == 1), context.uploadDetailId);
         Assert.notNull(voiceId, "返回的声音id为空");
         return voiceId;
     }

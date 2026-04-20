@@ -30,11 +30,6 @@ spring:
     multipart:
       max-file-size: 100000000
       max-request-size: 100000000
-  data:
-    redis:
-      host: #地址
-      port: #端口
-      password: #密码
 
 mybatis-plus:
   global-config:

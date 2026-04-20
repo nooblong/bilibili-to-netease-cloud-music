@@ -13,8 +13,6 @@ import github.nooblong.download.mapper.UserVoicelistMapper;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UserVoicelistService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

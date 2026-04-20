@@ -21,18 +21,4 @@ public class MybatisConfig {
         return interceptor;
     }
 
-//    /**
-//     * 自定义序列化类型转换
-//     * 注：此处解决Long型转换后，前端js损失精度的问题，将Long型转换为字符串类型
-//     */
-//    @Bean
-//    public Jackson2ObjectMapperBuilderCustomizer jackson2ObjectMapperBuilderCustomizer() {
-//        return jacksonObjectMapperBuilder -> {
-//            // long -> String
-//            jacksonObjectMapperBuilder.serializerByType(Long.TYPE, ToStringSerializer.instance);
-//            // Long -> String
-//            jacksonObjectMapperBuilder.serializerByType(Long.class, ToStringSerializer.instance);
-//        };
-//    }
-
 }

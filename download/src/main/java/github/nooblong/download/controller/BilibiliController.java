@@ -17,8 +17,6 @@ import github.nooblong.download.bilibili.BilibiliFullVideo;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.utils.OkUtil;
 import okhttp3.OkHttpClient;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.awt.image.BufferedImage;
@@ -33,14 +31,11 @@ public class BilibiliController {
 
     final BilibiliClient bilibiliClient;
     final IUserService userService;
-    final RedisTemplate<String, String> redisTemplate;
 
     public BilibiliController(BilibiliClient bilibiliClient,
-                              IUserService userService,
-                              RedisTemplate<String, String> redisTemplate) {
+                              IUserService userService) {
         this.bilibiliClient = bilibiliClient;
         this.userService = userService;
-        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping("/getUpChannels")

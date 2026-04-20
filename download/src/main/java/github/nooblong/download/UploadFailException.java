@@ -2,7 +2,7 @@ package github.nooblong.download;
 
 public class UploadFailException extends Exception {
 
-    private UploadStatusTypeEnum uploadStatusType;
+    private final UploadStatusTypeEnum uploadStatusType;
 
     public UploadFailException(UploadStatusTypeEnum uploadStatusTypeEnum) {
         super(uploadStatusTypeEnum.getDesc());

@@ -11,7 +11,6 @@ import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.model.Result;
 import github.nooblong.common.util.JwtUtil;
 import github.nooblong.download.UploadStatusTypeEnum;
-import github.nooblong.download.api.AddQueueRequest;
 import github.nooblong.download.bilibili.BilibiliClient;
 import github.nooblong.download.bilibili.SimpleVideoInfo;
 import github.nooblong.download.entity.CidName;
@@ -21,17 +20,12 @@ import github.nooblong.download.entity.UserVoicelist;
 import github.nooblong.download.netmusic.NetMusicClient;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.service.UserVoicelistService;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,18 +40,14 @@ public class UploadDetailController {
 
     final UserVoicelistService userVoicelistService;
 
-    final StringRedisTemplate redisTemplate;
-
     public UploadDetailController(UploadDetailService uploadDetailService,
                                   NetMusicClient netMusicClient,
                                   BilibiliClient bilibiliClient,
-                                  UserVoicelistService userVoicelistService,
-                                  StringRedisTemplate redisTemplate) {
+                                  UserVoicelistService userVoicelistService) {
         this.uploadDetailService = uploadDetailService;
         this.netMusicClient = netMusicClient;
         this.bilibiliClient = bilibiliClient;
         this.userVoicelistService = userVoicelistService;
-        this.redisTemplate = redisTemplate;
     }
 
     @GetMapping

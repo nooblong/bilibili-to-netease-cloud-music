@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.common.entity.SysUser;
 import github.nooblong.common.service.IUserService;
 import github.nooblong.common.util.CommonUtil;
-import github.nooblong.download.MusicStatusEnum;
+import github.nooblong.common.util.Constant;
 import github.nooblong.download.UploadFailException;
 import github.nooblong.download.UploadStatusTypeEnum;
 import github.nooblong.download.bilibili.enums.AudioQuality;
@@ -17,8 +17,6 @@ import github.nooblong.download.bilibili.enums.CollectionVideoOrder;
 import github.nooblong.download.bilibili.enums.UserVideoOrder;
 import github.nooblong.download.entity.IteratorCollectionTotal;
 import github.nooblong.download.entity.IteratorCollectionTotalList;
-import github.nooblong.common.util.Constant;
-import github.nooblong.download.job.UploadJob;
 import github.nooblong.download.service.UploadDetailService;
 import github.nooblong.download.utils.MultiDownload;
 import github.nooblong.download.utils.OkUtil;
@@ -29,36 +27,28 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
 public class BilibiliClient {
     final OkHttpClient okHttpClient;
     final IUserService userService;
-    final RedisTemplate<String, Map<String, String>> redisTemplate;
     final UploadDetailService uploadDetailService;
     final PythonManager pythonManager;
 
     public BilibiliClient(IUserService userService,
-                          RedisTemplate<String, Map<String, String>> redisTemplate,
                           UploadDetailService uploadDetailService,
                           PythonManager pythonManager) {
         this.userService = userService;
-        this.redisTemplate = redisTemplate;
         this.uploadDetailService = uploadDetailService;
         this.pythonManager = pythonManager;
         this.okHttpClient = new OkHttpClient.Builder().build();
@@ -66,11 +56,6 @@ public class BilibiliClient {
 
     public Map<String, String> getAndSetBiliCookie() throws RuntimeException {
         log.info("获取可用b站cookie...");
-        String key = "bilibili-cookie";
-        Map<String, String> cookieMap = redisTemplate.opsForValue().get(key);
-        if (cookieMap != null) {
-            return cookieMap;
-        }
         List<SysUser> list =
                 Db.list(SysUser.class).stream().filter(user -> StrUtil.isNotBlank(user.getBiliCookies())).toList();
         if (list.isEmpty()) {
@@ -82,7 +67,6 @@ public class BilibiliClient {
             log.info("检查用户{},cookie状态:{}", sysUser.getUsername(), login3);
             if (login3) {
                 log.info("使用用户cookie:{}", sysUser.getUsername());
-                redisTemplate.opsForValue().set(key, userCredMap, Duration.ofMinutes(1));
                 return userCredMap;
             }
             try {
