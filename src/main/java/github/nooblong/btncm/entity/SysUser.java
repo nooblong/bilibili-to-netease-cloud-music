@@ -1,0 +1,52 @@
+package github.nooblong.btncm.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
+import lombok.experimental.Accessors;
+
+import java.io.Serializable;
+import java.util.Date;
+
+@Data
+@TableName("sys_user")
+@Accessors(chain = true)
+public class SysUser implements Serializable {
+
+    @TableId(value = "id", type = IdType.AUTO)
+    private Long id;
+
+    private String username;
+
+    private String password;
+
+    private String netCookies;
+
+    private String biliCookies;
+
+    private Integer visitTimes;
+
+    private Date updateTime;
+
+    private Integer isAdmin;
+
+    private Integer visitToday;
+
+    private Integer visitTodayTimes;
+
+    private String afdUserId;
+
+    private String totalPay;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date expire;
+
+    private Integer remaining;
+
+    public boolean expired() {
+        return expire.before(new Date());
+    }
+
+}

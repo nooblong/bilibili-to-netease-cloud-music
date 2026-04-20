@@ -1,0 +1,41 @@
+pythonCmd: "python"
+pythonPath: "C:/Users/yjlyl/Documents/GitHub/bilibili-api/server.py"
+pythonPort: "9000"
+
+initialDelay: 3 #启动后下列检查延迟
+enableGetUpJob: 1 #是否启用订阅up主的定时任务
+enableGetAuditStatus: 1 #是否启用定时检查网易云审核状态
+enableUploadJob: 1 #是否启用将待上传歌曲上传到网易云
+enableRefreshNetCookie: 1 #是否启用定时刷新网易云cookie
+enableRestartJob: 1 #每次重启应用时将上次中断的任务重启
+enableRefreshBiliCookie: 1 #是否启用定时刷新b站cookie
+enableRefreshUserVoiceList: 1 #是否启用定时刷新用户播客列表
+removeUselessCookie: 1 #是否启用定时清理无效的网易云或b站cookie
+
+afdToken: xxx #爱发电token
+afdUserId: xxx #爱发电userId
+
+server:
+  port: 25565
+spring:
+  datasource:
+    url: #jdbc:mysql://127.0.0.1:3306/netmusic4?serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: #用户名
+    password: #密码
+    hikari:
+      max-lifetime: 100000
+
+  servlet:
+    multipart:
+      max-file-size: 100000000
+      max-request-size: 100000000
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: auto
+      table-underline: true
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    call-setters-on-nulls: true

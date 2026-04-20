@@ -1,0 +1,61 @@
+package github.nooblong.btncm.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import github.nooblong.btncm.enums.SubscribeTypeEnum;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * @TableName subscribe
+ */
+@TableName(value = "subscribe")
+@Data
+// upId regName limitSec fromTime toTime processTime keyWord type videoOrder useVideoCover checkPart channelIdsList
+public class Subscribe implements Serializable {
+    @TableId(type = IdType.AUTO)
+    private Long id;
+    private String regName;
+    private Long userId;
+    private Long voiceListId;
+    private String upId;
+    private String upName;
+    private String upImage;
+    private String channelIds;
+    @TableField(exist = false)
+    private List<IdName> channelIdsList;
+    private SubscribeTypeEnum type;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date processTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+    private Date updateTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+    private Date fromTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone="GMT+8")
+    private Date toTime;
+    private String keyWord;
+    private Integer limitSec;
+    private Integer minSec;
+    private String videoOrder;
+    private String remark;
+    private Integer enable;
+    private Integer crack;
+    private Integer useVideoCover;
+    private Integer checkPart;
+    private Integer priority;
+    private String log;
+    private Integer lastTotalIndex;
+    private Integer bitrate;
+
+    @TableField(exist = false)
+    private String typeDesc;
+    @TableField(exist = false)
+    private String userName;
+
+}
