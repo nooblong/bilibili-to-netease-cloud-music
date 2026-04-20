@@ -174,7 +174,7 @@ public class NetMusicClient {
     }
 
     public boolean checkLogin(Long userId) {
-        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "LoginStatus", userId);
+        JsonNode loginstatus = getMusicDataByUserId(new HashMap<>(), "loginStatus", userId);
         return loginstatus.has("account") &&
                 loginstatus.get("account").get("id") != null &&
                 loginstatus.get("profile") != null &&

@@ -91,7 +91,7 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
     private String getAuditStatus(String voiceId, Long userId) {
         Map<String, Object> param = new HashMap<>();
         param.put("id", voiceId);
-        JsonNode voiceDetail = netMusicClient.getMusicDataByUserId(param, "VoiceDetail", userId);
+        JsonNode voiceDetail = netMusicClient.getMusicDataByUserId(param, "voiceDetail", userId);
         if (voiceDetail.get("code").asInt() == 301) {
             return "NO_COOKIE";
         }

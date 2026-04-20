@@ -113,7 +113,7 @@ public class ScheduleTask {
         getUpJob.process();
     }
 
-    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "1")
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
     public void uploadJob() {
         if (enableUploadJob <= 0) {
             return;
@@ -129,7 +129,7 @@ public class ScheduleTask {
         List<SysUser> list = Db.list(SysUser.class);
         for (SysUser sysUser : list) {
             if (StrUtil.isNotBlank(sysUser.getNetCookies())) {
-                netMusicClient.getMusicDataByUserId(new HashMap<>(), "LoginRefresh", sysUser.getId());
+                netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginRefresh", sysUser.getId());
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {

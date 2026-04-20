@@ -1,5 +1,5 @@
 pythonCmd: "python"
-pythonPath: "C:/Users/yjlyl/Documents/GitHub/bilibili-api/server.py"
+pythonPath: "C:/Users/lyl/Documents/GitHub/bilibili-api/server.py"
 pythonPort: "9000"
 
 initialDelay: 3 #启动后下列检查延迟
@@ -19,7 +19,7 @@ server:
   port: 25565
 spring:
   datasource:
-    url: #jdbc:mysql://127.0.0.1:3306/netmusic4?serverTimezone=Asia/Shanghai
+    url: #jdbc:mysql://127.0.0.1:3306/netmusic5?serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: #用户名
     password: #密码
