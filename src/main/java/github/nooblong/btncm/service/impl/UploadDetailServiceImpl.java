@@ -99,8 +99,39 @@ public class UploadDetailServiceImpl extends ServiceImpl<UploadDetailMapper, Upl
         result = voiceDetail.get("data").get("displayStatus").asText();
         return result;
     }
+
+    @Override
+    public Long getTodayUploadNum() {
+        return getBaseMapper().getTodayUploadNum();
+    }
+
+    @Override
+    public Long getTotalUploadNum() {
+        return getBaseMapper().getTotalUploadNum();
+    }
+
+    @Override
+    public Long getTodayUploadSuccessNum() {
+        return getBaseMapper().getTodayUploadSuccessNum();
+    }
+
+    @Override
+    public Long getTodayUploadUserNum() {
+        return getBaseMapper().getTodayUploadUserNum();
+    }
+
+    @Override
+    public Long getTodayHasNewUploadSubscribe() {
+        return getBaseMapper().getTodayHasNewUploadSubscribe();
+    }
+
+    @Override
+    public Long getEnabledSubscribeNum() {
+        return getBaseMapper().getEnabledSubscribeNum();
+    }
+
+    @Override
+    public Long getEnabledSubscribeUserNum() {
+        return getBaseMapper().getEnabledSubscribeUserNum();
+    }
 }
-
-
-
-

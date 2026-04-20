@@ -73,6 +73,14 @@ public class SystemController {
         List<AfdOrder> orderList = afdOrderService.list(Wrappers.lambdaQuery(AfdOrder.class)
                 .isNotNull(AfdOrder::getOutCreateTime));
         sysInfo.setAfdOrders(orderList);
+        // 添加上传统计信息
+        sysInfo.setTodayUploadNum(uploadDetailService.getTodayUploadNum().intValue());
+        sysInfo.setTodayUploadSuccessNum(uploadDetailService.getTodayUploadSuccessNum().intValue());
+        sysInfo.setTotalUploadNum(uploadDetailService.getTotalUploadNum().intValue());
+        sysInfo.setTodayUploadUserNum(uploadDetailService.getTodayUploadUserNum().intValue());
+        sysInfo.setTodayHasNewUploadSubscribe(uploadDetailService.getTodayHasNewUploadSubscribe().intValue());
+        sysInfo.setEnabledSubscribeNum(uploadDetailService.getEnabledSubscribeNum().intValue());
+        sysInfo.setEnabledSubscribeUserNum(uploadDetailService.getEnabledSubscribeUserNum().intValue());
         try {
             SysUser sysUser = JwtUtil.verifierFromContext();
             sysInfo.setLogin(true);
@@ -86,6 +94,7 @@ public class SystemController {
             sysInfo.setExpireTime(DateUtil.parse("2000-01-01 00:00:00"));
             sysInfo.setLogin(false);
         }
+
         return Result.ok("ok", sysInfo);
     }
 

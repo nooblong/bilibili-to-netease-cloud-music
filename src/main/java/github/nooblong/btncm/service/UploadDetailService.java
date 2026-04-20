@@ -25,4 +25,39 @@ public interface UploadDetailService extends IService<UploadDetail> {
      */
     UploadDetail getToUploadWithCookie();
 
+    /**
+     * 获取今日上传次数
+     */
+    Long getTodayUploadNum();
+
+    /**
+     * 获取总上传数量
+     */
+    Long getTotalUploadNum();
+
+    /**
+     * 获取今日上传成功数量
+     */
+    Long getTodayUploadSuccessNum();
+
+    /**
+     * 获取今日上传用户数
+     */
+    Long getTodayUploadUserNum();
+
+    /**
+     * 获取今日有更新的订阅数
+     */
+    Long getTodayHasNewUploadSubscribe();
+
+    /**
+     * 获取总活跃的订阅数
+     */
+    Long getEnabledSubscribeNum();
+
+    /**
+     * 获取有活跃的订阅数的用户数
+     */
+    Long getEnabledSubscribeUserNum();
+
 }
