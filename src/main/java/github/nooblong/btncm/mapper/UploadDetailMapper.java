@@ -24,7 +24,8 @@ public interface UploadDetailMapper extends BaseMapper<UploadDetail> {
     @Select("""
             select count(*)
             from upload_detail u
-            where u.create_time >= CURDATE() and u.create_time <= CURDATE() + INTERVAL 1 DAY;""")
+            where u.create_time >= CURDATE() and u.create_time <= CURDATE() + INTERVAL 1 DAY
+            and (u.upload_status = 'SUCCESS' or u.upload_status !='ERROR');""")
     Long getTodayUploadNum();
 
     /**
