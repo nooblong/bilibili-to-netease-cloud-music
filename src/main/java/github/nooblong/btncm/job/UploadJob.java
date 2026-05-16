@@ -51,7 +51,6 @@ public class UploadJob {
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
 
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
@@ -66,15 +65,15 @@ public class UploadJob {
 
     public void start(Long uploadDetailId,
                       Map<String, String> bilibiliCookie) {
-        TaskContextHolder.set(new TaskContext());
-        TaskContext context = TaskContextHolder.get();
-        UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
-        uploadDetail.setUploadRetryTimes(uploadDetail.getUploadRetryTimes() + 1);
-        uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
-        uploadDetailService.updateById(uploadDetail);
-        context.uploadDetailId = uploadDetailId;
-        context.sysUser = Db.getById(uploadDetail.getUserId(), SysUser.class);
         try {
+            TaskContextHolder.set(new TaskContext());
+            TaskContext context = TaskContextHolder.get();
+            UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
+            uploadDetail.setUploadRetryTimes(uploadDetail.getUploadRetryTimes() + 1);
+            uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
+            uploadDetailService.updateById(uploadDetail);
+            context.uploadDetailId = uploadDetailId;
+            context.sysUser = Db.getById(uploadDetail.getUserId(), SysUser.class);
             log.info("开始处理: {}", uploadDetail);
             checkUploadPerDay(context.sysUser);
             Assert.notNull(context.sysUser, "user不能为空");
@@ -108,12 +107,14 @@ public class UploadJob {
             Db.updateById(newUploadDetail);
             log.info("上传完成");
         } catch (UploadFailException uploadFailException) {
+            TaskContext context = TaskContextHolder.get();
             log.error(uploadFailException.getuploadStatusTypeEnum().getDesc());
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
             byId.setLog(context.getAllLogsText());
             byId.setUploadStatus(uploadFailException.getuploadStatusTypeEnum());
             Db.updateById(byId);
         } catch (Exception e) {
+            TaskContext context = TaskContextHolder.get();
             log.error("总处理失败", e);
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
             byId.setLog(context.getAllLogsText());
