@@ -73,7 +73,6 @@ public class AudioUploadSecond extends SimpleWeApiModule {
 
                 while (!success) {
                     try {
-                        log.info("上传字节长度: {}", bytesRead);
                         JsonNode responseWithHeader = OkUtil.getJsonResponseWithHeader(
                         OkUtil.uploadWeApi(
                                         bytesRead,
