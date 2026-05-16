@@ -40,11 +40,11 @@ public class Constant {
         Path path = Paths.get(tempDir, "btncm");
         try {
             Path newDir = Files.createDirectory(path);
-            log.info("文件夹创建成功：" + newDir);
+            log.info("文件夹创建成功：{}", newDir);
         } catch (FileAlreadyExistsException e) {
-            log.info("文件夹已经存在: " + path);
+            log.info("文件夹已经存在: {}", path);
         } catch (IOException e) {
-            log.error("无法创建文件夹: " + path);
+            log.error("无法创建文件夹: {}", path);
             throw new RuntimeException(e);
         }
         TMP_FOLDER = path.toAbsolutePath().toString();

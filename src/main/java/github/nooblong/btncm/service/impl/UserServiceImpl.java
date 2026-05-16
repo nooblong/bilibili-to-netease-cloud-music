@@ -73,7 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
             byId.setNetCookies(cookie);
             updateById(byId);
         } catch (JsonProcessingException e) {
-            log.error("更新网易cookie失败: {}", e.getMessage());
+            log.error("更新网易cookie失败: ", e);
         }
     }
 
@@ -86,7 +86,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
             byId.setBiliCookies(cookie);
             updateById(byId);
         } catch (JsonProcessingException e) {
-            log.error("更新b站cookie失败: {}", e.getMessage());
+            log.error("更新b站cookie失败: ", e);
         }
     }
 

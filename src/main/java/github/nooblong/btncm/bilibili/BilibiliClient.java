@@ -95,9 +95,9 @@ public class BilibiliClient {
     /**
      * 根据bvid获取
      */
-    public BilibiliFullVideo getFullVideoByBvidOrUrl(String bvid, Map<String, String> bilibiliCookie) {
+    public BilibiliFullVideo getFullVideoByBvidOrUrl(String bvid, Map<String, String> cred) {
         SimpleVideoInfo byUrl = getSimpleVideoInfoByBvidOrUrl(bvid);
-        return getFullVideoBySimpleVideo(byUrl, bilibiliCookie);
+        return getFullVideoBySimpleVideo(byUrl, cred);
     }
 
     /**
@@ -243,6 +243,7 @@ public class BilibiliClient {
                 hasHiRes = true;
             }
         }
+        log.info("当前视频是否存在hi-res: {}", hasHiRes);
         Assert.isTrue(max != 0, "获取不到下载链接1");
         List<String> urls = new ArrayList<>();
         for (JsonNode audio : audios) {
@@ -315,7 +316,7 @@ public class BilibiliClient {
         try {
             MultiDownload.downloadWithRange(audioUrl.get(0), downloadedFile, 1024 * 512, referer);
         } catch (Exception e) {
-            log.error("链接失效: {}", audioUrl.get(0));
+            log.error("下载视频失败: ", e);
             if (audioUrl.size() > 1) {
                 log.info("尝试备用链接: {}", audioUrl.get(1));
                 try {
@@ -575,8 +576,8 @@ public class BilibiliClient {
     public IteratorCollectionTotalList<SimpleVideoInfo> getUpVideoListFromBilibili(String upId, int ps, int pn,
                                                                                    UserVideoOrderEnum userVideoOrder,
                                                                                    String keyWord,
-                                                                                   Map<String, String> bilibiliCookie) {
-        IteratorCollectionTotal collectionTotal = getUpVideos(upId, ps, pn, userVideoOrder, keyWord, bilibiliCookie);
+                                                                                   Map<String, String> cred) {
+        IteratorCollectionTotal collectionTotal = getUpVideos(upId, ps, pn, userVideoOrder, keyWord, cred);
         List<SimpleVideoInfo> data = new ArrayList<>();
         collectionTotal.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
@@ -595,9 +596,9 @@ public class BilibiliClient {
      * 获取多p视频合集并解析为SimpleVideoInfo
      */
     public IteratorCollectionTotalList<SimpleVideoInfo> getPartVideosFromBilibili(String bvid,
-                                                                                  Map<String, String> bilibiliCookie) {
+                                                                                  Map<String, String> cred) {
         SimpleVideoInfo video = getSimpleVideoInfoByBvidOrUrl(bvid);
-        BilibiliFullVideo bilibiliFullVideo = getFullVideoBySimpleVideo(video, bilibiliCookie);
+        BilibiliFullVideo bilibiliFullVideo = getFullVideoBySimpleVideo(video, cred);
         List<SimpleVideoInfo> data = new ArrayList<>();
         bilibiliFullVideo.getPartVideos().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
@@ -619,12 +620,12 @@ public class BilibiliClient {
     public IteratorCollectionTotalList<SimpleVideoInfo> getCollectionVideoListFromBilibili(String collectionId,
                                                                                            int ps, int pn,
                                                                                            CollectionVideoOrderEnum collectionVideoOrder,
-                                                                                           Map<String, String> bilibiliCookie) {
+                                                                                           Map<String, String> cred) {
         IteratorCollectionTotal collectionVideos = null;
         try {
-            collectionVideos = getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
+            collectionVideos = getCollectionVideos(collectionId, ps, pn, collectionVideoOrder, cred);
         } catch (Throwable e) {
-            log.error("获取合集失败: {}", e.getMessage());
+            log.error("获取合集失败: ", e);
             throw new RuntimeException(e);
         }
         List<SimpleVideoInfo> data = new ArrayList<>();
@@ -647,12 +648,12 @@ public class BilibiliClient {
     public IteratorCollectionTotalList<SimpleVideoInfo> getOldCollectionVideoListFromBilibili(String collectionId,
                                                                                               int ps, int pn,
                                                                                               CollectionVideoOrderEnum collectionVideoOrder,
-                                                                                              Map<String, String> bilibiliCookie) {
+                                                                                              Map<String, String> cred) {
         IteratorCollectionTotal collectionVideos = null;
         try {
-            collectionVideos = getOldCollectionVideos(collectionId, ps, pn, collectionVideoOrder, bilibiliCookie);
+            collectionVideos = getOldCollectionVideos(collectionId, ps, pn, collectionVideoOrder, cred);
         } catch (Throwable e) {
-            log.error("获取旧合集失败: {}", e.getMessage());
+            log.error("获取旧合集失败: ", e);
             throw new RuntimeException(e);
         }
         List<SimpleVideoInfo> data = new ArrayList<>();
@@ -673,8 +674,8 @@ public class BilibiliClient {
      * 根据收藏夹id获取视频列表并封装为SimpleVideoInfo
      */
     public IteratorCollectionTotalList<SimpleVideoInfo> getFavoriteVideoListFromBilibili(String favoriteId, int page,
-                                                                                         Map<String, String> bilibiliCookie) {
-        IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page, bilibiliCookie);
+                                                                                         Map<String, String> cred) {
+        IteratorCollectionTotal favoriteVideos = getFavoriteVideos(favoriteId, page, cred);
         List<SimpleVideoInfo> data = new ArrayList<>();
         favoriteVideos.getData().forEach(jsonNode -> {
             SimpleVideoInfo simpleVideoInfo = new SimpleVideoInfo()
@@ -692,9 +693,9 @@ public class BilibiliClient {
     /**
      * 获取b站所以表情列表
      */
-    public JsonNode getAllEmoji(Map<String, String> bilibiliCookie) {
+    public JsonNode getAllEmoji(Map<String, String> cred) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
-        bilibiliCookie.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("emoji").addPathSegment("get_all_emoji");
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         Assert.isTrue(response.get("code").asInt() != -1, "获取emoji信息失败");
@@ -704,9 +705,9 @@ public class BilibiliClient {
     /**
      * 获取b站所以表情内容
      */
-    public JsonNode getEmojiDetail(Map<String, String> bilibiliCookie, String emojiId) {
+    public JsonNode getEmojiDetail(Map<String, String> cred, String emojiId) {
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
-        bilibiliCookie.forEach(builder::addQueryParameter);
+        cred.forEach(builder::addQueryParameter);
         builder.addPathSegment("emoji").addPathSegment("get_emoji_detail");
         builder.addQueryParameter("id", emojiId);
         JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);

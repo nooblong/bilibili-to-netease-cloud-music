@@ -14,12 +14,9 @@ import org.springframework.stereotype.Component;
 public class GetUpJob {
 
     final SubscribeService subscribeService;
-    final UploadDetailService uploadDetailService;
 
-    public GetUpJob(SubscribeService subscribeService,
-                    UploadDetailService uploadDetailService) {
+    public GetUpJob(SubscribeService subscribeService) {
         this.subscribeService = subscribeService;
-        this.uploadDetailService = uploadDetailService;
     }
 
     public void process() {

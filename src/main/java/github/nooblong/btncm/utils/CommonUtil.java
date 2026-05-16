@@ -86,7 +86,7 @@ public class CommonUtil {
             return objectMapper.readValue(json, new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
-            log.error("字符串转json失败: {}", e.getMessage());
+            log.error("字符串转json失败: ", e);
             return new HashMap<>();
         }
     }

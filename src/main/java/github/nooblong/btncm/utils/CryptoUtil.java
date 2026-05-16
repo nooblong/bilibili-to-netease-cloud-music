@@ -66,7 +66,7 @@ public class CryptoUtil {
             }
 
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("err: ", e);
         }
         return result;
 
@@ -141,7 +141,7 @@ public class CryptoUtil {
         try {
             result = DigestUtils.md5DigestAsHex(content.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("err: ",e);
         }
         return result;
     }

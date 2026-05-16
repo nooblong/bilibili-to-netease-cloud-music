@@ -19,6 +19,7 @@ import github.nooblong.btncm.utils.Constant;
 import github.nooblong.btncm.service.UserVoicelistService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -47,8 +48,8 @@ public class ScheduleTask {
     final BilibiliClient bilibiliClient;
     final IUserService userService;
     final GetUpJob getUpJob;
-    final UploadJob uploadJob;
     final UserVoicelistService userVoicelistService;
+    final ObjectProvider<UploadJob> uploadJobProvider;
 
     public ScheduleTask(NetMusicClient netMusicClient,
                         UploadDetailService uploadDetailService,
@@ -56,16 +57,16 @@ public class ScheduleTask {
                         BilibiliClient bilibiliClient,
                         IUserService userService,
                         GetUpJob getUpJob,
-                        UploadJob uploadJob,
-                        UserVoicelistService userVoicelistService) {
+                        UserVoicelistService userVoicelistService,
+                        ObjectProvider<UploadJob> uploadJobProvider) {
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = service;
         this.bilibiliClient = bilibiliClient;
         this.userService = userService;
         this.getUpJob = getUpJob;
-        this.uploadJob = uploadJob;
         this.userVoicelistService = userVoicelistService;
+        this.uploadJobProvider = uploadJobProvider;
     }
 
     @Value("${enableUploadJob}")
@@ -122,7 +123,20 @@ public class ScheduleTask {
         if (enableUploadJob <= 0) {
             return;
         }
-        uploadJob.uploadOne();
+        UploadDetail upload = uploadDetailService.getToUploadWithCookie();
+        if (upload == null) {
+            return;
+        }
+        log.info("处理: {}", upload.getTitle());
+        Map<String, String> availableBilibiliCookie;
+        try {
+            availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
+        } catch (RuntimeException e) {
+            log.error("b站cookie获取失败:", e);
+            return;
+        }
+        UploadJob job = uploadJobProvider.getObject(upload.getId(), availableBilibiliCookie);
+        job.start();
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
@@ -198,7 +212,7 @@ public class ScheduleTask {
                         userService.updateBilibiliCookieByCookieMap(sysUser.getId(), updateMap);
                     }
                 } catch (Exception e) {
-                    log.error("{}的b站cookie刷新失败: {}", sysUser.getUsername(), sysUser.getUsername());
+                    log.error(sysUser.getUsername() + "的b站cookie刷新失败: ", e);
                 }
                 try {
                     Thread.sleep(1000);

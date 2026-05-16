@@ -20,7 +20,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+@Scope("prototype")
 public class ImageUploadFirst extends SimpleWeApiModule {
 
     private String token;

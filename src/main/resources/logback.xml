@@ -1,0 +1,27 @@
+<configuration>
+
+    <appender name="STDOUT"
+              class="ch.qos.logback.core.ConsoleAppender">
+
+        <encoder>
+            <pattern>
+                %d %-5level [%thread]
+                %class.%method:%line
+                - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="TASK"
+              class="github.nooblong.btncm.job.TaskCollectAppender">
+    </appender>
+
+    <root level="INFO">
+
+        <appender-ref ref="STDOUT"/>
+
+        <appender-ref ref="TASK"/>
+
+    </root>
+
+</configuration>

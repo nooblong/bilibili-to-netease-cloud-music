@@ -131,7 +131,7 @@ public class NetMusicClient {
                                 userService.updateNeteaseCookieByCookieMap(userId, neteaseCookieMap);
                                 log.info("刷新网易cookie成功, 用户id: {}", userId);
                             } catch (Exception e) {
-                                log.error("刷新网易cookie出错: {}", e.getMessage());
+                                log.error("刷新网易cookie出错: ", e);
                             }
                         }
                         if (url != null && url.toString().contains("/register/anonimous")) {

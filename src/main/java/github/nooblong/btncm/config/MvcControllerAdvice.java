@@ -25,14 +25,14 @@ public class MvcControllerAdvice {
 
     @ExceptionHandler(ValidateException.class)
     public ResponseEntity<Result<String>> handleException(ValidateException e) {
-        log.error(e.getMessage());
+        log.error("err: ", e);
         Result<String> fail = Result.fail("未登录");
         return new ResponseEntity<>(fail, HttpStatusCode.valueOf(403));
     }
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<Result<String>> handleException(DataAccessException e) {
-        log.error(e.getMessage());
+        log.error("err: ", e);
         Result<String> fail = Result.fail("数据库错误");
         return new ResponseEntity<>(fail, HttpStatusCode.valueOf(500));
     }

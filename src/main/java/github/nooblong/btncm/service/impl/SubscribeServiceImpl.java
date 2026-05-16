@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import github.nooblong.btncm.entity.SysUser;
+import github.nooblong.btncm.job.TaskContext;
+import github.nooblong.btncm.job.TaskContextHolder;
 import github.nooblong.btncm.utils.CommonUtil;
 import github.nooblong.btncm.enums.SubscribeTypeEnum;
 import github.nooblong.btncm.bilibili.BilibiliClient;
@@ -54,7 +56,6 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         this.netMusicClient = netMusicClient;
     }
 
-    @Async
     @Override
     public void checkAndSave() {
         Map<String, String> availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
@@ -95,24 +96,27 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
     }
 
     public void checkSubscribe(Subscribe subscribe, Map<String, String> availableBilibiliCookie) {
-        Long userId = subscribe.getUserId();
-        if (userId == null) {
-            return;
-        }
-        SysUser user = Db.getById(userId, SysUser.class);
-        if (StrUtil.isBlank(user.getNetCookies())) {
-            log.info("用户未登录不处理，订阅:{} 用户:{}", subscribe.getId(), user.getId());
-            subscribe.setLog("用户未登录不处理\n");
-            updateById(subscribe);
-            return;
-        }
-        AtomicInteger counter;
-        if (subscribe.getLastTotalIndex() < 0) {
-            counter = new AtomicInteger(1);
-        } else {
-            counter = new AtomicInteger(subscribe.getLastTotalIndex());
-        }
+        AtomicInteger counter = null;
         try {
+            TaskContext context = new TaskContext();
+            TaskContextHolder.set(context);
+
+            Long userId = subscribe.getUserId();
+            if (userId == null) {
+                return;
+            }
+            SysUser user = Db.getById(userId, SysUser.class);
+            if (StrUtil.isBlank(user.getNetCookies())) {
+                log.error("用户未登录不处理，订阅:{} 用户:{}", subscribe.getId(), user.getId());
+                subscribe.setLog("用户未登录不处理\n");
+                updateById(subscribe);
+                return;
+            }
+            if (subscribe.getLastTotalIndex() < 0) {
+                counter = new AtomicInteger(1);
+            } else {
+                counter = new AtomicInteger(subscribe.getLastTotalIndex());
+            }
             if (subscribe.getType() == SubscribeTypeEnum.UP) {
                 UpIterator upIterator = new UpIterator(bilibiliClient, subscribe.getUpId(), subscribe.getKeyWord(),
                         subscribe.getLimitSec(), subscribe.getMinSec(), VideoOrderEnum.valueOf(subscribe.getVideoOrder()),
@@ -142,30 +146,20 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 }
                 updateById(subscribe);
             }
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
+            Thread.sleep(500);
         } catch (Exception e) {
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ex) {
-                throw new RuntimeException(ex);
-            }
-            if (counter.get() > 1) {
+            if (counter != null && counter.get() > 1) {
                 log.error("订阅: {}处理失败, 但是遍历到了第{}页, 下次将从此开始", subscribe.getId(), counter.get());
                 subscribe.setLastTotalIndex(counter.get());
-                subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + "已经遍历到了第" + counter.get() + "页\n");
             }
-            log.error("订阅: {} 处理失败: {}", subscribe.getId(), e.getMessage());
-            log.error(e.getMessage(), e);
-            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() +
-                    " 订阅处理失败，原因: " + e.getMessage() + "\n");
+            log.error("订阅: {}处理失败: ", subscribe.getId(), e);
+            TaskContext context = TaskContextHolder.get();
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + context.getAllLogsText() + "\n");
             updateById(subscribe);
+        } finally {
+            TaskContextHolder.clear();
         }
     }
-
 
 
     private void process(Subscribe subscribe, Iterator<SimpleVideoInfo> iterator) {
@@ -239,13 +233,10 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
         }
         if (isProcess) {
             log.info("订阅检测完成,发布{}个新视频,时间: {}", processNum, DateUtil.formatDateTime(new Date()));
-            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 订阅检测完成,发布" + processNum
-                    + "个新视频" + "\n");
             // 只有第一次是从老到新
             subscribe.setVideoOrder(VideoOrderEnum.PUB_NEW_FIRST_THEN_OLD.name());
         } else {
             log.info("未检测到新视频: {}", DateUtil.now());
-            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + DateUtil.now() + " 未检测到新视频 " + "\n");
         }
     }
 
@@ -298,8 +289,8 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             if (StrUtil.isNotBlank(user.getNetCookies())) {
                 JsonNode loginStatus = netMusicClient.getMusicDataByUserId(new HashMap<>(), "loginStatus", user.getId());
                 if (loginStatus.get("account") != null
-                && loginStatus.get("account").get("id") != null
-                && !loginStatus.get("account").get("id").asText().isEmpty()) {
+                        && loginStatus.get("account").get("id") != null
+                        && !loginStatus.get("account").get("id").asText().isEmpty()) {
                     log.info("用户{}网易登录有效", user.getUsername());
                 } else {
                     log.info("清除网易云cookie: 用户{}", user.getUsername());

@@ -75,7 +75,7 @@ public class NetMusicForwardInterceptor implements HandlerInterceptor {
             writer = response.getWriter();
             writer.print(musicData);
         } catch (IOException e) {
-            log.error(e.getMessage());
+            log.error("err: ", e);
         } finally {
             assert writer != null;
             writer.close();

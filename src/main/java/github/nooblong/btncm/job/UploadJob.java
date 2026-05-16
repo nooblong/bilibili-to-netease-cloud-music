@@ -1,8 +1,5 @@
 package github.nooblong.btncm.job;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
@@ -25,7 +22,7 @@ import github.nooblong.btncm.service.SubscribeService;
 import github.nooblong.btncm.service.UploadDetailService;
 import github.nooblong.btncm.utils.Constant;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -38,12 +35,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * 上传视频到网易云的全部步骤
  */
+@Scope("prototype")
 @Component
 @Slf4j
 public class UploadJob {
@@ -53,10 +50,13 @@ public class UploadJob {
     final FfmpegService ffmpegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
-    public static StringBuilder uploadLog = new StringBuilder();
-    public static ListAppender<ILoggingEvent> listAppender;
+    final Map<String, String> cred;
+    Long uploadDetailId;
 
-    public UploadJob(BilibiliClient bilibiliClient,
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    public UploadJob(Long uploadDetailId,
+                     Map<String, String> bilibiliCookie,
+                     BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
                      SubscribeService subscribeService,
@@ -66,59 +66,18 @@ public class UploadJob {
         this.ffmpegService = ffmpegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
+
+        this.cred = bilibiliCookie;
+        this.uploadDetailId = uploadDetailId;
     }
 
-    public static void redirectLog() {
-        Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        listAppender = new ListAppender<>();
-        listAppender.start();
-        logger.addAppender(listAppender);
-    }
-
-    public static void stopRedirectLog() {
-        Logger logger = (Logger) LoggerFactory.getLogger(UploadJob.class);
-        List<ILoggingEvent> logsList = listAppender.list;
-        String logs = logsList.stream()
-                .map(ILoggingEvent::getFormattedMessage)
-                .collect(Collectors.joining("\n"));
-        uploadLog.append(logs);
-        listAppender.stop();
-        logger.detachAppender(listAppender);
-        listAppender = null;
-    }
-
-    public void uploadOne() {
-        UploadDetail upload = uploadDetailService.getToUploadWithCookie();
-        if (upload == null) {
-            return;
-        }
-        log.info("处理: {}", upload.getTitle());
-        Map<String, String> availableBilibiliCookie;
-        try {
-            availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
-        } catch (RuntimeException e) {
-            log.error("准备下载失败:", e);
-            return;
-        }
-        this.process(upload.getId(), availableBilibiliCookie);
-    }
-
-    public static class Context {
-        public Path musicPath;
-        public String desc = "";
-        public String netImageId;
-        public BilibiliFullVideo bilibiliFullVideo;
-        public Long uploadDetailId;
-        public SysUser sysUser;
-    }
-
-    public void process(Long uploadDetailId, Map<String, String> availableBilibiliCookie) {
-        redirectLog();
+    public void start() {
+        TaskContextHolder.set(new TaskContext());
+        TaskContext context = TaskContextHolder.get();
         UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
         uploadDetail.setUploadRetryTimes(uploadDetail.getUploadRetryTimes() + 1);
         uploadDetail.setUploadStatus(UploadStatusTypeEnum.PROCESSING);
         uploadDetailService.updateById(uploadDetail);
-        Context context = new Context();
         context.uploadDetailId = uploadDetailId;
         context.sysUser = Db.getById(uploadDetail.getUserId(), SysUser.class);
         try {
@@ -127,10 +86,10 @@ public class UploadJob {
             Assert.notNull(context.sysUser, "user不能为空");
             Db.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId, context.sysUser.getId())
                     .setSql("remaining = remaining - 1"));
-            getData(context, uploadDetail.getBvid(), uploadDetail.getCid(),
-                    uploadDetail.getUseVideoCover(), uploadDetail.getUserId(), availableBilibiliCookie);
+            getData(uploadDetail.getBvid(), uploadDetail.getCid(),
+                    uploadDetail.getUseVideoCover(), uploadDetail.getUserId(), cred);
 
-            codecAudio(context, uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
+            codecAudio(uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
                     uploadDetail.getOffset(), uploadDetail.getBitrate());
 
             // 上传之前先设置名字
@@ -143,35 +102,35 @@ public class UploadJob {
             }
             uploadDetail.setUploadName(handleUploadName(regName, uploadDetail, context.bilibiliFullVideo));
 
-            String voiceId = uploadNetease(context, String.valueOf(uploadDetail.getVoiceListId()),
+            String voiceId = uploadNetease(String.valueOf(uploadDetail.getVoiceListId()),
                     uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
 
             log.info("上传完成");
-            clear(context, Long.valueOf(voiceId));
+            UploadDetail newUploadDetail = uploadDetailService.getById(context.uploadDetailId);
+            newUploadDetail.setVoiceId(Long.valueOf(voiceId));
+            newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
+            String logsString = context.getAllLogsText();
+            newUploadDetail.setLog(logsString);
+            Db.updateById(newUploadDetail);
         } catch (UploadFailException uploadFailException) {
             log.error(uploadFailException.getuploadStatusTypeEnum().getDesc());
-            stopRedirectLog();
-            String uploadLogString = uploadLog.toString();
-            uploadLog.setLength(0);
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
-            byId.setLog(uploadLogString);
+            byId.setLog(context.getAllLogsText());
             byId.setUploadStatus(uploadFailException.getuploadStatusTypeEnum());
             Db.updateById(byId);
-            delete();
         } catch (Exception e) {
-            log.error("处理失败1, {}", e.getMessage());
-            stopRedirectLog();
-            String uploadLogString = uploadLog.toString();
-            uploadLog.setLength(0);
+            log.error("总处理失败", e);
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);
-            byId.setLog(uploadLogString);
+            byId.setLog(context.getAllLogsText());
             byId.setUploadStatus(UploadStatusTypeEnum.ERROR);
             if (byId.getUploadRetryTimes() > Constant.UPLOAD_MAX_RETRY_TIMES) {
                 byId.setUploadStatus(UploadStatusTypeEnum.MAX_RETRY);
             }
             Db.updateById(byId);
+        } finally {
             delete();
+            TaskContextHolder.clear();
         }
     }
 
@@ -182,8 +141,9 @@ public class UploadJob {
         }
     }
 
-    private void getData(Context context, String bvid, String cid, Long useVideoCover, Long userId,
+    private void getData(String bvid, String cid, Long useVideoCover, Long userId,
                          Map<String, String> availableBilibiliCookie) throws Exception {
+        TaskContext context = TaskContextHolder.get();
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         if (StrUtil.isNotEmpty(cid)) {
             simpleVideoInfo.setCid(cid);
@@ -200,14 +160,14 @@ public class UploadJob {
         if (useVideoCover == 1) {
             try {
                 Path imagePath = bilibiliClient.downloadCover(bilibiliFullVideo);
-                context.netImageId = transImage(context, imagePath, netMusicClient, userId);
+                context.netImageId = transImage(imagePath, netMusicClient, userId);
             } catch (Exception e) {
-                log.error("下载封面出错，跳过");
+                log.error("下载封面出错，跳过", e);
             }
         }
     }
 
-    private String transImage(Context context, Path path, NetMusicClient netMusicClient, Long userId) {
+    private String transImage(Path path, NetMusicClient netMusicClient, Long userId) {
         HashMap<String, Object> params = new HashMap<>();
         try {
             BufferedImage image = ImageIO.read(path.toFile());
@@ -239,7 +199,8 @@ public class UploadJob {
 
     }
 
-    private void codecAudio(Context context, double beginSec, double endSec, double voiceOffset, int bitrate) {
+    private void codecAudio(double beginSec, double endSec, double voiceOffset, int bitrate) {
+        TaskContext context = TaskContextHolder.get();
         Path targetPath = ffmpegService.encodeMp3(context.musicPath, beginSec, endSec, voiceOffset, bitrate);
         context.musicPath = targetPath;
         try {
@@ -249,8 +210,9 @@ public class UploadJob {
         }
     }
 
-    private String uploadNetease(Context context, String voiceListId, Long uploadUserId,
+    private String uploadNetease(String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
+        TaskContext context = TaskContextHolder.get();
         String toAddDesc = "";
         toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
         toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
@@ -322,19 +284,6 @@ public class UploadJob {
         Assert.isTrue(audioUpload.get("code").asInt() == 200, "声音发布失败: " + audioPreCheck.get("message").asText());
         ArrayNode result = (ArrayNode) audioUpload.get("data");
         return result.get(0).asText();
-    }
-
-    private void clear(Context context, Long voiceId) {
-        UploadDetail newUploadDetail = uploadDetailService.getById(context.uploadDetailId);
-        newUploadDetail.setVoiceId(voiceId);
-        newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
-        stopRedirectLog();
-        String uploadLogString = uploadLog.toString();
-        newUploadDetail.setLog(uploadLogString);
-        Db.updateById(newUploadDetail);
-        uploadLog.setLength(0);
-        // 清理数据
-        delete();
     }
 
     private void delete() {
