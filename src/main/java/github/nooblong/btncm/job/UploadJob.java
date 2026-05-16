@@ -50,13 +50,9 @@ public class UploadJob {
     final FfmpegService ffmpegService;
     final SubscribeService subscribeService;
     final UploadDetailService uploadDetailService;
-    final Map<String, String> cred;
-    Long uploadDetailId;
 
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    public UploadJob(Long uploadDetailId,
-                     Map<String, String> bilibiliCookie,
-                     BilibiliClient bilibiliClient,
+    public UploadJob(BilibiliClient bilibiliClient,
                      NetMusicClient netMusicClient,
                      FfmpegService ffmpegService,
                      SubscribeService subscribeService,
@@ -66,12 +62,10 @@ public class UploadJob {
         this.ffmpegService = ffmpegService;
         this.subscribeService = subscribeService;
         this.uploadDetailService = uploadDetailService;
-
-        this.cred = bilibiliCookie;
-        this.uploadDetailId = uploadDetailId;
     }
 
-    public void start() {
+    public void start(Long uploadDetailId,
+                      Map<String, String> bilibiliCookie) {
         TaskContextHolder.set(new TaskContext());
         TaskContext context = TaskContextHolder.get();
         UploadDetail uploadDetail = uploadDetailService.getById(uploadDetailId);
@@ -87,7 +81,7 @@ public class UploadJob {
             Db.update(Wrappers.lambdaUpdate(SysUser.class).eq(SysUser::getId, context.sysUser.getId())
                     .setSql("remaining = remaining - 1"));
             getData(uploadDetail.getBvid(), uploadDetail.getCid(),
-                    uploadDetail.getUseVideoCover(), uploadDetail.getUserId(), cred);
+                    uploadDetail.getUseVideoCover(), uploadDetail.getUserId(), bilibiliCookie);
 
             codecAudio(uploadDetail.getBeginSec(), uploadDetail.getEndSec(),
                     uploadDetail.getOffset(), uploadDetail.getBitrate());
@@ -106,13 +100,13 @@ public class UploadJob {
                     uploadDetail.getUserId(),
                     uploadDetail.getUploadName(), uploadDetail.getPrivacy());
 
-            log.info("上传完成");
             UploadDetail newUploadDetail = uploadDetailService.getById(context.uploadDetailId);
             newUploadDetail.setVoiceId(Long.valueOf(voiceId));
             newUploadDetail.setUploadStatus(UploadStatusTypeEnum.SUCCESS);
             String logsString = context.getAllLogsText();
             newUploadDetail.setLog(logsString);
             Db.updateById(newUploadDetail);
+            log.info("上传完成");
         } catch (UploadFailException uploadFailException) {
             log.error(uploadFailException.getuploadStatusTypeEnum().getDesc());
             UploadDetail byId = Db.getById(uploadDetailId, UploadDetail.class);

@@ -52,18 +52,12 @@ public class AudioUploadSecond extends SimpleWeApiModule {
         headerMap.put("X-Nos-Meta-Content-Type", "audio/mpeg");
     }
 
-    public void logNow(Long uploadDetailId, String content) {
-        UploadDetail uploadDetail = Db.getById(uploadDetailId, UploadDetail.class);
-        uploadDetail.setLog(uploadDetail.getLog() + content + "\n");
-        Db.updateById(uploadDetail);
-    }
-
     @Override
     public JsonNode execute(JsonNode paramNode, Map<String, String> headerMap, OkHttpClient client) {
         ObjectMapper objectMapper = new ObjectMapper();
         final int CHUNK_SIZE = 1024 * 1024; // 1MB
         byte[] buffer = new byte[CHUNK_SIZE];
-        logNow(uploadDetailId, ">>> 开始上传");
+        log.info(">>> 开始上传");
         ArrayNode responseArray = objectMapper.createArrayNode();
 
         try (ReadableByteChannel sourceChannel = Channels.newChannel(dataInputStream)) {
@@ -92,7 +86,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                                 client
                         );
                         responseArray.add(responseWithHeader);
-                        logNow(uploadDetailId, String.format(">>> 上传分片 #%d 成功，%d b", partNum, bytesRead));
+                        log.info(">>> 上传分片 #{} 成功，{} b", partNum, bytesRead);
                         success = true;
                     } catch (Exception e) {
                         retry++;
@@ -108,7 +102,7 @@ public class AudioUploadSecond extends SimpleWeApiModule {
                 partNum++;
             }
 
-            logNow(uploadDetailId, ">>> 上传结束");
+            log.info(">>> 上传结束");
 
         } catch (IOException e) {
             throw new RuntimeException("读取上传数据失败", e);

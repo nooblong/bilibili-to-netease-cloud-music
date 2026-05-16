@@ -230,11 +230,11 @@ public class UploadDetailController {
     }
 
     @GetMapping("/delAllWait")
-    public Result<String> delAllWait(@RequestParam(name = "voicelistId") Long voiceListId) {
+    public Result<String> delAllWait(@RequestParam(name = "voicelistId", required = false) Long voiceListId) {
         SysUser sysUser = JwtUtil.verifierFromContext();
         uploadDetailService.remove(Wrappers.<UploadDetail>lambdaQuery()
                 .eq(UploadDetail::getUserId, sysUser.getId())
-                .eq(UploadDetail::getVoiceListId, voiceListId)
+                .eq(voiceListId != null, UploadDetail::getVoiceListId, voiceListId)
                 .eq(UploadDetail::getUploadStatus, UploadStatusTypeEnum.WAIT));
         return Result.ok("ok");
     }

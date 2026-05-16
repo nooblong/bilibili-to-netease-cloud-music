@@ -135,8 +135,8 @@ public class ScheduleTask {
             log.error("b站cookie获取失败:", e);
             return;
         }
-        UploadJob job = uploadJobProvider.getObject(upload.getId(), availableBilibiliCookie);
-        job.start();
+        UploadJob job = uploadJobProvider.getObject();
+        job.start(upload.getId(), availableBilibiliCookie);
     }
 
     @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")

@@ -469,7 +469,7 @@ public class BilibiliClient {
             builder2.addQueryParameter("order", "user.VideoOrder(\"" + userVideoOrder.getValue() + "\"):parse");
             response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
         }
-        Assert.notNull(response, "获取Up视频失败");
+        Assert.notNull(response, "获取Up视频返回为空");
         Assert.isTrue(response.get("code").asInt() == 0, "获取Up视频失败");
         return new IteratorCollectionTotal()
                 .setData((ArrayNode) response.get("data").get("list").get("vlist"))

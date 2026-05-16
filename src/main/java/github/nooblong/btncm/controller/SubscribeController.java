@@ -40,20 +40,17 @@ public class SubscribeController {
     final UploadDetailService uploadDetailService;
     final SubscribeService subscribeService;
     final UserVoicelistService userVoicelistService;
-    final UploadJob uploadJob;
 
     public SubscribeController(BilibiliClient bilibiliClient,
                                NetMusicClient netMusicClient,
                                UploadDetailService uploadDetailService,
                                SubscribeService subscribeService,
-                               UserVoicelistService userVoicelistService,
-                               UploadJob uploadJob) {
+                               UserVoicelistService userVoicelistService) {
         this.bilibiliClient = bilibiliClient;
         this.netMusicClient = netMusicClient;
         this.uploadDetailService = uploadDetailService;
         this.subscribeService = subscribeService;
         this.userVoicelistService = userVoicelistService;
-        this.uploadJob = uploadJob;
     }
 
     @GetMapping
@@ -90,7 +87,7 @@ public class SubscribeController {
     }
 
     @PutMapping("/{id}")
-    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable Long id) {
+    public Result<Subscribe> edit(@RequestBody Subscribe subscribe, @PathVariable(name = "id") Long id) {
         subscribe.setId(id);
         SysUser user = JwtUtil.verifierFromContext();
         Subscribe byId = Db.getById(subscribe.getId(), Subscribe.class);

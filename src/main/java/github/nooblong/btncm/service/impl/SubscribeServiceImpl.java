@@ -146,6 +146,9 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
                 }
                 updateById(subscribe);
             }
+            log.info("检查订阅成功");
+            subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + context.getAllLogsText() + "\n");
+            updateById(subscribe);
             Thread.sleep(500);
         } catch (Exception e) {
             if (counter != null && counter.get() > 1) {

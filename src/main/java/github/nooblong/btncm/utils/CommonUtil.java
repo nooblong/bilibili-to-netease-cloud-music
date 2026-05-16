@@ -32,7 +32,7 @@ public class CommonUtil {
             return "";
         }
         String[] lines = input.split("\\r?\\n");
-        if (lines.length <= 20) {
+        if (lines.length <= 5000) {
             return input; // 不超过100行，返回全部字符串
         } else {
             StringBuilder result = new StringBuilder();

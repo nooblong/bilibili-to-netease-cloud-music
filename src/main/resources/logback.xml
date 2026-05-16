@@ -5,9 +5,7 @@
 
         <encoder>
             <pattern>
-                %d %-5level [%thread]
-                %class.%method:%line
-                - %msg%n
+                %d %-5level [%thread] %class.%method:%line - %msg%n
             </pattern>
         </encoder>
     </appender>
