@@ -159,6 +159,11 @@ public class SubscribeServiceImpl extends ServiceImpl<SubscribeMapper, Subscribe
             TaskContext context = TaskContextHolder.get();
             subscribe.setLog(CommonUtil.processString(subscribe.getLog()) + context.getAllLogsText() + "\n");
             updateById(subscribe);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         } finally {
             TaskContextHolder.clear();
         }
