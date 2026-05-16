@@ -27,7 +27,7 @@ CREATE TABLE `subscribe`  (
                               `use_video_cover` tinyint NOT NULL DEFAULT 0,
                               `check_part` tinyint NOT NULL DEFAULT 0,
                               `priority` int NOT NULL DEFAULT 0,
-                              `log` varchar(12192) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+                              `log` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
                               `last_total_index` int NOT NULL DEFAULT -1,
                               `channel_ids` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
                               `up_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
