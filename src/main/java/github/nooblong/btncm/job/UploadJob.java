@@ -239,6 +239,7 @@ public class UploadJob {
         queryMap.put("ext", ext);
         queryMap.put("fileName", UUID.randomUUID().toString().substring(0, 10) + uploadName);
         JsonNode audioUploadAlloc = netMusicClient.getMusicDataByUserId(queryMap, "audioUploadAlloc", userId);
+        log.info("audioUploadAlloc: ok");
 
         String docId = audioUploadAlloc.get("result").get("docId").asText();
         String objectKey = audioUploadAlloc.get("result").get("objectKey").asText();
@@ -248,6 +249,7 @@ public class UploadJob {
         queryMap.put("token", token);
 
         JsonNode audioUploadFirst = netMusicClient.getMusicDataByUserId(queryMap, "audioUploadFirst", userId);
+        log.info("audioUploadFirst: ok");
         String uploadId = audioUploadFirst.get("uploadId").asText();
         queryMap.put("uploadId", uploadId);
 
@@ -260,6 +262,7 @@ public class UploadJob {
         queryMap.put("uploadDetailId", uploadDetailId);
 
         JsonNode audioUploadSecond = netMusicClient.getMusicDataByUserId(queryMap, "audioUploadSecond", userId);
+        log.info("audioUploadSecond: ok");
 
         queryMap.put("name", uploadName);
         queryMap.put("uploadResult", audioUploadSecond);
@@ -271,13 +274,16 @@ public class UploadJob {
         queryMap.put("description", description);
 
         JsonNode audioUploadThird = netMusicClient.getMusicDataByUserId(queryMap, "audioUploadThird", userId);
+        log.info("audioUploadThird: ok");
 
         JsonNode audioPreCheck = netMusicClient.getMusicDataByUserId(queryMap, "audioPreCheck", userId);
         Assert.isTrue(audioPreCheck.get("code").asInt() == 200, "声音发布失败: " + audioPreCheck.get("message").asText());
+        log.info("audioPreCheck: ok");
 
         JsonNode audioUpload = netMusicClient.getMusicDataByUserId(queryMap, "audioSubmit", userId);
         Assert.isTrue(audioUpload.get("code").asInt() == 200, "声音发布失败: " + audioPreCheck.get("message").asText());
         ArrayNode result = (ArrayNode) audioUpload.get("data");
+        log.info("result: ok");
         return result.get(0).asText();
     }
 
