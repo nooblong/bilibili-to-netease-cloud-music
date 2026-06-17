@@ -102,8 +102,8 @@ public class NetMusicClient {
         final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
         return templateClient.newBuilder()
-                .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-                .hostnameVerifier((hostname, session) -> true)
+//                .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+//                .hostnameVerifier((hostname, session) -> true)
                 .cookieJar(new CookieJar() {
                     // 当遇到网易云的更新cookie请求时, 更新数据库中的cookie
                     @Override
@@ -124,7 +124,7 @@ public class NetMusicClient {
                                 Map<String, String> neteaseCookieMap = userService.getNeteaseCookieMap(userId);
                                 objectNode.fields().forEachRemaining(entry -> {
                                     if (neteaseCookieMap.containsKey(entry.getKey()) && StrUtil.isNotBlank(entry.getValue().asText())) {
-                                        log.info("更新cookie中的: {}", entry.getKey());
+//                                        log.info("更新cookie中的: {}", entry.getKey());
                                         neteaseCookieMap.put(entry.getKey(), entry.getValue().asText());
                                     }
                                 });
