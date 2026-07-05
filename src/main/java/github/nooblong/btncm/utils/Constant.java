@@ -1,5 +1,6 @@
 package github.nooblong.btncm.utils;
 
+import cn.hutool.core.util.StrUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,9 @@ public class Constant {
 
     @PostConstruct
     public void init() {
+        if (StrUtil.isBlank(pythonHost) || pythonPort == 0) {
+            log.error("pythonHost或pythonPort为空");
+        }
         BAU = "http://" + pythonHost + ":" + pythonPort;
     }
 

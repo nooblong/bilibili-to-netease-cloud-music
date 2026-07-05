@@ -1,8 +1,6 @@
-pythonHost: "localhost"
+pythonHost: "bilibili-api"
 pythonPort: "9000"
 pythonDockerService: "bilibili-api"
-token:
-  secret: "change-this-token-secret"
 
 initialDelay: 3 #启动后下列检查延迟
 enableGetUpJob: 1 #是否启用订阅up主的定时任务
@@ -16,6 +14,9 @@ removeUselessCookie: 1 #是否启用定时清理无效的网易云或b站cookie
 
 afdToken: xxx #爱发电token
 afdUserId: xxx #爱发电userId
+
+token:
+  secret: "change-this-token-secret"
 
 server:
   port: 8080

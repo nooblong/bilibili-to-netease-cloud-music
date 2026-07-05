@@ -14,30 +14,12 @@ import java.util.Arrays;
  */
 @Service
 @Slf4j
-public class PythonManager implements CommandLineRunner {
+public class PythonManager {
 
     @Value("${pythonDockerService:bilibili-api}")
     private String pythonDockerService;
 
     private final Object lock = new Object();
-
-    public void start() throws IOException {
-        synchronized (lock) {
-            runDockerCommand("start", pythonDockerService);
-            log.info("bilibili-api Docker 服务已启动: {}", pythonDockerService);
-        }
-    }
-
-    public void stop() {
-        synchronized (lock) {
-            try {
-                runDockerCommand("stop", pythonDockerService);
-                log.info("bilibili-api Docker 服务已停止: {}", pythonDockerService);
-            } catch (IOException e) {
-                log.error("停止 bilibili-api Docker 服务失败", e);
-            }
-        }
-    }
 
     public void restart() throws IOException {
         synchronized (lock) {
@@ -62,17 +44,6 @@ public class PythonManager implements CommandLineRunner {
             Thread.currentThread().interrupt();
             throw new IOException("Docker 命令被中断: " + Arrays.toString(command), e);
         }
-    }
-
-    @PreDestroy
-    public void onShutdown() {
-        log.info("Spring Boot 退出时，停止 bilibili-api Docker 服务...");
-        stop();
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        this.start();
     }
 }
 
