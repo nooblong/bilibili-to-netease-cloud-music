@@ -2,7 +2,9 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
 
 COPY pom.xml .
-RUN mvn -B -DskipTests dependency:go-offline
+RUN mkdir -p /root/.m2 && \
+    echo '<?xml version="1.0" encoding="UTF-8"?><settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /root/.m2/settings.xml && \
+    mvn -B -DskipTests dependency:go-offline
 
 COPY src ./src
 RUN mvn -B -DskipTests package
