@@ -7,64 +7,66 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
- * python控制器，用于启动和停止bilibili-api服务
+ * python控制器，用于通过 Docker 管理 bilibili-api 服务
  */
 @Service
 @Slf4j
 public class PythonManager implements CommandLineRunner {
 
-    @Value("${pythonCmd}")
-    private String pythonCmd;
-    @Value("${pythonPath}")
-    private String pythonPath;
-    @Value("${pythonPort}")
-    private String pythonPort;
+    @Value("${pythonDockerService:bilibili-api}")
+    private String pythonDockerService;
 
-    private Process pythonProcess;
     private final Object lock = new Object();
-    private long pid;
 
     public void start() throws IOException {
         synchronized (lock) {
-            // 启动 Python 服务
-            pythonProcess = new ProcessBuilder(pythonCmd, pythonPath, pythonPort)
-                    .inheritIO() // 让输出直接显示到控制台
-                    .start();
-            pid = pythonProcess.pid();
-            log.info("Python 服务已启动,pid={}", pid);
+            runDockerCommand("start", pythonDockerService);
+            log.info("bilibili-api Docker 服务已启动: {}", pythonDockerService);
         }
     }
 
     public void stop() {
         synchronized (lock) {
-            if (pythonProcess != null && pythonProcess.isAlive()) {
-                try {
-
-                    String osName = System.getProperty("os.name").toLowerCase();
-                    if (osName.contains("win")) {
-                        Runtime.getRuntime().exec("taskkill /PID " + pid + " /T /F");
-                    } else {
-                        Runtime.getRuntime().exec("kill -TERM -" + pid);
-                    }
-                    log.info("Python 服务已停止,pid={}", pid);
-                } catch (IOException e) {
-                    log.error("关闭python服务失败", e);
-                }
+            try {
+                runDockerCommand("stop", pythonDockerService);
+                log.info("bilibili-api Docker 服务已停止: {}", pythonDockerService);
+            } catch (IOException e) {
+                log.error("停止 bilibili-api Docker 服务失败", e);
             }
-            pythonProcess = null;
         }
     }
 
     public void restart() throws IOException {
-        stop();
-        start();
+        synchronized (lock) {
+            runDockerCommand("restart", pythonDockerService);
+            log.info("bilibili-api Docker 服务已重启: {}", pythonDockerService);
+        }
+    }
+
+    private void runDockerCommand(String... args) throws IOException {
+        String[] command = new String[args.length + 1];
+        command[0] = "docker";
+        System.arraycopy(args, 0, command, 1, args.length);
+        try {
+            int exitCode = new ProcessBuilder(command)
+                    .inheritIO()
+                    .start()
+                    .waitFor();
+            if (exitCode != 0) {
+                throw new IOException("Docker 命令执行失败: " + Arrays.toString(command) + ", exitCode=" + exitCode);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Docker 命令被中断: " + Arrays.toString(command), e);
+        }
     }
 
     @PreDestroy
     public void onShutdown() {
-        log.info("Spring Boot 退出时，停止 Python 服务...");
+        log.info("Spring Boot 退出时，停止 bilibili-api Docker 服务...");
         stop();
     }
 
@@ -73,6 +75,5 @@ public class PythonManager implements CommandLineRunner {
         this.start();
     }
 }
-
 
 

@@ -20,6 +20,8 @@ public class Constant {
 
     @Value("${pythonPort}")
     private int pythonPort;
+    @Value("${pythonHost:localhost}")
+    private String pythonHost;
 
     public static String BAU = "";
     public static final String FFMPEG_FORMAT_MP3 = "mp3";
@@ -32,7 +34,7 @@ public class Constant {
 
     @PostConstruct
     public void init() {
-        BAU = "http://localhost:" + pythonPort;
+        BAU = "http://" + pythonHost + ":" + pythonPort;
     }
 
     static {
