@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:9
-    container_name: btncm-mysql
+    container_name: mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: btncm_root
@@ -21,9 +21,9 @@ services:
       retries: 10
 
   bilibili-api:
-    build:
-      context: ../bilibili-api
-    image: btncm-bilibili-api:latest
+#    build:
+#      context: ../bilibili-api
+    image: nooblong/btncm-bilibili-api:v1.0
     container_name: bilibili-api
     restart: unless-stopped
     environment:
@@ -37,10 +37,10 @@ services:
       retries: 5
 
   java:
-    build:
-      context: .
-    image: btncm-java:latest
-    container_name: btncm-java
+#    build:
+#      context: .
+    image: nooblong/btncm-bilibili-to-netease-cloud-music:v1.0
+    container_name: java
     restart: unless-stopped
     depends_on:
       mysql:
@@ -51,6 +51,7 @@ services:
       TZ: Asia/Shanghai
       PYTHON_HOST: bilibili-api
       PYTHON_PORT: 9000
+      SERVER_PORT: 8080
       PYTHON_DOCKER_SERVICE: bilibili-api
       TOKEN_SECRET: "FU9Q9TtG499shN54UFvzi5+4lP2j9lEj5hUZJAacZ+Q/hpozgolLn3QQKR+Acrjn"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/netmusic?serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
@@ -62,10 +63,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   ui:
-    build:
-      context: ../bilibili-to-netease-cloud-music-ui
-    image: btncm-ui:latest
-    container_name: btncm-ui
+#    build:
+#      context: ../bilibili-to-netease-cloud-music-ui
+    image: nooblong/btncm-ui:v1.0
+    container_name: ui
     restart: unless-stopped
     depends_on:
       - java

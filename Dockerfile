@@ -15,7 +15,7 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 ENV TZ=Asia/Shanghai \
-    SERVER_PORT=25565 \
+    SERVER_PORT=8080 \
     PYTHON_HOST=bilibili-api \
     PYTHON_PORT=9000 \
     PYTHON_DOCKER_SERVICE=bilibili-api \
@@ -24,6 +24,6 @@ ENV TZ=Asia/Shanghai \
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=build /workspace/target/btncm-1.0-SNAPSHOT.jar /app/app.jar
 
-EXPOSE 25565
+EXPOSE 8080
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
