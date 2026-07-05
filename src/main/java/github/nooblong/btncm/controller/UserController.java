@@ -36,7 +36,7 @@ public class UserController {
         }
         String token;
         try {
-            token = JwtUtil.generateTokenByRS256(userList.get(0));
+            token = JwtUtil.generateToken(userList.get(0));
         } catch (Exception e) {
             return Result.fail("token生成失败");
         }
@@ -57,7 +57,7 @@ public class UserController {
     public Result<String> refreshToken(HttpServletResponse response) {
         try {
             SysUser user = JwtUtil.verifierFromContext();
-            String result = JwtUtil.generateTokenByRS256(user);
+            String result = JwtUtil.generateToken(user);
             response.setHeader("Access-Token", result);
         } catch (Exception e) {
             return Result.fail("刷新失败");

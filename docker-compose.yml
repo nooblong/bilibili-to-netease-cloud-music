@@ -15,7 +15,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./netmusic.sql:/docker-entrypoint-initdb.d/01-netmusic.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ubtncm -pbtncm_password --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ubtncm -pbtncm --silent"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -52,6 +52,7 @@ services:
       PYTHON_HOST: bilibili-api
       PYTHON_PORT: 9000
       PYTHON_DOCKER_SERVICE: bilibili-api
+      TOKEN_SECRET: "FU9Q9TtG499shN54UFvzi5+4lP2j9lEj5hUZJAacZ+Q/hpozgolLn3QQKR+Acrjn"
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/netmusic?serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: btncm
       SPRING_DATASOURCE_PASSWORD: btncm

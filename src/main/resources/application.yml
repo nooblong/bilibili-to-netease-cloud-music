@@ -1,6 +1,8 @@
 pythonHost: "localhost"
 pythonPort: "9000"
 pythonDockerService: "bilibili-api"
+token:
+  secret: "change-this-token-secret"
 
 initialDelay: 3 #启动后下列检查延迟
 enableGetUpJob: 1 #是否启用订阅up主的定时任务
