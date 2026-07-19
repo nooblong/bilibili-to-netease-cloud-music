@@ -224,11 +224,28 @@ public class UploadJob {
         String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
         String coverImgId = voiceListDetail.get("coverImgId").asText();
         String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
-        String voiceId = doUpload(netMusicClient, "mp3", uploadName, context.musicPath, voiceListId, netImageId,
-                categoryId, secondCategoryId, context.desc, uploadUserId,
-                Boolean.toString(privacy == 1), context.uploadDetailId);
-        Assert.notNull(voiceId, "返回的声音id为空");
-        return voiceId;
+
+        int maxRetries = Constant.UPLOAD_MAX_RETRY_TIMES;
+        int attempt = 0;
+        while (true) {
+            try {
+                String voiceId = doUpload(netMusicClient, "mp3", uploadName, context.musicPath, voiceListId, netImageId,
+                        categoryId, secondCategoryId, context.desc, uploadUserId,
+                        Boolean.toString(privacy == 1), context.uploadDetailId);
+                Assert.notNull(voiceId, "返回的声音id为空");
+                return voiceId;
+            } catch (Exception e) {
+                attempt++;
+                UploadDetail uploadDetail = uploadDetailService.getById(context.uploadDetailId);
+                uploadDetail.setUploadRetryTimes(uploadDetail.getUploadRetryTimes() + 1);
+                uploadDetailService.updateById(uploadDetail);
+                if (attempt >= maxRetries) {
+                    log.error("上传网易云失败，已重试{}次，不再重试", attempt, e);
+                    throw e;
+                }
+                log.warn("上传网易云失败，第{}次重试，最多重试{}次", attempt, maxRetries, e);
+            }
+        }
     }
 
     private String doUpload(NetMusicClient netMusicClient, String ext, String uploadName, Path path,
