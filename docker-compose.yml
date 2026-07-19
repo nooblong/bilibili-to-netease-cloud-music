@@ -23,7 +23,7 @@ services:
   bilibili-api:
 #    build:
 #      context: ../bilibili-api
-    image: nooblong/btncm-bilibili-api:v1.0
+    image: nooblong/btncm-bilibili-api:latest
     container_name: bilibili-api
     restart: unless-stopped
     environment:
@@ -39,7 +39,7 @@ services:
   java:
 #    build:
 #      context: .
-    image: nooblong/btncm-bilibili-to-netease-cloud-music:v1.0
+    image: nooblong/btncm-bilibili-to-netease-cloud-music:latest
     container_name: java
     restart: unless-stopped
     depends_on:
@@ -65,7 +65,7 @@ services:
   ui:
 #    build:
 #      context: ../bilibili-to-netease-cloud-music-ui
-    image: nooblong/btncm-ui:v1.0
+    image: nooblong/btncm-ui:latest
     container_name: ui
     restart: unless-stopped
     depends_on:
