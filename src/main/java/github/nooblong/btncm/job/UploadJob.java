@@ -208,27 +208,28 @@ public class UploadJob {
     private String uploadNetease(String voiceListId, Long uploadUserId,
                                  String uploadName, long privacy) {
         TaskContext context = TaskContextHolder.get();
-        String toAddDesc = "";
-        toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
-        toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
-        toAddDesc += ("\n一键上传工具: github.com/nooblong/bilibili-to-netease-cloud-music");
-        context.desc += toAddDesc;
-
-        Assert.notNull(uploadName, "上传名字为空");
-        if (uploadName.length() > 40) {
-            uploadName = uploadName.substring(0, 40);
-        }
-
-        JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
-        String categoryId = voiceListDetail.get("categoryId").asText();
-        String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
-        String coverImgId = voiceListDetail.get("coverImgId").asText();
-        String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
 
         int maxRetries = Constant.UPLOAD_MAX_RETRY_TIMES;
         int attempt = 0;
         while (true) {
             try {
+                String toAddDesc = "";
+                toAddDesc += ("\n视频bvid: " + context.bilibiliFullVideo.getBvid());
+                toAddDesc += ("\nb站作者: " + context.bilibiliFullVideo.getAuthor());
+                toAddDesc += ("\n一键上传工具: github.com/nooblong/bilibili-to-netease-cloud-music");
+                context.desc += toAddDesc;
+
+                Assert.notNull(uploadName, "上传名字为空");
+                if (uploadName.length() > 40) {
+                    uploadName = uploadName.substring(0, 40);
+                }
+
+                JsonNode voiceListDetail = netMusicClient.getVoiceListDetailByUserId(voiceListId, uploadUserId);
+                String categoryId = voiceListDetail.get("categoryId").asText();
+                String secondCategoryId = voiceListDetail.get("secondCategoryId").asText();
+                String coverImgId = voiceListDetail.get("coverImgId").asText();
+                String netImageId = StrUtil.isNotBlank(context.netImageId) ? context.netImageId : coverImgId;
+
                 String voiceId = doUpload(netMusicClient, "mp3", uploadName, context.musicPath, voiceListId, netImageId,
                         categoryId, secondCategoryId, context.desc, uploadUserId,
                         Boolean.toString(privacy == 1), context.uploadDetailId);
@@ -243,7 +244,13 @@ public class UploadJob {
                     log.error("上传网易云失败，已重试{}次，不再重试", attempt, e);
                     throw e;
                 }
-                log.warn("上传网易云失败，第{}次重试，最多重试{}次", attempt, maxRetries, e);
+                log.warn("上传网易云失败，第{}次重试，最多重试{}次，等待3秒后重试", attempt, maxRetries, e);
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("重试等待被中断", ie);
+                }
             }
         }
     }
