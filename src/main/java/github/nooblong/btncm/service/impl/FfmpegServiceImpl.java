@@ -38,7 +38,7 @@ public class FfmpegServiceImpl implements FfmpegService, InitializingBean {
             cmdList.add("-codec:a");
             cmdList.add("libmp3lame");
             cmdList.add("-q:a");
-            cmdList.add("1");
+            cmdList.add("0");
             if (endSec != 0) {
                 cmdList.add("-ss");
                 cmdList.add(String.valueOf(beginSec));
