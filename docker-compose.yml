@@ -1,3 +1,7 @@
+# docker buildx build --platform linux/amd64,linux/arm64 -t nooblong/btncm-bilibili-to-netease-cloud-music:v1.1 --push .
+# docker buildx build --platform linux/amd64,linux/arm64 -t nooblong/btncm-bilibili-api:v1.0 --push .
+# docker buildx build --platform linux/amd64,linux/arm64 -t nooblong/btncm-ui:v1.0 --push .
+
 services:
   mysql:
     image: mysql:9
@@ -23,7 +27,7 @@ services:
   bilibili-api:
 #    build:
 #      context: ../bilibili-api
-    image: nooblong/btncm-bilibili-api:latest
+    image: nooblong/btncm-bilibili-api:v1.0
     container_name: bilibili-api
     restart: unless-stopped
     environment:
@@ -39,7 +43,7 @@ services:
   java:
 #    build:
 #      context: .
-    image: nooblong/btncm-bilibili-to-netease-cloud-music:latest
+    image: nooblong/btncm-bilibili-to-netease-cloud-music:v1.1
     container_name: java
     restart: unless-stopped
     depends_on:
@@ -65,7 +69,7 @@ services:
   ui:
 #    build:
 #      context: ../bilibili-to-netease-cloud-music-ui
-    image: nooblong/btncm-ui:latest
+    image: nooblong/btncm-ui:v1.0
     container_name: ui
     restart: unless-stopped
     depends_on:
