@@ -1,6 +1,7 @@
 package github.nooblong.btncm.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -19,7 +20,7 @@ import github.nooblong.btncm.netmusic.NetMusicClient;
 import github.nooblong.btncm.service.SubscribeService;
 import github.nooblong.btncm.service.UploadDetailService;
 import github.nooblong.btncm.service.UserVoicelistService;
-import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,35 +55,53 @@ public class SubscribeController {
     }
 
     @GetMapping
-    public Result<IPage<Subscribe>> list(@RequestParam(name = "username", required = false) String username,
+    public Result<IPage<Subscribe>> list(@RequestParam(name = "pageNo") int pageNo,
+                                         @RequestParam(name = "pageSize") int pageSize,
+                                         @RequestParam(name = "column", required = false) String column,
+                                         @RequestParam(name = "orderBy", required = false) String orderBy,
+                                         @RequestParam(name = "username", required = false) String username,
                                          @RequestParam(name = "status", required = false) Integer status,
-                                         @RequestParam(name = "voiceListId", required = false) Long voiceListId,
-                                         HttpServletResponse response) {
+                                         @RequestParam(name = "voiceListId", required = false) Long voiceListId) {
+        List<SysUser> users = Db.list(SysUser.class);
+        Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
+
         Long selectUserId = null;
         if (StrUtil.isNotBlank(username)) {
             List<SysUser> selectUser = Db.list(Wrappers.lambdaQuery(SysUser.class).eq(SysUser::getUsername, username));
             if (selectUser.isEmpty()) {
-                return Result.ok("ok", new Page<>(1L, 1000L));
+                return Result.ok("ok", new Page<>(pageNo, pageSize));
             }
             selectUserId = selectUser.get(0).getId();
         }
-        IPage<Subscribe> list = Db.page(new Page<>(1, Integer.MAX_VALUE),
-                Wrappers.lambdaQuery(Subscribe.class)
-                        .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
-                        .eq(voiceListId != null, Subscribe::getVoiceListId, voiceListId)
-                        .eq(status != null, Subscribe::getEnable, status)
-                        .orderByDesc(Subscribe::getUpdateTime));
-        if (list.getRecords().isEmpty()) {
-            return Result.ok("ok", list);
+
+        LambdaQueryWrapper<Subscribe> wrapper = Wrappers.lambdaQuery(Subscribe.class)
+                .eq(selectUserId != null, Subscribe::getUserId, selectUserId)
+                .eq(voiceListId != null, Subscribe::getVoiceListId, voiceListId)
+                .eq(status != null, Subscribe::getEnable, status);
+
+        if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {
+            if (orderBy.equalsIgnoreCase("desc")) {
+                if (column.equalsIgnoreCase("updateTime")) {
+                    wrapper.orderByDesc(Subscribe::getUpdateTime);
+                }
+            } else {
+                if (column.equalsIgnoreCase("updateTime")) {
+                    wrapper.orderByAsc(Subscribe::getUpdateTime);
+                }
+            }
+        } else {
+            wrapper.orderByDesc(Subscribe::getUpdateTime);
         }
-        List<SysUser> users = Db.list(SysUser.class);
-        Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
-        list.getRecords().forEach(subscribe -> {
-            subscribe.setTypeDesc(subscribe.getType().getDesc());
-            subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
-            subscribe.setLog(subscribe.getLog());
-        });
-        response.addHeader("Content-Range", String.valueOf(Db.count(Subscribe.class)));
+
+        IPage<Subscribe> list = Db.page(new Page<>(pageNo, pageSize), wrapper);
+
+        if (!list.getRecords().isEmpty()) {
+            list.getRecords().forEach(subscribe -> {
+                subscribe.setTypeDesc(subscribe.getType().getDesc());
+                subscribe.setUserName(longSysUserMap.get(subscribe.getUserId()).getUsername());
+                subscribe.setLog("");
+            });
+        }
         return Result.ok("ok", list);
     }
 
@@ -190,6 +209,12 @@ public class SubscribeController {
             return Result.ok("ok", result);
         }
         return Result.ok("ok", result);
+    }
+
+    @GetMapping("/getLog")
+    public Result<String> getLog(@RequestParam(name = "id") Long id) {
+        Subscribe byId = subscribeService.getById(id);
+        return Result.ok("ok", byId.getLog());
     }
 
 }

@@ -44,7 +44,7 @@ export default {
 
 
                     "Content-Type":
-                        "video/mp4",
+                        "audio/mp4",
 
 
                     // 支持断点续传
