@@ -198,7 +198,12 @@ public class BilibiliController {
     public Result<String> download(@RequestParam("bvid") String bvid,
                                    @RequestParam("cid") String cid,
                                    @RequestParam(value = "id", required = false) String id) {
-        Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
+        Map<String, String> cookie = new HashMap<>();
+        try {
+            cookie = bilibiliClient.getBilibiliCookie();
+        } catch (Exception e) {
+            // 直接请求
+        }
         String url = bilibiliClient.getAudioUrlSimple(bvid, cid, cookie);
         if (StrUtil.isNotBlank(id)) {
             UploadDetail byId = Db.getById(Long.parseLong(id), UploadDetail.class);
