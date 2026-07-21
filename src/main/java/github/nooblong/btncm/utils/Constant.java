@@ -39,6 +39,7 @@ public class Constant {
             log.error("pythonHost或pythonPort为空");
         }
         BAU = "http://" + pythonHost + ":" + pythonPort;
+        System.out.println("BAU:" + BAU);
     }
 
     static {

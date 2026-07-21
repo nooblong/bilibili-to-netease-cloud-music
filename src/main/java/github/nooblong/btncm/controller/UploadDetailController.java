@@ -62,7 +62,8 @@ public class UploadDetailController {
                                             @RequestParam(required = false, name = "voiceListId") String voiceListId,
                                             @RequestParam(required = false, name = "uploadName") String uploadName,
                                             @RequestParam(required = false, name = "username") String username,
-                                            @RequestParam(required = false, name = "status") String status) {
+                                            @RequestParam(required = false, name = "status") String status,
+                                            @RequestParam(required = false, name = "musicStatus") String musicStatus) {
         List<SysUser> users = Db.list(SysUser.class);
         Map<Long, SysUser> longSysUserMap = SimpleQuery.list2Map(users, SysUser::getId, i -> i);
         Map<Long, Subscribe> subscribeMap = new HashMap<>();
@@ -88,6 +89,7 @@ public class UploadDetailController {
         }
 
         wrapper.like(StrUtil.isNotBlank(status), UploadDetail::getUploadStatus, status);
+        wrapper.like(StrUtil.isNotBlank(musicStatus), UploadDetail::getMusicStatus, musicStatus);
         wrapper.eq(StrUtil.isNotBlank(voiceListId), UploadDetail::getVoiceListId, voiceListId);
 
         if (StrUtil.isNotBlank(column) && StrUtil.isNotBlank(orderBy)) {

@@ -270,6 +270,52 @@ public class BilibiliClient {
     }
 
     /**
+     * 获取视频url简易
+     */
+    public String getAudioUrlSimple(String bvid, String cid, Map<String, String> cred) {
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("get_download_url");
+        builder.addQueryParameter("bvid", bvid);
+        if (StrUtil.isNotBlank(cid)) {
+            builder.addQueryParameter("cid", cid);
+        } else {
+            builder.addQueryParameter("page_index", "int(0):parse");
+        }
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+        ArrayNode audios;
+        audios = ((ArrayNode) response.get("data").get("dash").get("audio"));
+        int max = 0;
+        boolean hasHiRes = false;
+        for (JsonNode audio : audios) {
+            if (audio.get("id").asInt() > max) {
+                max = audio.get("id").asInt();
+            }
+            if (audio.get("id").asInt() == AudioQualityEnum.HI_RES.getCode()) {
+                hasHiRes = true;
+            }
+        }
+        log.info("当前视频是否存在hi-res: {}", hasHiRes);
+        Assert.isTrue(max != 0, "获取不到下载链接1");
+        String url = "";
+        for (JsonNode audio : audios) {
+            if (hasHiRes) {
+                if (audio.get("id").asInt() == AudioQualityEnum.HI_RES.getCode()) {
+                    url = audio.get("base_url").asText();
+                }
+            } else {
+                if (audio.get("id").asInt() == max) {
+                    url = audio.get("base_url").asText();
+                }
+            }
+        }
+        Assert.isTrue(StrUtil.isNotBlank(url), "获取不到下载链接2");
+        log.info("下载链接: {}", url);
+        return url;
+    }
+
+    /**
      * 判断视频长度
      */
     private void overLengthLimit(JsonNode data, SysUser user) throws UploadFailException {

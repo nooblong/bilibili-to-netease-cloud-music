@@ -196,4 +196,11 @@ public class BilibiliController {
         return Result.ok("ok", emojiDetail);
     }
 
+    @GetMapping("/download")
+    public Result<String> download(@RequestParam("bvid") String bvid, @RequestParam("cid") String cid) {
+        Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
+        String url = bilibiliClient.getAudioUrlSimple(bvid, cid, cookie);
+        return Result.ok("ok", url);
+    }
+
 }
