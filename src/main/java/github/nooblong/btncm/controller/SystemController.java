@@ -82,6 +82,13 @@ public class SystemController {
         sysInfo.setEnabledSubscribeNum(uploadDetailService.getEnabledSubscribeNum().intValue());
         sysInfo.setEnabledSubscribeUserNum(uploadDetailService.getEnabledSubscribeUserNum().intValue());
         try {
+            Map<String, String> bilibiliCookie = bilibiliClient.getBilibiliCookie();
+            sysInfo.setBiliLogin(true);
+        } catch (Exception e) {
+            sysInfo.setBiliLogin(false);
+        }
+
+        try {
             SysUser sysUser = JwtUtil.verifierFromContext();
             sysInfo.setLogin(true);
             sysInfo.setExpireTime(sysUser.getExpire());

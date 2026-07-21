@@ -86,7 +86,7 @@ public class ScheduleTask {
     @Value("${removeUselessCookie}")
     private int removeUselessCookie;
 
-    @Scheduled(fixedDelay = 10800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.HOURS, initialDelay = 0)
     public void getAuditStatus() {
         if (enableGetAuditStatus <= 0) {
             return;
@@ -94,7 +94,7 @@ public class ScheduleTask {
         uploadDetailService.checkAllAuditStatus();
     }
 
-    @Scheduled(fixedDelay = 86400, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS, initialDelay = 1)
     public void refreshUserVoiceList() {
         if (enableRefreshUserVoiceList <= 0) {
             return;
@@ -102,7 +102,7 @@ public class ScheduleTask {
         userVoicelistService.syncUserVoicelist();
     }
 
-    @Scheduled(fixedDelay = 30800, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.DAYS, initialDelay = 1)
     public void removeUselessCookie() {
         if (removeUselessCookie <= 0) {
             return;
@@ -110,7 +110,7 @@ public class ScheduleTask {
         subscribeService.removeUselessCookie();
     }
 
-    @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 3, timeUnit = TimeUnit.HOURS, initialDelay = 3)
     public void getUpJob() {
         if (enableGetUpJob <= 0) {
             return;
@@ -139,7 +139,7 @@ public class ScheduleTask {
         job.start(upload.getId(), availableBilibiliCookie);
     }
 
-    @Scheduled(fixedDelay = 7200, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 2, timeUnit = TimeUnit.HOURS, initialDelay = 1)
     public void refreshNetCookie() {
         if (enableRefreshNetCookie <= 0) {
             return;
@@ -185,7 +185,7 @@ public class ScheduleTask {
         }
     }
 
-    @Scheduled(fixedDelay = 3600, timeUnit = TimeUnit.SECONDS, initialDelayString = "${initialDelay}")
+    @Scheduled(fixedDelay = 24, timeUnit = TimeUnit.HOURS, initialDelay = 24)
     public void refreshBiliCookie() {
         if (enableRefreshBiliCookie <= 0) {
             return;

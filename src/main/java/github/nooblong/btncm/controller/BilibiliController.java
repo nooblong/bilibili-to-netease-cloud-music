@@ -169,7 +169,7 @@ public class BilibiliController {
         return Result.ok("ok", bilibiliClient.loginWithKey(key, user));
     }
 
-    public ExpiringCache<JsonNode> emojiList = new ExpiringCache<>(72 *60 * 60 * 1000L, this::getAllEmoji);
+    public ExpiringCache<JsonNode> emojiList = new ExpiringCache<>(72 * 60 * 60 * 1000L, this::getAllEmoji);
 
     /**
      * 获取emoji列表

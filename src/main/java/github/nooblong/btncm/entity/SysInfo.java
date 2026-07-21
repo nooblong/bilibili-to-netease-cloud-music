@@ -29,4 +29,6 @@ public class SysInfo implements Serializable {
     private Integer enabledSubscribeNum;
     private Integer enabledSubscribeUserNum;
 
+    private Boolean biliLogin;
+
 }

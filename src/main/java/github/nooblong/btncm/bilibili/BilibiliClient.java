@@ -47,7 +47,7 @@ public class BilibiliClient {
     final PythonManager pythonManager;
 
     /**
-     * b站cookie缓存
+     * b站cookie缓存 30min
      */
     ExpiringCache<Map<String, String>> expiringCache = new ExpiringCache<>(30 * 60 * 1000, this::getBilibiliCookieFromDb);
 
