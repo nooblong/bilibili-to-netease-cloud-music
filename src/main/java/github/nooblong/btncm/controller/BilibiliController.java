@@ -1,15 +1,13 @@
 package github.nooblong.btncm.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.fasterxml.jackson.databind.JsonNode;
-import github.nooblong.btncm.entity.ExpiringCache;
-import github.nooblong.btncm.entity.SysUser;
-import github.nooblong.btncm.entity.Result;
+import github.nooblong.btncm.entity.*;
 import github.nooblong.btncm.service.IUserService;
 import github.nooblong.btncm.utils.Constant;
 import github.nooblong.btncm.utils.JwtUtil;
-import github.nooblong.btncm.entity.QrResponse;
 import github.nooblong.btncm.bilibili.VideoInfoResponse;
 import github.nooblong.btncm.bilibili.BilibiliClient;
 import github.nooblong.btncm.bilibili.BilibiliFullVideo;
@@ -197,9 +195,16 @@ public class BilibiliController {
     }
 
     @GetMapping("/download")
-    public Result<String> download(@RequestParam("bvid") String bvid, @RequestParam("cid") String cid) {
+    public Result<String> download(@RequestParam("bvid") String bvid,
+                                   @RequestParam("cid") String cid,
+                                   @RequestParam(value = "id", required = false) String id) {
         Map<String, String> cookie = bilibiliClient.getBilibiliCookie();
         String url = bilibiliClient.getAudioUrlSimple(bvid, cid, cookie);
+        if (StrUtil.isNotBlank(id)) {
+            UploadDetail byId = Db.getById(Long.parseLong(id), UploadDetail.class);
+            byId.setInstanceId(byId.getInstanceId() + 1);
+            Db.updateById(byId);
+        }
         return Result.ok("ok", url);
     }
 

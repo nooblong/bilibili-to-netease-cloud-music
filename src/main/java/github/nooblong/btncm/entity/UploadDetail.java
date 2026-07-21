@@ -51,6 +51,7 @@ public class UploadDetail implements Serializable, Comparable<UploadDetail> {
     private Long crack;
     private Long priority;
     private String log;
+    private Long instanceId;
 
     @TableField(exist = false)
     private String voiceListName;
