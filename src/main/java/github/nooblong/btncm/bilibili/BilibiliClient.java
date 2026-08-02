@@ -8,13 +8,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import github.nooblong.btncm.entity.ExpiringCache;
 import github.nooblong.btncm.entity.SysUser;
-import github.nooblong.btncm.enums.UploadStatusTypeEnum;
+import github.nooblong.btncm.enums.*;
 import github.nooblong.btncm.service.IUserService;
 import github.nooblong.btncm.utils.CommonUtil;
 import github.nooblong.btncm.utils.Constant;
-import github.nooblong.btncm.enums.AudioQualityEnum;
-import github.nooblong.btncm.enums.CollectionVideoOrderEnum;
-import github.nooblong.btncm.enums.UserVideoOrderEnum;
 import github.nooblong.btncm.service.UploadDetailService;
 import github.nooblong.btncm.utils.MultiDownload;
 import github.nooblong.btncm.utils.OkUtil;
@@ -194,6 +191,96 @@ public class BilibiliClient {
      */
     public JsonNode refresh(Map<String, String> cred) {
         return OkUtil.getJsonResponse(OkUtil.get(Constant.BAU + "/Credential/refresh", cred), okHttpClient);
+    }
+
+    /**
+     * 自动判断最优获取下载链接
+     */
+    public Map<String, String> getM4aBest(String bvid, String cid, Map<String, String> cred) {
+        Map<String, String> result = new HashMap<>();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("detect_dash");
+        builder.addQueryParameter("bvid", bvid);
+        if (StrUtil.isNotBlank(cid)) {
+            builder.addQueryParameter("cid", cid);
+        } else {
+            builder.addQueryParameter("page_index", "int(0):parse");
+        }
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+        ArrayNode urls;
+        urls = ((ArrayNode) response.get("data"));
+        for (JsonNode node : urls) {
+            if (node.has("audio_quality")) {
+                int audioQuality = node.get("audio_quality").asInt();
+                AudioQualityEnum audioQualityEnum = AudioQualityEnum.codeMap.get(audioQuality);
+                if (audioQualityEnum != null) {
+                    result.put("quality", audioQualityEnum.toString());
+                    result.put("ext", audioQualityEnum.getExt());
+                    result.put("url", node.get("url").asText());
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 自动判断最优获取下载链接
+     */
+    public Map<String, String> getMp4Best(String bvid, String cid, Map<String, String> cred) {
+        Map<String, String> result = new HashMap<>();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("detect_dash");
+        builder.addQueryParameter("bvid", bvid);
+        if (StrUtil.isNotBlank(cid)) {
+            builder.addQueryParameter("cid", cid);
+        } else {
+            builder.addQueryParameter("page_index", "int(0):parse");
+        }
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+        ArrayNode urls;
+        urls = ((ArrayNode) response.get("data"));
+        for (JsonNode node : urls) {
+            if (node.has("video_quality")) {
+                int audioQuality = node.get("video_quality").asInt();
+                VideoQualityEnum videoQualityEnum = VideoQualityEnum.codeMap.get(audioQuality);
+                if (videoQualityEnum != null) {
+                    result.put("quality", videoQualityEnum.toString());
+                    result.put("ext", videoQualityEnum.getExt());
+                    result.put("url", node.get("url").asText());
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 自动判断最优获取下载链接
+     */
+    public Map<String, String> getFlvBest(String bvid, String cid, Map<String, String> cred) {
+        Map<String, String> result = new HashMap<>();
+        HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
+        cred.forEach(builder::addQueryParameter);
+        builder.addPathSegment("video").addPathSegment("Video").addPathSegment("detect_flv");
+        builder.addQueryParameter("bvid", bvid);
+        if (StrUtil.isNotBlank(cid)) {
+            builder.addQueryParameter("cid", cid);
+        } else {
+            builder.addQueryParameter("page_index", "int(0):parse");
+        }
+        JsonNode response = OkUtil.getJsonResponse(OkUtil.get(builder.build()), okHttpClient);
+        Assert.isTrue(response.get("code").asInt() != -1, "获取不到下载链接0");
+        ArrayNode urls;
+        urls = ((ArrayNode) response.get("data"));
+        for (JsonNode node : urls) {
+            result.put("quality", "flv-unknown");
+            result.put("ext", "flv");
+            result.put("url", node.get("url").asText());
+        }
+        return result;
     }
 
     /**

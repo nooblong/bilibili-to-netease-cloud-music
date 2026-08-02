@@ -64,8 +64,13 @@ public class BilibiliController {
                                                   @RequestParam(required = false, name = "cid") String cid) {
         SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
         simpleVideoInfo.setCid(cid);
-        Map<String, String> availableBilibiliCookie = bilibiliClient.getBilibiliCookie();
-        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, availableBilibiliCookie);
+        Map<String, String> map = new HashMap<>();
+        try {
+            map = bilibiliClient.getBilibiliCookie();
+        } catch (Exception e) {
+            // 直接请求
+        }
+        BilibiliFullVideo bilibiliFullVideo = bilibiliClient.getFullVideoBySimpleVideo(simpleVideoInfo, map);
         VideoInfoResponse videoInfoResponse = new VideoInfoResponse()
                 .setImage(bilibiliFullVideo.getVideoInfo().get("data").get("pic").asText())
                 .setTitle(bilibiliFullVideo.getTitle())
@@ -194,6 +199,9 @@ public class BilibiliController {
         return Result.ok("ok", emojiDetail);
     }
 
+    /**
+     * 下载审核未通过
+     */
     @GetMapping("/download")
     public Result<String> download(@RequestParam("bvid") String bvid,
                                    @RequestParam("cid") String cid,
@@ -211,6 +219,45 @@ public class BilibiliController {
             Db.updateById(byId);
         }
         return Result.ok("ok", url);
+    }
+
+    /**
+     * 下载b站视频
+     */
+    @GetMapping("/downloadAll")
+    public Result<String> downloadAll(@RequestParam("bvid") String bvid,
+                                      @RequestParam("cid") String cid,
+                                      @RequestParam(value = "id", required = false) String id,
+                                      @RequestParam(value = "type", defaultValue = "m4a") String type) {
+        Map<String, String> cookie = new HashMap<>();
+        try {
+            cookie = bilibiliClient.getBilibiliCookie();
+        } catch (Exception e) {
+            // 直接请求
+        }
+        SimpleVideoInfo simpleVideoInfo = bilibiliClient.getSimpleVideoInfoByBvidOrUrl(bvid);
+        bvid = simpleVideoInfo.getBvid();
+        String url = bilibiliClient.getAudioUrlSimple(bvid, cid, cookie);
+        if (StrUtil.isNotBlank(id)) {
+            UploadDetail byId = Db.getById(Long.parseLong(id), UploadDetail.class);
+            byId.setInstanceId(byId.getInstanceId() + 1);
+            Db.updateById(byId);
+        }
+        return switch (type) {
+            case "m4a" -> {
+                Map<String, String> m4aBest = bilibiliClient.getM4aBest(bvid, cid, cookie);
+                yield Result.ok(m4aBest.get("quality"), m4aBest.get("url"));
+            }
+            case "mp4" -> {
+                Map<String, String> mp4Best = bilibiliClient.getMp4Best(bvid, cid, cookie);
+                yield Result.ok(mp4Best.get("quality"), mp4Best.get("url"));
+            }
+            case "flv" -> {
+                Map<String, String> flvBest = bilibiliClient.getFlvBest(bvid, cid, cookie);
+                yield Result.ok(flvBest.get("quality"), flvBest.get("url"));
+            }
+            default -> Result.ok("ok", url);
+        };
     }
 
 }

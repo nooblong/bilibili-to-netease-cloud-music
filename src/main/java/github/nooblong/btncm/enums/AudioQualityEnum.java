@@ -26,15 +26,11 @@ public enum AudioQualityEnum {
     final int code;
     final String ext;
 
-    public static final Map<Integer, AudioQualityEnum> extMap = new HashMap<>();
-    public static final Map<Integer, AudioQualityEnum> descMap = new HashMap<>();
+    public static final Map<Integer, AudioQualityEnum> codeMap = new HashMap<>();
 
     static {
         for (AudioQualityEnum audioQuality : AudioQualityEnum.values()) {
-            extMap.put(audioQuality.getCode(), audioQuality);
-        }
-        for (AudioQualityEnum audioQuality : AudioQualityEnum.values()) {
-            descMap.put(audioQuality.getCode(), audioQuality);
+            codeMap.put(audioQuality.getCode(), audioQuality);
         }
     }
 
