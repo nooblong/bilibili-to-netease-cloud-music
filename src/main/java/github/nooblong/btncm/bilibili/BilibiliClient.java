@@ -226,14 +226,19 @@ public class BilibiliClient {
     }
 
     /**
-     * 自动判断最优获取下载链接
+     * 自动判断最优获取下载链接,h5为true时，可直接打开播放
      */
-    public Map<String, String> getMp4Best(String bvid, String cid, Map<String, String> cred) {
+    public Map<String, String> getMp4Best(String bvid, String cid, Map<String, String> cred, boolean h5) {
         Map<String, String> result = new HashMap<>();
         HttpUrl.Builder builder = CommonUtil.getUrlBuilder();
-        cred.forEach(builder::addQueryParameter);
+        if (!h5) {
+            cred.forEach(builder::addQueryParameter);
+        }
         builder.addPathSegment("video").addPathSegment("Video").addPathSegment("detect_dash");
         builder.addQueryParameter("bvid", bvid);
+        if (h5) {
+            builder.addQueryParameter("html5", "True");
+        }
         if (StrUtil.isNotBlank(cid)) {
             builder.addQueryParameter("cid", cid);
         } else {
@@ -244,6 +249,9 @@ public class BilibiliClient {
         ArrayNode urls;
         urls = ((ArrayNode) response.get("data"));
         for (JsonNode node : urls) {
+            if (h5) {
+                result.put("url", node.get("url").asText());
+            }
             if (node.has("video_quality")) {
                 int audioQuality = node.get("video_quality").asInt();
                 VideoQualityEnum videoQualityEnum = VideoQualityEnum.codeMap.get(audioQuality);

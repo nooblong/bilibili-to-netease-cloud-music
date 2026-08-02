@@ -249,12 +249,16 @@ public class BilibiliController {
                 yield Result.ok(m4aBest.get("quality"), m4aBest.get("url"));
             }
             case "mp4" -> {
-                Map<String, String> mp4Best = bilibiliClient.getMp4Best(bvid, cid, cookie);
+                Map<String, String> mp4Best = bilibiliClient.getMp4Best(bvid, cid, cookie, false);
                 yield Result.ok(mp4Best.get("quality"), mp4Best.get("url"));
             }
             case "flv" -> {
                 Map<String, String> flvBest = bilibiliClient.getFlvBest(bvid, cid, cookie);
                 yield Result.ok(flvBest.get("quality"), flvBest.get("url"));
+            }
+            case "h5" -> {
+                Map<String, String> mp4Best = bilibiliClient.getMp4Best(bvid, cid, cookie, true);
+                yield Result.ok(mp4Best.get("quality"), mp4Best.get("url"));
             }
             default -> Result.ok("ok", url);
         };
