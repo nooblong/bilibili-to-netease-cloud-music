@@ -5,6 +5,10 @@ export default {
 
         const target = url.searchParams.get("url");
 
+        const name = url.searchParams.get("name");
+
+        const contentType = url.searchParams.get("contentType");
+
         if (!target) {
             return new Response(
                 "missing url",
@@ -40,11 +44,11 @@ export default {
 
                     // 强制浏览器下载
                     "Content-Disposition":
-                        'attachment; filename="video.m4a"',
+                        'attachment; filename=' + (name ?? "unknown"),
 
 
                     "Content-Type":
-                        "audio/mp4",
+                        contentType ?? "audio/mp4",
 
 
                     // 支持断点续传
